@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+release/
+out-tsc/
+.angular/
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+
+# Env / local
+.env
+*.log
+.vscode/*
+!.vscode/extensions.json

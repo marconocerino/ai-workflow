@@ -1,0 +1,260 @@
+﻿ID,Epic,Story,Description,Acceptance criteria,Points,Priority,Sprint,Labels,Status
+VAI-101,E1 Foundation,Project scaffold,"As a developer, I want an Electron + Angular + Angular Material workspace with a secure main/preload/renderer split, so every later story builds on a safe, consistent base.","• App launches on Windows (and macOS for dev)
+• Renderer has no Node access (contextIsolation on, nodeIntegration off)
+• One typed IPC example works end to end
+• README explains how to run, test and build",3,Must,S0,"chore, platform",To do
+VAI-102,E1 Foundation,CI pipeline,"As a developer, I want every pull request linted, tested and built automatically, so broken code never reaches main.","• Lint, unit tests and a Windows build run on every PR
+• A failing check blocks merging
+• Build artifacts are downloadable from the run",3,Must,S0,"chore, platform",To do
+VAI-103,E1 Foundation,AI working brief,"As a developer working with AI tools, I want CLAUDE.md, PLAN.md and a design/ folder of screenshots in the repo, so each AI session starts with the same context and rules.","• CLAUDE.md lists stack, folders, run/test commands and rules (never break dictation)
+• PLAN.md lists epics and stories with checkboxes
+• design/ holds a screenshot of each screen",1,Must,S0,docs,To do
+VAI-104,E1 Foundation,Company AI endpoint configuration,"As IT, I want the app pre-configured for our internal AI servers (ASR and LLM), so users never paste API keys or send data outside the company.","• Base URLs and model names come from a managed config file
+• A health check shows each endpoint's status in Settings
+• Timeouts and retries are configurable
+• No request goes to a non-approved host",3,Must,S0,"platform, security",To do
+VAI-105,E1 Foundation,Encrypted settings store,"As a user, I want my settings saved reliably and secrets encrypted on my machine, so nothing sensitive sits in plain text.","• Settings saved as versioned JSON with migrations
+• Secrets and tokens encrypted with Electron safeStorage (DPAPI on Windows)
+• Corrupt settings fall back to defaults without crashing",3,Must,S0,"platform, security",To do
+VAI-106,E1 Foundation,Local database and migrations,"As a developer, I want a local SQLite database with versioned migrations, so dictations, meetings and agent data can evolve safely.","• Database opens on first run and applies migrations in order
+• Each migration has a test
+• Database file is encrypted at rest or stored in an encrypted location
+• A failed migration rolls back and is logged",5,Must,S1,"platform, data",To do
+VAI-107,E1 Foundation,Structured logging and diagnostics,"As a support person, I want readable logs and a one-click diagnostics export, so problems can be fixed without asking users for screenshots.","• Rotating log files with levels and timestamps
+• Logs never contain transcripts, audio or keys
+• Export diagnostics creates a zip of logs and non-secret settings",3,Must,S1,platform,To do
+VAI-108,E1 Foundation,Windows installer and code signing,"As IT, I want a signed installer that supports silent installs, so the app can be rolled out to a pilot group without warnings.","• Signed per-user installer (no admin rights needed)
+• Silent install and uninstall switches documented
+• Uninstall removes app files and offers to keep or delete user data",5,Must,S1,"platform, release",To do
+VAI-109,E1 Foundation,Feature flags,"As the product owner, I want to switch features on per user or pilot group, so meetings and agents can be released gradually.","• Flags for meetings, agents and voiceprints
+• Flags can be set by a managed config
+• Hidden features leave no UI traces",2,Should,S1,platform,To do
+VAI-110,E1 Foundation,Auto-update,"As a user, I want updates to download in the background and install on restart, so I always have fixes without effort.","• Updates download silently and install on quit
+• Pilot and stable channels
+• IT can disable auto-update by policy",3,Should,S2,"platform, release",To do
+VAI-111,E1 Foundation,Crash recovery and error panel,"As a user, I want the app to recover from crashes and show recent errors in plain words, so I'm never left wondering why something failed.","• Crashed helper processes restart automatically
+• An in-progress recording is recovered after a crash
+• Settings shows the last errors in plain language",3,Should,S2,platform,To do
+VAI-112,E1 Foundation,Privacy-safe usage metrics,"As the product owner, I want opt-in counts of usage (dictations, meetings, approvals), so we can measure the pilot without collecting content.","• Opt-in, off by default
+• Only counts and durations, never text or audio
+• Sent only to company servers",3,Should,S6,"platform, pilot",To do
+VAI-201,E2 Design system & shell,Design tokens,"As a developer, I want the green retro palette, fonts (Fraunces, Archivo), spacing, radii and offset shadows as theme tokens, so every screen looks consistent.","• Tokens defined once as an Angular Material theme plus CSS variables
+• Text colours meet 4.5:1 contrast
+• Changing a token updates every screen",3,Must,S0,ui,To do
+VAI-202,E2 Design system & shell,Core components,"As a developer, I want reusable buttons, inputs, toggles, cards, chips, keycaps and agent avatars, so new screens are assembled, not redrawn.","• Each component has default, hover, focus and disabled states
+• A gallery page shows every component
+• Components are keyboard accessible",5,Must,S1,ui,To do
+VAI-203,E2 Design system & shell,App shell and sidebar,"As a user, I want a sidebar with Home, Meetings, Agent chats, Dictations and Settings, so I can move around the app easily.","• Routing between all sections
+• Active section highlighted
+• Sidebar shows agent status and the 'runs on company servers' badge",3,Must,S1,ui,To do
+VAI-204,E2 Design system & shell,Settings screen redesign,"As a user, I want Settings split into clear sections that save automatically, so I can find and change options quickly.","• Sections: Dictation, Transcription, AI cleanup, Vocabulary, Style per app, About & diagnostics
+• Changes save automatically with a visible confirmation
+• Existing settings carry over unchanged",5,Must,S1,ui,To do
+VAI-205,E2 Design system & shell,Tray icon and window behaviour,"As a user, I want Voice AI in the system tray with its status, so it runs quietly in the background.","• Tray icon shows idle, listening and recording states
+• Closing the window keeps the app running in the tray
+• Option to start at sign-in",3,Should,S1,"ui, platform",To do
+VAI-206,E2 Design system & shell,Home dashboard,"As a user, I want a Home screen with my next meeting, things waiting for my OK, today's meetings, agent activity and recent dictations, so I see my day at a glance.","• Each section shows real data when available and a helpful empty state when not
+• Up next card links to the meeting
+• Recent dictations come from history",5,Should,S2,ui,To do
+VAI-207,E2 Design system & shell,"Empty, loading and error states","As a user, I want clear empty, loading and error states everywhere, so the app never looks broken.","• Shared components for empty, loading and error
+• Every list and page uses them
+• Error states offer a next step",2,Should,S2,ui,To do
+VAI-208,E2 Design system & shell,Accessibility baseline,"As a user who relies on the keyboard or a screen reader, I want every screen usable without a mouse, so the app works for everyone.","• All controls reachable by Tab with visible focus
+• Icon-only buttons have labels
+• Respects reduced-motion settings
+• Automated accessibility check passes in CI",3,Must,S2,"ui, quality",To do
+VAI-209,E2 Design system & shell,First-run onboarding,"As a new user, I want a short setup that grants microphone access, tests the hotkey and signs me in, so I'm productive in two minutes.","• Steps: welcome, microphone permission, hotkey test, sign-in (when available)
+• Each step can be skipped and revisited
+• Ends with a first successful dictation",5,Should,S2,ui,To do
+VAI-301,E3 Dictation,Hold-Ctrl global hotkey,"As a user, I want to hold Ctrl anywhere to dictate and release to stop, so voice input is instant.","• Holding Ctrl alone for 120 ms starts recording; release stops
+• Ctrl shortcuts (Ctrl+C etc.) are not hijacked
+• Fallback toggle shortcut works if the keyboard hook fails",3,Must,S1,dictation,To do
+VAI-302,E3 Dictation,Microphone capture and device choice,"As a user, I want to choose my microphone and optionally keep it warm, so my first word is never cut off.","• Device list with System default
+• Keep-mic-ready option (off, 5, 10, 30 s)
+• Warm audio stays in memory and is discarded if unused",3,Must,S1,"dictation, audio",To do
+VAI-303,E3 Dictation,Transcription with Qwen3-ASR,"As a user, I want my speech turned into text by our company's speech model, so dictation is accurate and private.","• Audio sent only to the configured company endpoint
+• Typical 10-second clip returns text in under 2 seconds
+• Clear message on timeout or server error",3,Must,S1,"dictation, ai",To do
+VAI-304,E3 Dictation,Paste at cursor,"As a user, I want the text to appear where my cursor is in any app, so I don't copy and paste by hand.","• Works in Outlook, Teams, browsers and VS Code
+• My clipboard is restored afterwards
+• If pasting fails, the text stays on the clipboard with a notice",3,Must,S1,dictation,To do
+VAI-305,E3 Dictation,Recording overlay,"As a user, I want a small floating bar while I dictate, so I know it's listening.","• Appears within 100 ms of starting
+• Shows a level meter and the target app
+• Never steals focus from the app I'm typing in",3,Must,S1,"dictation, ui",To do
+VAI-306,E3 Dictation,Live transcription preview,"As a user, I want to see words appear and firm up while I speak, so I trust what will be pasted.","• Partial text appears within about 1 s
+• Final text replaces partials smoothly
+• Falls back to post-recording transcription if streaming fails",5,Should,S2,"dictation, ai",To do
+VAI-307,E3 Dictation,AI cleanup (Light and Polished),"As a user, I want filler words removed and punctuation added, so dictated text is ready to send.","• Light: punctuation and fillers only; Polished: also false starts and paragraphs
+• Raw text is pasted if cleanup fails or takes over 3 s
+• Cleanup never adds facts that weren't spoken",3,Must,S2,"dictation, ai",To do
+VAI-308,E3 Dictation,Style per app,"As a user, I want cleanup to match the app I'm in (professional in Outlook, casual in Teams, code-aware in VS Code), so tone is right automatically.","• Foreground app name detected (never window titles)
+• Rules editable with defaults
+• Apps without a rule use Neutral",3,Should,S2,"dictation, ai",To do
+VAI-309,E3 Dictation,Custom vocabulary,"As a user, I want to add names, products and acronyms, so they're spelled correctly.","• Add words by Enter, comma or pasting a list
+• Vocabulary sent as hints to ASR and cleanup
+• Words can be removed",2,Should,S2,dictation,To do
+VAI-310,E3 Dictation,Dictation history,"As a user, I want a searchable history of my dictations, so I can recover text I dictated earlier.","• Stored encrypted with app name, style and time
+• Search, copy and delete entries
+• Retention setting (e.g. 7, 30, 90 days)",3,Must,S2,"dictation, data",To do
+VAI-311,E3 Dictation,Offline and error handling,"As a user, I want clear feedback when the AI servers can't be reached, so I don't lose what I said.","• Recording is kept and retried when the connection returns
+• Message explains what happened in plain words
+• No crash or silent failure",2,Must,S2,"dictation, quality",To do
+VAI-401,E4 Meeting capture,Spike: Windows system audio capture,"As the team, we want to prove we can capture what the PC plays (other participants) without a meeting bot, so we de-risk meetings early.","• Prototype captures a Teams and a Zoom call via WASAPI process loopback (excluding our own app)
+• Mic and system audio saved as separate tracks
+• Short write-up of limits and next steps",3,Must,S0,"spike, audio",To do
+VAI-402,E4 Meeting capture,Meeting detection,"As a user, I want Voice AI to notice when I'm in a Teams or Zoom call and ask if I want notes, so I never forget to record.","• Detects meeting apps plus sustained mic use, or a calendar event starting
+• Shows one prompt card, never records automatically
+• Dismissals respected for that meeting",5,Must,S3,meetings,To do
+VAI-403,E4 Meeting capture,System audio helper (Windows),"As a developer, I want a small native helper that streams system audio to the app, so capture is reliable and isolated from the UI.","• Helper streams PCM over stdout at a fixed sample rate
+• Watchdog restarts it if it stops; no orphan processes
+• Follows output device changes during a call",8,Must,S3,"meetings, audio",To do
+VAI-404,E4 Meeting capture,Dual-channel meeting recording,"As a user, I want my voice and everyone else's recorded separately, so the notes know what I said.","• Mic and system audio kept as two channels end to end
+• Always-visible recording indicator with pause and stop
+• Dictation still works during a recording",5,Must,S3,"meetings, audio",To do
+VAI-405,E4 Meeting capture,Recording notice and consent,"As a user, I want an easy way to tell participants I'm taking AI notes, so recording is transparent and fair.","• Recording card offers 'Copy notice for chat' and a reminder to say it aloud
+• Whether a notice was given is logged with the meeting
+• One click stops recording and deletes everything captured",3,Must,S3,"meetings, security",To do
+VAI-406,E4 Meeting capture,Echo handling,"As a user without headphones, I want other people's voices not duplicated as mine, so the transcript is clean.","• Echo cancellation only when output is not headphones
+• Duplicate mic lines matching system audio are suppressed
+• Tested with speakers and with headphones",5,Must,S4,"meetings, audio",To do
+VAI-407,E4 Meeting capture,Live meeting transcript,"As a user, I want to see the transcript build during the meeting, so I can follow along and catch up.","• Audio sent in chunks to Qwen3-ASR
+• Partial, final and retracted lines handled by a tested reducer
+• Shown in You / Them lanes with timestamps",8,Must,S4,"meetings, ai",To do
+VAI-408,E4 Meeting capture,Meeting storage,"As a user, I want each meeting saved securely with its audio and word-level transcript, so notes can be regenerated and checked.","• Session, transcript words (with channel and timestamps) and audio file stored
+• Encrypted at rest
+• Retention setting deletes old audio automatically",5,Must,S4,"meetings, data",To do
+VAI-409,E4 Meeting capture,Meetings list and meeting page,"As a user, I want a list of my meetings and a page for each, so I can find and review them.","• List with search and date filter
+• Meeting page with audio player synced to the transcript
+• Clicking a line jumps the audio to that moment",5,Must,S4,"meetings, ui",To do
+VAI-410,E4 Meeting capture,Full re-transcription after the meeting,"As a user, I want a more accurate transcript once the meeting ends, so the final notes are as correct as possible.","• Full audio re-transcribed in the background
+• Replaces live transcript only when complete
+• Progress shown on the meeting page",3,Should,S5,"meetings, ai",To do
+VAI-411,E4 Meeting capture,Manual recording and audio import,"As a user, I want to start recording with a shortcut or import an audio file, so I can take notes for in-person meetings too.","• Meeting hotkey starts and stops recording
+• Import of common audio formats
+• Imported files go through the same pipeline",2,Could,S5,meetings,To do
+VAI-412,E4 Meeting capture,macOS system audio capture,"As a Mac user, I want meeting capture to work on macOS, so the app isn't Windows-only.","• Core Audio process tap helper
+• Same helper protocol as Windows
+• Permission prompt explained in onboarding",5,Could,Backlog,"meetings, audio",To do
+VAI-501,E5 Meeting intelligence,Spike: speaker labelling quality,"As the team, we want to test diarization on a few real internal meetings, so we know how good speaker labels will be before building UI.","• pyannote segmentation + speaker embeddings run locally on 3–5 recordings
+• Error rate and run time recorded
+• Recommendation written up",3,Must,S3,"spike, ai",To do
+VAI-502,E5 Meeting intelligence,Speaker diarization,"As a user, I want the transcript split by speaker, so I can see who said what.","• Runs after the meeting as a background sidecar
+• Mic channel is always labelled 'You'
+• Speakers shown as Speaker 1, 2… until named",8,Must,S5,"meetings, ai",To do
+VAI-503,E5 Meeting intelligence,Name speakers,"As a user, I want to rename Speaker 1 to a real name in one click, so notes use people's names.","• Rename once and it applies to the whole meeting
+• Names suggested from calendar attendees when available
+• Auto-naming only when the match is unambiguous; no voiceprints stored",5,Must,S6,"meetings, ai",To do
+VAI-504,E5 Meeting intelligence,Meeting summary,"As a user, I want a clear summary with key points and decisions, so I don't have to reread the transcript.","• Output: summary, decisions, open questions, plus Markdown
+• Never presents proposals as decisions; says when there's nothing to summarise
+• Long meetings summarised in chunks then merged",8,Must,S5,"meetings, ai",To do
+VAI-505,E5 Meeting intelligence,Action items with owners,"As a user, I want action items with owners, due dates and the moment they were said, so follow-up is easy and verifiable.","• Each item has text, owner, due date (if said) and a timestamp link
+• Items can be edited, ticked off or deleted
+• Each item offers 'Hand to an agent' (used by E8)",5,Must,S5,"meetings, ai",To do
+VAI-506,E5 Meeting intelligence,My notes during the meeting,"As a user, I want to type my own notes during the meeting and have the summary build on them, so what I care about is front and centre.","• Notes editor next to the live transcript
+• Summary prioritises headings and highlighted text in my notes
+• My original notes are kept separately from the AI version",5,Should,S5,"meetings, ui",To do
+VAI-507,E5 Meeting intelligence,Ask the meeting,"As a user, I want to ask questions about a meeting and get answers with timestamps, so I can check things quickly.","• Answers use only that meeting's transcript and notes
+• Each answer cites one or more timestamps
+• Says clearly when the answer isn't in the meeting",5,Should,S5,"meetings, ai",To do
+VAI-508,E5 Meeting intelligence,Prompt evaluation set,"As the team, we want 10–20 real internal transcripts with expected outputs, so every prompt change is checked before release.","• Evaluation set stored securely with consent from participants
+• Script scores summaries and action items against expectations
+• Runs in CI or before each release",3,Must,S5,"quality, ai",To do
+VAI-509,E5 Meeting intelligence,Summary templates,"As a user, I want templates for standups, 1:1s and customer calls, so summaries fit the meeting type.","• At least 4 built-in templates
+• Users can create and edit templates
+• Template chosen per meeting or by default",3,Could,S7,"meetings, ai",To do
+VAI-510,E5 Meeting intelligence,Transcript correction pass,"As a user, I want obvious transcription mistakes fixed using my vocabulary, so names and terms are right.","• LLM may only replace words, never add, remove or reorder them
+• Uses the custom vocabulary
+• Original transcript kept for comparison",3,Could,S7,"meetings, ai",To do
+VAI-511,E5 Meeting intelligence,Share and export notes,"As a user, I want to share notes by email or Teams and export them, so others get the outcome.","• Copy as formatted text or Markdown
+• Export to PDF and Word
+• Shared content excludes audio unless chosen",3,Should,S7,meetings,To do
+VAI-512,E5 Meeting intelligence,Opt-in voiceprints,"As a user who has given consent, I want my voice recognised across meetings, so I don't rename myself every time.","• Only after legal/DPO approval and explicit opt-in per person
+• Strict match threshold plus margin
+• Voiceprints can be viewed and deleted",5,Could,Backlog,"meetings, ai, security",To do
+VAI-601,E6 Microsoft 365,IT request: Entra app registration,"As the team, we need IT to register the app in Entra ID with delegated permissions and admin consent, so sign-in works when we reach it.","• Public client app with desktop redirect URIs
+• Delegated: User.Read, Calendars.Read (later Calendars.ReadWrite, Mail.ReadWrite)
+• Admin consent granted for the pilot group; client and tenant IDs shared",1,Must,S0,"integrations, dependency",To do
+VAI-602,E6 Microsoft 365,Microsoft sign-in,"As a user, I want to sign in with my work account, ideally without typing a password, so calendar features just work.","• MSAL with the Windows sign-in broker (WAM) for silent sign-in
+• Tokens cached encrypted; refreshed silently
+• Sign-out in Settings removes tokens",5,Must,S6,"integrations, security",To do
+VAI-603,E6 Microsoft 365,Calendar sync,"As a user, I want my upcoming meetings in the app, so it knows what's next.","• Uses calendarView with delta sync
+• Recurring meetings expanded; cancelled ones hidden
+• Works offline from a local cache",5,Must,S6,integrations,To do
+VAI-604,E6 Microsoft 365,Match recordings to calendar events,"As a user, I want recordings linked to the right calendar event, so titles and attendees fill in automatically.","• Match by join link or time overlap
+• Title, organiser and attendees copied to the meeting
+• Manual relink if the match is wrong",3,Must,S6,"integrations, meetings",To do
+VAI-605,E6 Microsoft 365,Up next and meeting brief,"As a user, I want my next meeting on Home with a short brief from past notes, so I walk in prepared.","• Next meeting with time, platform and attendees
+• Brief built from related past meetings and the agenda
+• Notetaker auto-join toggle per meeting",3,Should,S6,"integrations, ui",To do
+VAI-606,E6 Microsoft 365,Outlook mail drafts,"As a user, I want follow-up emails created as Outlook drafts, so I review and send them myself.","• Creates drafts only; never sends
+• Draft contains recipients, subject and body
+• Link opens the draft in Outlook",3,Must,S8,integrations,To do
+VAI-607,E6 Microsoft 365,Free/busy and event creation,"As a user, I want the app to find a time everyone is free and create the event after I approve, so scheduling is effortless.","• Uses getSchedule for availability
+• Proposes up to 3 slots
+• Creates the event only after approval",5,Should,S9,integrations,To do
+VAI-608,E6 Microsoft 365,Invite disclosure line,"As an organiser, I want an optional AI-notes notice added to my invites, so attendees know in advance.","• Opt-in setting
+• Adds wording approved by HR/legal
+• Only for meetings I organise",2,Could,S7,"integrations, security",To do
+VAI-609,E6 Microsoft 365,People lookup,"As a user, I want names, job titles and photos for attendees, so speakers and notes are easier to read.","• Uses directory data with the right permission
+• Cached and refreshed daily
+• Falls back to email name if not permitted",2,Could,S7,integrations,To do
+VAI-701,E7 Agent platform,Spike: Qwen tool-calling reliability,"As the team, we want to measure how reliably our Qwen models call tools, so we choose the right model and design.","• 20+ test tasks across 3 tools
+• Success rate and failure types recorded per model
+• Recommendation: model, prompt style, max steps",3,Must,S0,"spike, ai",To do
+VAI-702,E7 Agent platform,Orchestrator and personas,"As a user, I want specialist agents (Notetaker, Researcher, Writer, Scheduler), so the right helper handles each task.","• One orchestrator model with persona prompts and tool sets
+• Persona chosen by @mention or by intent
+• Each step and handoff is recorded",8,Must,S8,"agents, ai",To do
+VAI-703,E7 Agent platform,Tool framework,"As a developer, I want a standard way to define tools with schemas, marked read-only or action, so agents can be extended safely.","• Tools declare input schema, output schema and type (read or action)
+• Inputs validated before running
+• Errors returned to the agent in a structured way",5,Must,S8,"agents, platform",To do
+VAI-704,E7 Agent platform,Approval queue,"As a user, I want every action an agent proposes to wait for my OK, so nothing is sent or booked without me.","• Action tools create a pending approval instead of acting
+• Approve, edit or reject; expired requests are cancelled
+• Rejecting never runs the action",5,Must,S8,"agents, security",To do
+VAI-705,E7 Agent platform,Action log,"As a user and as IT, I want a log of everything agents read and did, so behaviour can be reviewed.","• Append-only log with time, agent, tool, inputs summary and result
+• Visible to the user; exportable
+• Content minimised (no full email bodies)",3,Must,S8,"agents, security",To do
+VAI-706,E7 Agent platform,Researcher search tool,"As a user, I want the Researcher to search my meetings, notes and dictations, so it can answer from our own information.","• Local search index over meetings, notes and dictations
+• Results include source links
+• Only the user's own data is searchable",5,Must,S9,"agents, ai",To do
+VAI-707,E7 Agent platform,Writer drafting tool,"As a user, I want the Writer to draft emails and documents in my style, so follow-ups take seconds.","• Drafts use meeting context and my writing style
+• Email drafts go to Outlook drafts (VAI-606)
+• Shown for review before anything leaves the app",3,Must,S9,"agents, ai",To do
+VAI-708,E7 Agent platform,Scheduler tool,"As a user, I want the Scheduler to find times and prepare invites, so meetings get booked quickly.","• Uses free/busy (VAI-607)
+• Proposals go to the approval queue
+• Respects working hours",5,Should,S9,agents,To do
+VAI-709,E7 Agent platform,Thread context,"As a user, I want agents to remember the context of a thread and linked meetings, so I don't repeat myself.","• Context limited to the thread and items linked to it
+• No hidden memory across threads
+• User can see what context is used",3,Should,S9,"agents, ai",To do
+VAI-710,E7 Agent platform,Prompt-injection defences,"As IT, I want agents to treat documents, emails and transcripts as data, so hidden instructions can't trigger actions.","• Actions only from the user's request, never from tool output
+• Test suite with injected instructions passes
+• Suspicious content flagged to the user",5,Must,S10,"agents, security",To do
+VAI-711,E7 Agent platform,Limits and load control,"As IT, I want limits on agent steps, time and concurrency, so our GPU servers stay responsive.","• Max steps and timeout per task
+• Queue when servers are busy, with a visible status
+• Dictation always takes priority over agent work",3,Should,S10,"agents, platform",To do
+VAI-801,E8 Agent experience,Agent chat threads,"As a user, I want separate chat threads for different pieces of work, so conversations stay organised.","• Create, rename, archive and search threads
+• Unread count per thread
+• Threads can be linked to meetings",3,Must,S9,"agents, ui",To do
+VAI-802,E8 Agent experience,Chat thread view,"As a user, I want to see agents' messages with their colours and watch them talk to each other, so I understand what's happening.","• Messages stream in as they're written
+• Each agent has its own colour and avatar
+• Agent-to-agent exchanges shown in a distinct style",5,Must,S9,"agents, ui",To do
+VAI-803,E8 Agent experience,Composer with @mentions,"As a user, I want to @mention agents and attach meetings in the composer, so I can direct work precisely.","• @ opens an agent picker
+• Meetings and notes can be attached
+• Hold Ctrl in the composer to speak",3,Must,S9,"agents, ui",To do
+VAI-804,E8 Agent experience,Approval cards,"As a user, I want approvals shown as clear cards in chat and on Home, so I can OK things in one click.","• Card shows exactly what will happen (recipients, time, content)
+• Approve, edit and reject buttons
+• Same request shown in chat and in 'Waiting for your OK'",3,Must,S9,"agents, ui",To do
+VAI-805,E8 Agent experience,Voice routing to agents,"As a user, I want to hold Ctrl and say 'Researcher, find…' to create a task, so I can delegate by voice from anywhere.","• Agent name at the start routes to Agent chats instead of pasting
+• Confirmation toast with an undo option
+• Misrecognised names fall back to normal dictation",5,Must,S10,"agents, dictation",To do
+VAI-806,E8 Agent experience,Hand action items to agents,"As a user, I want a 'Hand to an agent' button on meeting action items, so follow-up starts from the meeting.","• Opens a thread with the item and meeting context
+• Item status updates as the agent works
+• Works for Writer, Researcher and Scheduler",3,Must,S10,"agents, meetings",To do
+VAI-807,E8 Agent experience,Agent activity feed,"As a user, I want a feed of what agents are doing on Home, so I stay informed without opening every thread.","• Latest activities with agent, summary and time
+• Links to the related thread
+• Progress shown for running tasks",2,Should,S10,"agents, ui",To do
+VAI-808,E8 Agent experience,Notifications,"As a user, I want a Windows notification when an agent needs my OK or finishes, so I don't have to keep checking.","• Notifications for approvals needed and tasks done
+• Respects Windows focus settings
+• Can be turned off per type",2,Should,S10,agents,To do
+VAI-809,E8 Agent experience,Agent roster and permissions,"As a user, I want to see what each agent can access and switch tools off, so I stay in control.","• Panel listing each agent's role and tools
+• Toggle tools per agent
+• Note that nothing is sent or booked without approval",3,Should,S10,"agents, security",To do
