@@ -11,6 +11,16 @@ const api: AiWorkflowApi = {
   app: {
     getInfo: () => invoke('app:get-info'),
   },
+  settings: {
+    get: () => invoke('settings:get'),
+    update: (patch) => invoke('settings:update', patch),
+  },
+  // Secret values go in but never come back out.
+  secrets: {
+    set: (name, value) => invoke('secrets:set', { name, value }),
+    has: (name) => invoke('secrets:has', name),
+    clear: (name) => invoke('secrets:clear', name),
+  },
 };
 
 contextBridge.exposeInMainWorld('aiWorkflow', api);

@@ -10,7 +10,7 @@ const info: AppInfo = {
   chrome: '142.0.0',
 };
 
-function setup(bridge: AiWorkflowApi | null): ElectronApi {
+function setup(bridge: Pick<AiWorkflowApi, 'app'> | null): ElectronApi {
   TestBed.configureTestingModule({
     providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
   });

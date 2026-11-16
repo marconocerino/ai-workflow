@@ -1,8 +1,9 @@
-import { BrowserWindow, app, ipcMain, net, protocol, session, shell } from 'electron';
+import { BrowserWindow, app, ipcMain, net, protocol, safeStorage, session, shell } from 'electron';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { getAppInfo } from './ipc/app-info';
 import { createIpcRegistrar } from './ipc/handle';
+import { registerSettingsIpc } from './ipc/settings';
 import {
   APP_ORIGIN,
   APP_SCHEME,
@@ -11,7 +12,18 @@ import {
   originOf,
   resolveRendererPath,
 } from './security';
+import { type Encryptor, SecretStore } from './settings/secret-store';
+import { SettingsStore } from './settings/settings-store';
 import { APP_TITLE, createMainWindowOptions } from './window';
+
+// Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
+// so e2e tests never touch the real profile or pop up a Keychain prompt.
+if (!app.isPackaged && process.env['AIW_USER_DATA_DIR']) {
+  app.setPath('userData', process.env['AIW_USER_DATA_DIR']);
+}
+if (!app.isPackaged && process.env['AIW_MOCK_KEYCHAIN'] === '1') {
+  app.commandLine.appendSwitch('use-mock-keychain');
+}
 
 /** Dev only: URL of `ng serve`. Ignored in packaged builds. */
 const devServerUrl = !app.isPackaged ? process.env['AIW_DEV_SERVER_URL'] : undefined;
@@ -54,7 +66,11 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(() => {
     configureSession();
     registerAppProtocol();
-    registerIpc();
+    const settingsDir = app.getPath('userData');
+    const settings = new SettingsStore(settingsDir);
+    settings.load();
+    const secrets = new SecretStore(settingsDir, osEncryptor());
+    registerIpc(settings, secrets);
     createMainWindow();
 
     app.on('activate', () => {
@@ -91,7 +107,21 @@ function registerAppProtocol(): void {
   });
 }
 
-function registerIpc(): void {
+/**
+ * safeStorage (DPAPI on Windows, Keychain on macOS). On Linux without a keyring Electron falls
+ * back to a hard-coded key ('basic_text'), which is not real protection — treat it as unavailable.
+ */
+function osEncryptor(): Encryptor {
+  return {
+    isEncryptionAvailable: () =>
+      safeStorage.isEncryptionAvailable() &&
+      !(process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text'),
+    encryptString: (text) => safeStorage.encryptString(text),
+    decryptString: (data) => safeStorage.decryptString(data),
+  };
+}
+
+function registerIpc(settings: SettingsStore, secrets: SecretStore): void {
   const handle = createIpcRegistrar(ipcMain, (event) =>
     isTrustedUrl(event.senderFrame?.url, trustedOrigins),
   );
@@ -104,6 +134,7 @@ function registerIpc(): void {
       versions: process.versions,
     }),
   );
+  registerSettingsIpc(handle, settings, secrets);
 }
 
 function createMainWindow(): void {

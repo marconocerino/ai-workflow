@@ -5,6 +5,7 @@
  * `import type` from here. Main and renderer import the same types, so a wrong channel name
  * or payload is a compile error on both sides.
  */
+import type { SecretName, Settings, SettingsPatch } from './settings';
 
 /** Basic facts about the running app. Contains nothing sensitive. */
 export interface AppInfo {
@@ -19,6 +20,13 @@ export interface AppInfo {
 /** channel → request payload and response type. */
 export interface IpcContract {
   'app:get-info': { request: void; response: AppInfo };
+  'settings:get': { request: void; response: Settings };
+  /** Validates and saves; rejects with a message naming the bad field. Returns the saved settings. */
+  'settings:update': { request: SettingsPatch; response: Settings };
+  'secrets:set': { request: { name: SecretName; value: string }; response: void };
+  /** True if a value is stored. The value itself never leaves the main process. */
+  'secrets:has': { request: SecretName; response: boolean };
+  'secrets:clear': { request: SecretName; response: void };
 }
 
 export type IpcChannel = keyof IpcContract;
@@ -32,5 +40,14 @@ export type IpcArgs<C extends IpcChannel> = IpcRequest<C> extends void ? [] : [I
 export interface AiWorkflowApi {
   app: {
     getInfo(): Promise<AppInfo>;
+  };
+  settings: {
+    get(): Promise<Settings>;
+    update(patch: SettingsPatch): Promise<Settings>;
+  };
+  secrets: {
+    set(name: SecretName, value: string): Promise<void>;
+    has(name: SecretName): Promise<boolean>;
+    clear(name: SecretName): Promise<void>;
   };
 }

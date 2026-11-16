@@ -11,7 +11,7 @@ const info: AppInfo = {
   chrome: '142.0.0',
 };
 
-async function render(bridge: AiWorkflowApi | null) {
+async function render(bridge: Pick<AiWorkflowApi, 'app'> | null) {
   TestBed.configureTestingModule({
     imports: [Home],
     providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],

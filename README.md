@@ -78,6 +78,19 @@ scripts/dev.mjs    `npm start` runner
 - The preload exposes narrow functions only, never `ipcRenderer` itself.
 - Never log transcripts, audio or keys.
 
+## Settings and secrets
+
+- Settings: `<userData>/settings.json`, versioned (`{ "version": 1, "data": { … } }`) and migrated
+  on load (`electron/settings/migrations.ts`). Corrupt files are moved aside and defaults are used.
+- Secrets (API keys): `<userData>/secrets.json`, each value encrypted with Electron `safeStorage`
+  (DPAPI on Windows, Keychain on macOS). The renderer can set, check and clear them, never read them.
+- `<userData>` is `%APPDATA%\AI Workflow` on Windows and `~/Library/Application Support/AI Workflow`
+  on macOS.
+- To change the settings shape: bump `SETTINGS_VERSION` in `electron/settings/schema.ts`, add a
+  migration step, add a test. Never edit a migration that has shipped.
+- Dev/test only: `AIW_USER_DATA_DIR=<dir>` uses a separate profile folder and
+  `AIW_MOCK_KEYCHAIN=1` avoids macOS Keychain prompts. Both are ignored in packaged builds.
+
 ## Adding an IPC call
 
 1. Add the channel to `IpcContract` in `shared/ipc-contract.ts` and a method to `AiWorkflowApi`.
