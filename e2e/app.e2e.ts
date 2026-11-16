@@ -1,30 +1,22 @@
-import {
-  type ElectronApplication,
-  type Page,
-  _electron as electron,
-  expect,
-  test,
-} from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { type ElectronApplication, type Page, expect, test } from '@playwright/test';
+import { readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { ROOT, launchApp, tempProfile } from './launch';
 
-const root = join(__dirname, '..');
-const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { version: string };
+const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { version: string };
 
 let app: ElectronApplication;
 let page: Page;
+let profile: string;
 
 test.beforeAll(async () => {
-  const env = { ...process.env };
-  delete env['AIW_DEV_SERVER_URL']; // always test the production build
-  delete env['ELECTRON_RUN_AS_NODE'];
-  app = await electron.launch({ args: [root], cwd: root, env });
-  page = await app.firstWindow();
-  await page.waitForLoadState('domcontentloaded');
+  profile = tempProfile();
+  ({ app, page } = await launchApp(profile));
 });
 
 test.afterAll(async () => {
   await app?.close();
+  rmSync(profile, { recursive: true, force: true });
 });
 
 test('launches the main window with the product name', async () => {
@@ -46,7 +38,7 @@ test('renderer has no Node access', async () => {
     process: 'undefined',
     module: 'undefined',
     Buffer: 'undefined',
-    bridgeKeys: ['app'],
+    bridgeKeys: ['app', 'settings', 'secrets'],
   });
 });
 

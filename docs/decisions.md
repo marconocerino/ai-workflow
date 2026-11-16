@@ -38,3 +38,14 @@ Alternatives: Electron Forge (weaker Angular support, Squirrel installer); Vite/
 Decision: every channel is declared once in `shared/ipc-contract.ts` (request/response types). Main registers handlers through `createIpcRegistrar`, which rejects calls whose sender frame is not our renderer origin. Preload exposes narrow functions on `window.aiWorkflow`, never `ipcRenderer`. Angular reaches it only through the `ElectronApi` service.
 Why: compile-time safety on both sides, one place to review the attack surface, and easy mocking in tests.
 Alternatives: exposing a generic `invoke(channel, …)` to the renderer (wider attack surface).
+
+**D-009 — AI endpoints are user-editable in Settings** · 2026-11 · Accepted (partly supersedes D-002)
+Decision: the speech-to-text and LLM base URLs, model names and API keys are set by the user in Settings (story VAI-113), not only through managed config. VAI-104 (managed endpoint config) is closed. Requests are made from the main process only, to the configured hosts. An optional host allowlist that IT can lock down may be added later; when empty, any http(s) URL is allowed.
+Why: product owner wants users to connect the app to the company AI servers themselves.
+Risk: a user could point the app at an outside AI service, which breaks the "all AI on company servers" rule. Mitigations: URLs validated (http/https, no credentials or query); the allowlist hook above; pilot users are told to use company endpoints only.
+Alternatives: managed config only (VAI-104 as written) — rejected by product owner for now.
+
+**D-010 — Settings and secrets storage** · 2026-11 · Accepted
+Decision: settings live in `<userData>/settings.json` as `{ version, data }`, upgraded step by step by `electron/settings/migrations.ts`, validated field by field with hand-written checks (no schema library). Writes are atomic (temp file + rename). Corrupt files are moved aside (`settings.corrupt-<time>.json`) and defaults are used; a file from a newer app version is left untouched and updates are refused. Secrets (API keys, later tokens) live in a separate `<userData>/secrets.json`, each value encrypted with Electron `safeStorage` (DPAPI on Windows, Keychain on macOS), file mode 0600. If OS encryption isn't available (incl. Linux `basic_text`), secrets are not stored — never a plain-text fallback. The renderer can set, check and clear a secret but there is no channel that returns its value; only the main process decrypts. Logs name fields and files, never values.
+Why: meets VAI-105; keeps keys out of the renderer, which is the part exposed to web content.
+Alternatives: electron-store (extra dependency, no field-level recovery); zod for validation (extra dependency, not needed for a small schema); keytar (deprecated, native module).

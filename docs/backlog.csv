@@ -12,10 +12,10 @@ VAI-103,E1 Foundation,AI working brief,"As a developer working with AI tools, I 
 VAI-104,E1 Foundation,Company AI endpoint configuration,"As IT, I want the app pre-configured for our internal AI servers (ASR and LLM), so users never paste API keys or send data outside the company.","• Base URLs and model names come from a managed config file
 • A health check shows each endpoint's status in Settings
 • Timeouts and retries are configurable
-• No request goes to a non-approved host",3,Must,S0,"platform, security",To do
+• No request goes to a non-approved host",3,Must,S0,"platform, security",Done
 VAI-105,E1 Foundation,Encrypted settings store,"As a user, I want my settings saved reliably and secrets encrypted on my machine, so nothing sensitive sits in plain text.","• Settings saved as versioned JSON with migrations
 • Secrets and tokens encrypted with Electron safeStorage (DPAPI on Windows)
-• Corrupt settings fall back to defaults without crashing",3,Must,S0,"platform, security",To do
+• Corrupt settings fall back to defaults without crashing",3,Must,S0,"platform, security",Done
 VAI-106,E1 Foundation,Local database and migrations,"As a developer, I want a local SQLite database with versioned migrations, so dictations, meetings and agent data can evolve safely.","• Database opens on first run and applies migrations in order
 • Each migration has a test
 • Database file is encrypted at rest or stored in an encrypted location
@@ -38,6 +38,10 @@ VAI-111,E1 Foundation,Crash recovery and error panel,"As a user, I want the app 
 VAI-112,E1 Foundation,Privacy-safe usage metrics,"As the product owner, I want opt-in counts of usage (dictations, meetings, approvals), so we can measure the pilot without collecting content.","• Opt-in, off by default
 • Only counts and durations, never text or audio
 • Sent only to company servers",3,Should,S6,"platform, pilot",To do
+VAI-113,E1 Foundation,AI server settings,"As a user, I want to set the AI server URLs, API key and model names in Settings, so I can connect the app to our company AI servers myself.","• Settings page has fields for speech-to-text and LLM base URL, model name and API key
+• Values are validated and saved through the settings store (VAI-105); the API key is encrypted and never shown again, only 'saved' or 'not set'
+• A Test connection button checks each server and shows the result
+• Requests only go to the configured hosts (see D-009)",3,Must,S0,"settings, ai",To do
 VAI-201,E2 Design system & shell,Design tokens,"As a developer, I want the green retro palette, fonts (Fraunces, Archivo), spacing, radii and offset shadows as theme tokens, so every screen looks consistent.","• Tokens defined once as an Angular Material theme plus CSS variables
 • Text colours meet 4.5:1 contrast
 • Changing a token updates every screen",3,Must,S0,ui,To do
