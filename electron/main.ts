@@ -1,6 +1,8 @@
 import { BrowserWindow, app, ipcMain, net, protocol, safeStorage, session, shell } from 'electron';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { AiHttpClient } from './ai/ai-http';
+import { registerAiIpc } from './ipc/ai';
 import { getAppInfo } from './ipc/app-info';
 import { createIpcRegistrar } from './ipc/handle';
 import { registerSettingsIpc } from './ipc/settings';
@@ -135,6 +137,14 @@ function registerIpc(settings: SettingsStore, secrets: SecretStore): void {
     }),
   );
   registerSettingsIpc(handle, settings, secrets);
+
+  // Electron's net.fetch uses Chromium's network stack: system proxy and company certificates work.
+  const aiClient = new AiHttpClient(
+    () => settings.get(),
+    secrets,
+    (url, init) => net.fetch(url, init),
+  );
+  registerAiIpc(handle, aiClient, settings, secrets);
 }
 
 function createMainWindow(): void {

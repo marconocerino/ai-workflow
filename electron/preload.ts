@@ -21,6 +21,9 @@ const api: AiWorkflowApi = {
     has: (name) => invoke('secrets:has', name),
     clear: (name) => invoke('secrets:clear', name),
   },
+  ai: {
+    testConnection: (service) => invoke('ai:test-connection', service),
+  },
 };
 
 contextBridge.exposeInMainWorld('aiWorkflow', api);

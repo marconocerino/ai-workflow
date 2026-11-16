@@ -30,6 +30,16 @@
     )
   );
 
-  // Page background sampled from design/ (approximate until VAI-201).
+  // Colours sampled from design/ — approximate placeholders until VAI-201 (Design tokens).
   --aiw-page-bg: #eef0e2;
+  --aiw-sidebar-bg: #e2e8d2;
+  --aiw-active: #c5db9c;
+  --aiw-surface: #fbfcf4;
+  --aiw-ink: #1f2e25;
+  --aiw-shadow: #1f4d3a;
+  --aiw-primary: #2f6b45;
+  --aiw-on-primary: #ffffff;
+  --aiw-divider: #d6dccb;
+  --aiw-dot: #d3d8c4;
+  --aiw-success: #2f6b45;
 }

@@ -5,6 +5,7 @@
  * `import type` from here. Main and renderer import the same types, so a wrong channel name
  * or payload is a compile error on both sides.
  */
+import type { AiService, ConnectionResult } from './ai';
 import type { SecretName, Settings, SettingsPatch } from './settings';
 
 /** Basic facts about the running app. Contains nothing sensitive. */
@@ -27,6 +28,8 @@ export interface IpcContract {
   /** True if a value is stored. The value itself never leaves the main process. */
   'secrets:has': { request: SecretName; response: boolean };
   'secrets:clear': { request: SecretName; response: void };
+  /** Calls GET {baseUrl}/models on the saved server with the saved key. */
+  'ai:test-connection': { request: AiService; response: ConnectionResult };
 }
 
 export type IpcChannel = keyof IpcContract;
@@ -49,5 +52,8 @@ export interface AiWorkflowApi {
     set(name: SecretName, value: string): Promise<void>;
     has(name: SecretName): Promise<boolean>;
     clear(name: SecretName): Promise<void>;
+  };
+  ai: {
+    testConnection(service: AiService): Promise<ConnectionResult>;
   };
 }

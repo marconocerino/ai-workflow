@@ -1,0 +1,51 @@
+@use '../settings-card' as card;
+
+.page {
+  max-width: 760px;
+  padding: 48px 48px 64px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 32px;
+
+  h1 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-headline-medium);
+    font-weight: 700;
+  }
+}
+
+.lead {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.save-pill {
+  @include card.pill;
+  white-space: nowrap;
+  padding: 6px 14px;
+  background: var(--aiw-surface);
+}
+
+.card {
+  @include card.card;
+
+  h2 {
+    @include card.title;
+    margin-bottom: 16px;
+  }
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

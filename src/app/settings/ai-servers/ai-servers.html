@@ -1,0 +1,88 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>AI servers</h1>
+      <p class="lead">Where speech-to-text and the AI assistant run. Use your company's servers.</p>
+    </div>
+    <span class="save-pill" role="status" data-testid="save-status">
+      @switch (saveState()) {
+        @case ('saving') {
+          Saving…
+        }
+        @case ('error') {
+          <span class="error">Couldn't save — see below</span>
+        }
+        @default {
+          <span aria-hidden="true">✓</span> Changes save automatically
+        }
+      }
+    </span>
+  </header>
+
+  @if (loaded(); as data) {
+    <app-endpoint-card
+      service="asr"
+      heading="Speech-to-text"
+      description="Turns your voice into text for dictation and meetings (Qwen3-ASR)."
+      urlPlaceholder="https://asr.company.internal/v1"
+      modelPlaceholder="qwen3-asr"
+      [initial]="data.settings.ai.asr"
+      [initialHasKey]="data.hasAsrKey"
+      (saveState)="onSaveState($event)"
+    />
+    <app-endpoint-card
+      service="llm"
+      heading="Language model"
+      description="Cleans up dictation, writes summaries and powers the agents."
+      urlPlaceholder="https://llm.company.internal/v1"
+      modelPlaceholder="qwen3-32b"
+      [initial]="data.settings.ai.llm"
+      [initialHasKey]="data.hasLlmKey"
+      (saveState)="onSaveState($event)"
+    />
+
+    <section class="card" aria-labelledby="advanced-heading">
+      <h2 id="advanced-heading">Advanced</h2>
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Timeout (seconds)</mat-label>
+          <input
+            matInput
+            type="number"
+            min="1"
+            max="600"
+            [formControl]="timeoutSeconds"
+            data-testid="timeout-seconds"
+            (blur)="saveTimeout()"
+            (keydown.enter)="saveTimeout()"
+          />
+          <mat-hint>How long to wait for a server answer</mat-hint>
+          @if (timeoutSeconds.invalid) {
+            <mat-error>{{ errorText(timeoutSeconds) }}</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Retries</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            max="10"
+            [formControl]="retries"
+            data-testid="retries"
+            (blur)="saveRetries()"
+            (keydown.enter)="saveRetries()"
+          />
+          <mat-hint>Extra attempts after a failed request</mat-hint>
+          @if (retries.invalid) {
+            <mat-error>{{ errorText(retries) }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </section>
+  } @else if (loadError(); as message) {
+    <p class="error" role="alert">Couldn't load settings: {{ message }}</p>
+  } @else {
+    <p>Loading…</p>
+  }
+</div>
