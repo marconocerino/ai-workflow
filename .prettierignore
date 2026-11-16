@@ -1,0 +1,12 @@
+dist/
+release/
+.angular/
+coverage/
+test-results/
+playwright-report/
+node_modules/
+package-lock.json
+docs/backlog.csv
+design/
+CLAUDE.md
+.claude/

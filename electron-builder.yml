@@ -1,0 +1,20 @@
+# Packaging config. VAI-101: unpacked/zip builds only.
+# Installer (NSIS), code signing, Electron fuses and auto-update come in VAI-108 / VAI-110.
+appId: com.aiworkflow.desktop # placeholder until IT gives the company reverse-DNS id
+productName: AI Workflow
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/app/**/*
+  - '!dist/app/**/*.map'
+  - dist/renderer/**/*
+  - package.json
+asar: true
+win:
+  target:
+    - target: zip
+      arch: [x64]
+mac:
+  target: dir
+  category: public.app-category.productivity

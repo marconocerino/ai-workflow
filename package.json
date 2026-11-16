@@ -1,0 +1,63 @@
+{
+  "name": "ai-workflow",
+  "productName": "AI Workflow",
+  "version": "0.1.0",
+  "description": "Desktop app for dictation, meeting notes and AI agents.",
+  "private": true,
+  "main": "dist/app/electron/main.js",
+  "engines": {
+    "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
+  },
+  "packageManager": "npm@11.21.2",
+  "scripts": {
+    "start": "node scripts/dev.mjs",
+    "build:renderer": "ng build",
+    "build:electron": "tsc -p electron/tsconfig.json",
+    "build": "npm run build:renderer && npm run build:electron",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "npm run test:renderer && npm run test:electron",
+    "test:renderer": "ng test --watch=false",
+    "test:electron": "tsc -p electron/tsconfig.spec.json && vitest run --config vitest.electron.config.ts",
+    "e2e": "npm run build && playwright test",
+    "dist:mac": "npm run build && electron-builder --mac --dir",
+    "dist:win": "npm run build && electron-builder --win --x64",
+    "ng": "ng"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.30",
+    "@angular/cdk": "^21.2.14",
+    "@angular/cli": "^21.2.30",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/compiler-cli": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/material": "^21.2.14",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.20.5",
+    "angular-eslint": "^21.4.0",
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
+    "eslint": "^9.39.5",
+    "globals": "^17.14.0",
+    "jsdom": "^28.0.0",
+    "prettier": "^3.8.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^4.0.8"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "@parcel/watcher": false,
+    "electron-winstaller": false,
+    "fsevents": false,
+    "lmdb": false,
+    "msgpackr-extract": false
+  }
+}

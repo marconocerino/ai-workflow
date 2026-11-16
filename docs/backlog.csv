@@ -2,7 +2,7 @@
 VAI-101,E1 Foundation,Project scaffold,"As a developer, I want an Electron + Angular + Angular Material workspace with a secure main/preload/renderer split, so every later story builds on a safe, consistent base.","• App launches on Windows (and macOS for dev)
 • Renderer has no Node access (contextIsolation on, nodeIntegration off)
 • One typed IPC example works end to end
-• README explains how to run, test and build",3,Must,S0,"chore, platform",To do
+• README explains how to run, test and build",3,Must,S0,"chore, platform",Done
 VAI-102,E1 Foundation,CI pipeline,"As a developer, I want every pull request linted, tested and built automatically, so broken code never reaches main.","• Lint, unit tests and a Windows build run on every PR
 • A failing check blocks merging
 • Build artifacts are downloadable from the run",3,Must,S0,"chore, platform",To do

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node10",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "rootDir": "..",
+    "outDir": "../dist/app",
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*.ts", "../shared/**/*.ts"],
+  "exclude": ["**/*.spec.ts"]
+}

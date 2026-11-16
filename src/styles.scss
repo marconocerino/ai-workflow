@@ -1,0 +1,17 @@
+@use 'theme/theme';
+
+html {
+  @include theme.apply();
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--aiw-page-bg);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+}

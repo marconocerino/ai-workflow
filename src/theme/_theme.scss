@@ -1,0 +1,35 @@
+// Placeholder theme for VAI-101: proves Angular Material is wired in.
+// The real design tokens (green retro palette, Fraunces/Archivo, offset shadows,
+// contrast checks) replace this in VAI-201.
+@use '@angular/material' as mat;
+
+@mixin apply() {
+  color-scheme: light;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$green-palette,
+        theme-type: light,
+      ),
+      typography: (
+        plain-family: (
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif,
+        ),
+        brand-family: (
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif,
+        ),
+      ),
+      density: 0,
+    )
+  );
+
+  // Page background sampled from design/ (approximate until VAI-201).
+  --aiw-page-bg: #eef0e2;
+}

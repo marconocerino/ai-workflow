@@ -1,0 +1,39 @@
+<main class="home">
+  <h1>AI Workflow</h1>
+  <p class="lead">Dictation, meeting notes and AI agents — running on your company's AI servers.</p>
+
+  <mat-card appearance="outlined" class="info-card">
+    <mat-card-header>
+      <mat-card-title>Desktop connection</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (info(); as i) {
+        <dl data-testid="app-info">
+          <dt>Version</dt>
+          <dd data-testid="app-version">{{ i.version }}</dd>
+          <dt>Platform</dt>
+          <dd data-testid="app-platform">{{ i.platform }}</dd>
+          <dt>Electron</dt>
+          <dd>{{ i.electron }}</dd>
+          <dt>Chromium</dt>
+          <dd>{{ i.chrome }}</dd>
+        </dl>
+      } @else if (error(); as message) {
+        <p class="error" role="alert" data-testid="app-info-error">{{ message }}</p>
+      } @else {
+        <p>Connecting…</p>
+      }
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        mat-flat-button
+        type="button"
+        data-testid="refresh"
+        [disabled]="loading()"
+        (click)="refresh()"
+      >
+        Check again
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</main>

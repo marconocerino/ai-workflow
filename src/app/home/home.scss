@@ -1,0 +1,35 @@
+.home {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font: var(--mat-sys-headline-large);
+}
+
+.lead {
+  margin: 0 0 32px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 24px;
+  margin: 0;
+}
+
+dt {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+dd {
+  margin: 0;
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
