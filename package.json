@@ -22,7 +22,8 @@
     "e2e": "npm run build && playwright test",
     "dist:mac": "npm run build && electron-builder --mac --dir",
     "dist:win": "npm run build && electron-builder --win --x64",
-    "ng": "ng"
+    "ng": "ng",
+    "plan": "node scripts/plan.mjs"
   },
   "devDependencies": {
     "@angular/build": "^21.2.30",

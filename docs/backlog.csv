@@ -8,7 +8,7 @@ VAI-102,E1 Foundation,CI pipeline,"As a developer, I want every pull request lin
 • Build artifacts are downloadable from the run",3,Must,S0,"chore, platform",To do
 VAI-103,E1 Foundation,AI working brief,"As a developer working with AI tools, I want CLAUDE.md, PLAN.md and a design/ folder of screenshots in the repo, so each AI session starts with the same context and rules.","• CLAUDE.md lists stack, folders, run/test commands and rules (never break dictation)
 • PLAN.md lists epics and stories with checkboxes
-• design/ holds a screenshot of each screen",1,Must,S0,docs,To do
+• design/ holds a screenshot of each screen",1,Must,S0,docs,Done
 VAI-104,E1 Foundation,Company AI endpoint configuration,"As IT, I want the app pre-configured for our internal AI servers (ASR and LLM), so users never paste API keys or send data outside the company.","• Base URLs and model names come from a managed config file
 • A health check shows each endpoint's status in Settings
 • Timeouts and retries are configurable
