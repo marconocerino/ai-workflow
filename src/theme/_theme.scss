@@ -10,6 +10,16 @@
   // Tokens as CSS variables.
   @include tokens.css-variables();
 
+  // Visible keyboard focus ring on every Material control (checkbox, radio, toggle, select, buttons).
+  @include mat.strong-focus-indicators(
+    (
+      border-style: solid,
+      border-width: 2px,
+      border-radius: var(--aiw-radius-sm),
+    )
+  );
+  --mat-focus-indicator-border-color: var(--aiw-color-primary);
+
   // Base Material theme: structure, typography and density. Colours are overridden below.
   @include mat.theme(
     (
@@ -83,6 +93,76 @@
       outlined-focus-outline-color: var(--aiw-color-primary),
       outlined-container-shape: var(--aiw-radius-md),
       outlined-input-text-placeholder-color: var(--aiw-color-ink-subtle),
+    )
+  );
+
+  // Toggle: sage track with a light knob when off, green when on (Settings design).
+  @include mat.slide-toggle-overrides(
+    (
+      track-height: 26px,
+      track-width: 46px,
+      track-shape: var(--aiw-radius-pill),
+      track-outline-width: 0,
+      selected-track-outline-width: 0,
+      unselected-track-color: var(--aiw-color-track),
+      unselected-hover-track-color: var(--aiw-color-track),
+      unselected-focus-track-color: var(--aiw-color-track),
+      unselected-pressed-track-color: var(--aiw-color-track),
+      selected-track-color: var(--aiw-color-primary),
+      selected-hover-track-color: var(--aiw-color-primary-deep),
+      selected-focus-track-color: var(--aiw-color-primary),
+      selected-pressed-track-color: var(--aiw-color-primary-deep),
+      unselected-handle-color: var(--aiw-color-surface),
+      unselected-hover-handle-color: var(--aiw-color-surface),
+      unselected-focus-handle-color: var(--aiw-color-surface),
+      unselected-pressed-handle-color: var(--aiw-color-surface),
+      selected-handle-color: var(--aiw-color-surface),
+      selected-hover-handle-color: var(--aiw-color-surface),
+      selected-focus-handle-color: var(--aiw-color-surface),
+      selected-pressed-handle-color: var(--aiw-color-surface),
+      unselected-handle-size: 20px,
+      selected-handle-size: 20px,
+      pressed-handle-size: 22px,
+      unselected-handle-horizontal-margin: 0 3px,
+      selected-handle-horizontal-margin: 0 23px,
+      label-text-color: var(--aiw-color-ink),
+    )
+  );
+
+  @include mat.checkbox-overrides(
+    (
+      selected-icon-color: var(--aiw-color-primary),
+      selected-hover-icon-color: var(--aiw-color-primary-deep),
+      selected-focus-icon-color: var(--aiw-color-primary),
+      selected-pressed-icon-color: var(--aiw-color-primary-deep),
+      selected-checkmark-color: var(--aiw-color-on-primary),
+      unselected-icon-color: var(--aiw-color-ink-muted),
+      unselected-hover-icon-color: var(--aiw-color-ink),
+      unselected-focus-icon-color: var(--aiw-color-ink),
+      label-text-color: var(--aiw-color-ink),
+    )
+  );
+
+  @include mat.radio-overrides(
+    (
+      selected-icon-color: var(--aiw-color-primary),
+      selected-hover-icon-color: var(--aiw-color-primary-deep),
+      selected-focus-icon-color: var(--aiw-color-primary),
+      selected-pressed-icon-color: var(--aiw-color-primary-deep),
+      unselected-icon-color: var(--aiw-color-line),
+      unselected-hover-icon-color: var(--aiw-color-ink),
+      unselected-focus-icon-color: var(--aiw-color-ink),
+      label-text-color: var(--aiw-color-ink),
+    )
+  );
+
+  // Select: light panel (the design's black dropdowns are not copied).
+  @include mat.select-overrides(
+    (
+      panel-background-color: var(--aiw-color-surface),
+      enabled-trigger-text-color: var(--aiw-color-ink),
+      enabled-arrow-color: var(--aiw-color-ink-muted),
+      placeholder-text-color: var(--aiw-color-ink-subtle),
     )
   );
 }

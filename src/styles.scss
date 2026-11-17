@@ -132,3 +132,146 @@ kbd,
 .aiw-muted {
   color: var(--aiw-color-ink-muted);
 }
+
+/// Text only for screen readers.
+.aiw-sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ── Material additions (VAI-202) ─────────────────────────────────────────
+
+/// Danger button: <button mat-flat-button class="aiw-danger">Delete</button>
+.mat-mdc-unelevated-button.aiw-danger {
+  --mat-button-filled-container-color: var(--aiw-color-danger);
+  --mat-button-filled-label-text-color: var(--aiw-color-on-danger);
+}
+.mat-mdc-outlined-button.aiw-danger,
+.mat-mdc-button.aiw-danger {
+  --mat-button-outlined-label-text-color: var(--aiw-color-danger);
+  --mat-button-outlined-outline-color: var(--aiw-color-danger);
+  --mat-button-text-label-text-color: var(--aiw-color-danger);
+}
+
+/// Buttons with an icon: <button mat-stroked-button><aiw-icon name="plus" /> Add</button>
+.mat-mdc-button-base aiw-icon {
+  margin-right: 6px;
+}
+.mat-mdc-icon-button aiw-icon {
+  margin: 0;
+}
+
+/// Disabled buttons lose the offset shadow.
+.mat-mdc-button-base:disabled {
+  box-shadow: none !important;
+}
+
+/// Hover tint on the whole checkbox / toggle row, not only the tiny box.
+.mat-mdc-checkbox:not(.mat-mdc-checkbox-disabled),
+.mat-mdc-slide-toggle:not(.mat-mdc-slide-toggle-disabled) {
+  border-radius: var(--aiw-radius-md);
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--aiw-color-surface-tint);
+  }
+}
+
+/// Toggle without the check/minus icons (cleaner, like the design).
+.mat-mdc-slide-toggle .mdc-switch__icons {
+  display: none;
+}
+
+/// Option card: a radio button drawn as a card ("Hold Ctrl" / "Toggle" in Settings).
+///   <mat-radio-group class="aiw-option-cards">
+///     <mat-radio-button class="aiw-option-card" value="hold">
+///       <span class="aiw-option-title">Hold Ctrl</span>
+///       <span class="aiw-option-desc">Hold to talk, release to stop.</span>
+///     </mat-radio-button>
+///   </mat-radio-group>
+.aiw-option-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--aiw-space-4);
+}
+
+.mat-mdc-radio-button.aiw-option-card {
+  display: block;
+  border: var(--aiw-border-control);
+  border-radius: var(--aiw-radius-md);
+  background: var(--aiw-color-surface);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  .mdc-form-field {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    padding: var(--aiw-space-3) var(--aiw-space-4) var(--aiw-space-3) var(--aiw-space-2);
+    box-sizing: border-box;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    padding-top: 10px;
+    cursor: pointer;
+  }
+
+  &:hover {
+    background: var(--aiw-color-surface-tint);
+  }
+
+  &.mat-mdc-radio-checked {
+    background: var(--aiw-color-surface-tint);
+    border-color: var(--aiw-color-primary);
+    border-width: 2px;
+  }
+
+  &.mat-mdc-radio-checked:hover {
+    border-color: var(--aiw-color-primary-deep);
+    background: var(--aiw-color-sidebar);
+  }
+
+  &.mat-mdc-radio-disabled {
+    opacity: 0.55;
+
+    label {
+      cursor: not-allowed;
+    }
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--aiw-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.aiw-option-title {
+  font-weight: 650;
+  color: var(--aiw-color-ink);
+}
+
+.aiw-option-desc {
+  font-size: 14px;
+  color: var(--aiw-color-ink-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

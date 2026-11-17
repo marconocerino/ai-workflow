@@ -25,10 +25,11 @@ Angular Material colours point at them too (`src/theme/_theme.scss`).
 | `--aiw-color-primary-deep` | `#1f4d3a` | offset shadows, section labels |
 | `--aiw-color-active` | `#c5db9c` | active nav item, selected |
 | `--aiw-color-key` | `#d3dcc3` | keyboard key caps (Ctrl) |
+| `--aiw-color-track` | `#bcc8a9` | toggle track when off |
 | `--aiw-color-chip` | `#e6ebd9` | status chips |
 | `--aiw-color-bubble` | `#d6e5be` | your messages in agent chat |
 | `--aiw-color-danger` | `#c2361f` | recording, errors |
-| `--aiw-color-danger-soft` | `#fae0da` | recording halo, error backgrounds |
+| `--aiw-color-danger-soft` | `#fcece8` | recording halo, error chips (design #fae0da, lightened for 4.5:1) |
 | `--aiw-color-on-danger` | `#ffffff` | text on danger |
 | `--aiw-color-success` | `#2f6b45` | success text |
 | `--aiw-color-agent-notetaker` | `#2f6b45` | N |
@@ -100,7 +101,7 @@ Checked by `npm test` (scripts/tokens.spec.mjs).
 | ink | key | 10.03:1 ✓ | Key caps (Ctrl) |
 | ink | chip | 11.69:1 ✓ | Chip text |
 | ink | bubble | 10.71:1 ✓ | Your chat messages |
-| ink | danger-soft | 11.34:1 ✓ | Text on error background |
+| ink | danger-soft | 12.40:1 ✓ | Text on error background |
 | ink-muted | page | 5.96:1 ✓ | Secondary text on the page |
 | ink-muted | surface | 6.65:1 ✓ | Hints in cards |
 | ink-muted | sidebar | 5.47:1 ✓ | Inactive nav items |
@@ -114,6 +115,7 @@ Checked by `npm test` (scripts/tokens.spec.mjs).
 | on-primary | primary | 6.34:1 ✓ | Primary buttons, logo |
 | danger | surface | 5.29:1 ✓ | Errors in cards |
 | danger | page | 4.74:1 ✓ | Errors on the page |
+| danger | danger-soft | 4.76:1 ✓ | Recording / error chip |
 | on-danger | danger | 5.47:1 ✓ | Text on the record button |
 | success | surface | 6.14:1 ✓ | Success messages |
 | agent-notetaker | agent-notetaker-soft | 4.54:1 ✓ | N avatar |
@@ -141,4 +143,5 @@ Fraunces, Archivo and JetBrains Mono are bundled with the app from `@fontsource-
 - Placeholder text uses `ink-subtle` (#637063) instead of the design's #838e81 (3.3:1).
 - Notetaker avatar background #c5d4bb → #d2dec9 and Writer olive #5e6b1e → #515f1f, so their
   letters and @mentions reach 4.5:1.
+- Error/recording chip background #fae0da → #fcece8 so red text on it reaches 4.5:1.
 - The black dropdowns and input fields in the screenshots are not copied; inputs use `surface`.

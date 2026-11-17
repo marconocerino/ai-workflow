@@ -38,6 +38,7 @@ export const TEXT_PAIRS = [
   ['on-primary', 'primary', 'Primary buttons, logo'],
   ['danger', 'surface', 'Errors in cards'],
   ['danger', 'page', 'Errors on the page'],
+  ['danger', 'danger-soft', 'Recording / error chip'],
   ['on-danger', 'danger', 'Text on the record button'],
   ['success', 'surface', 'Success messages'],
   ['agent-notetaker', 'agent-notetaker-soft', 'N avatar'],
@@ -186,6 +187,7 @@ export function renderTokensDoc(groups) {
     "- Placeholder text uses `ink-subtle` (#637063) instead of the design's #838e81 (3.3:1).",
     '- Notetaker avatar background #c5d4bb → #d2dec9 and Writer olive #5e6b1e → #515f1f, so their',
     '  letters and @mentions reach 4.5:1.',
+    '- Error/recording chip background #fae0da → #fcece8 so red text on it reaches 4.5:1.',
     '- The black dropdowns and input fields in the screenshots are not copied; inputs use `surface`.',
     '',
   );

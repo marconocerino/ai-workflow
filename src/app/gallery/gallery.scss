@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.gallery {
+  min-height: 100%;
+}
+
+.inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--aiw-space-6) var(--aiw-space-6) 96px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--aiw-space-4);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.lead {
+  margin: var(--aiw-space-2) 0 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aiw-space-3);
+  margin-bottom: var(--aiw-space-4);
+}
+
+code + .row {
+  margin-top: var(--aiw-space-5);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--aiw-space-4);
+}
+
+.grid.cards {
+  gap: var(--aiw-space-5);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--aiw-space-2);
+  margin-bottom: var(--aiw-space-4);
+}
+
+.small {
+  font-size: 13px;
+}
+
+code {
+  display: block;
+  margin-top: var(--aiw-space-3);
+  padding: var(--aiw-space-2) var(--aiw-space-3);
+  border-radius: var(--aiw-radius-sm);
+  background: var(--aiw-color-sidebar);
+  color: var(--aiw-color-ink);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+code.outside {
+  margin-top: var(--aiw-space-4);
+}
+
+.agent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aiw-space-2);
+  margin-right: var(--aiw-space-4);
+}
+
+.badge-demo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aiw-space-2);
+  color: var(--aiw-color-ink-muted);
+}
+
+.icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--aiw-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--aiw-space-2);
+    color: var(--aiw-color-ink);
+  }
+}
+
+.mono {
+  font-family: var(--aiw-font-mono);
+  font-size: 12px;
+  color: var(--aiw-color-ink-muted);
+}
+
+h3 {
+  margin-bottom: var(--aiw-space-1);
+}

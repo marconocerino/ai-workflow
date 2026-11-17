@@ -107,6 +107,13 @@ scripts/dev.mjs    `npm start` runner
   `npm test` fails on hex/rgb values outside `src/theme/` and on text pairs below 4.5:1 contrast.
 - After changing tokens run `npm run tokens` to update `design/tokens.md`.
 
+## UI components
+
+Open **/gallery** in the app (Home → "Component gallery") to see every component with usage code.
+Material is used for controls (buttons, inputs, select, toggle, checkbox, radio); our own
+components in `src/app/ui/` cover cards, chips, key caps, agent avatars, badges and Lucide icons.
+`npm run e2e` checks their hover/focus/disabled states, keyboard use and runs an axe scan.
+
 ## Adding an IPC call
 
 1. Add the channel to `IpcContract` in `shared/ipc-contract.ts` and a method to `AiWorkflowApi`.

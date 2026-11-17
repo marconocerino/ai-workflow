@@ -1,0 +1,297 @@
+<main class="gallery aiw-dotted">
+  <div class="inner">
+    <a routerLink="/" class="back"><aiw-icon name="chevron-left" [size]="16" /> Back</a>
+    <h1>Component gallery</h1>
+    <p class="aiw-muted lead">
+      Every core component in its states. Hover, Tab and click to try them. Code samples show how to
+      use each one.
+    </p>
+
+    <!-- Buttons -->
+    <section aria-labelledby="g-buttons">
+      <h2 class="aiw-section-label" id="g-buttons">Buttons</h2>
+      <aiw-card>
+        <div class="row" data-gallery="buttons">
+          <button mat-flat-button type="button" data-interactive="button-primary" (click)="click()">
+            Approve and send
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            data-interactive="button-secondary"
+            (click)="click()"
+          >
+            Other times
+          </button>
+          <button mat-button type="button" data-interactive="button-quiet" (click)="click()">
+            Cancel
+          </button>
+          <button
+            mat-flat-button
+            type="button"
+            class="aiw-danger"
+            data-interactive="button-danger"
+            (click)="click()"
+          >
+            <aiw-icon name="trash" [size]="16" /> Delete
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            data-interactive="button-icon-text"
+            (click)="click()"
+          >
+            <aiw-icon name="sparkles" [size]="16" /> Hand to an agent
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Send"
+            data-interactive="button-icon"
+            (click)="click()"
+          >
+            <aiw-icon name="send" />
+          </button>
+        </div>
+        <div class="row">
+          <button mat-flat-button type="button" disabled data-disabled="button-primary">
+            Approve and send
+          </button>
+          <button mat-stroked-button type="button" disabled data-disabled="button-secondary">
+            Other times
+          </button>
+          <button mat-button type="button" disabled data-disabled="button-quiet">Cancel</button>
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Send"
+            disabled
+            data-disabled="button-icon"
+          >
+            <aiw-icon name="send" />
+          </button>
+        </div>
+        <p class="aiw-muted small" aria-live="polite">Clicked {{ clicks() }} times</p>
+        <code>{{ code.buttons }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Inputs -->
+    <section aria-labelledby="g-inputs">
+      <h2 class="aiw-section-label" id="g-inputs">Inputs and select</h2>
+      <aiw-card>
+        <div class="grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
+            <input matInput [formControl]="name" placeholder="Jamie K." data-interactive="input" />
+            <mat-hint>Hint text</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Server URL</mat-label>
+            <input matInput [formControl]="url" data-gallery="input-error" />
+            <mat-error>Must start with http:// or https://.</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Disabled</mat-label>
+            <input matInput [formControl]="disabledInput" data-disabled="input" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Input device</mat-label>
+            <mat-select [formControl]="device" data-interactive="select">
+              <mat-option value="default">System default</mat-option>
+              <mat-option value="headset">Headset microphone</mat-option>
+              <mat-option value="laptop">Laptop microphone</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Disabled select</mat-label>
+            <mat-select [formControl]="disabledSelect" data-disabled="select">
+              <mat-option value="default">System default</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="wide">
+            <mat-label>Notes</mat-label>
+            <textarea
+              matInput
+              rows="3"
+              [formControl]="notes"
+              data-interactive="textarea"
+            ></textarea>
+          </mat-form-field>
+        </div>
+        <code>{{ code.inputs }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Toggles, checkboxes -->
+    <section aria-labelledby="g-toggles">
+      <h2 class="aiw-section-label" id="g-toggles">Toggle and checkbox</h2>
+      <aiw-card>
+        <div class="stack">
+          <mat-slide-toggle hideIcon data-interactive="toggle"
+            >Open AI Workflow when I sign in</mat-slide-toggle
+          >
+          <mat-slide-toggle hideIcon checked>Keep mic ready after dictating</mat-slide-toggle>
+          <mat-slide-toggle hideIcon disabled data-disabled="toggle"
+            >Available in the installed app</mat-slide-toggle
+          >
+          <mat-checkbox data-interactive="checkbox"
+            >Send a follow-up email to attendees</mat-checkbox
+          >
+          <mat-checkbox checked>Collect IT security requirements</mat-checkbox>
+          <mat-checkbox disabled data-disabled="checkbox">Share the pilot list</mat-checkbox>
+        </div>
+        <code>{{ code.toggles }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Option cards -->
+    <section aria-labelledby="g-options">
+      <h2 class="aiw-section-label" id="g-options">Option cards</h2>
+      <aiw-card>
+        <mat-radio-group
+          class="aiw-option-cards"
+          [formControl]="mode"
+          aria-labelledby="g-options"
+          data-interactive="options"
+        >
+          <mat-radio-button class="aiw-option-card" value="hold" data-option="hold">
+            <span class="aiw-option-title">Hold Ctrl</span>
+            <span class="aiw-option-desc"
+              >Hold to talk, release to stop. Fastest for short bursts.</span
+            >
+          </mat-radio-button>
+          <mat-radio-button class="aiw-option-card" value="toggle" data-option="toggle">
+            <span class="aiw-option-title">Toggle</span>
+            <span class="aiw-option-desc">Press once to start, again to stop. Esc cancels.</span>
+          </mat-radio-button>
+          <mat-radio-button class="aiw-option-card" value="voice" disabled data-disabled="option">
+            <span class="aiw-option-title">Voice activation</span>
+            <span class="aiw-option-desc">Not available yet.</span>
+          </mat-radio-button>
+        </mat-radio-group>
+        <p class="aiw-muted small">Selected: {{ mode.value }}</p>
+        <code>{{ code.options }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Cards -->
+    <section aria-labelledby="g-cards">
+      <h2 class="aiw-section-label" id="g-cards">Cards</h2>
+      <div class="grid cards">
+        <aiw-card heading="Summary">
+          <p>The team agreed both cleanup levels are ready for v1.1.</p>
+          <div card-actions>
+            <button mat-flat-button type="button">Share notes</button>
+          </div>
+        </aiw-card>
+        <a aiw-card routerLink="/gallery" data-interactive="card-link">
+          <h3>Design sync — Voice pilot</h3>
+          <p class="aiw-muted">Today · 11:00–11:38 · clickable card</p>
+        </a>
+        <a aiw-card aria-disabled="true" tabindex="-1" data-disabled="card-link">
+          <h3>Archived meeting</h3>
+          <p class="aiw-muted">Disabled card</p>
+        </a>
+      </div>
+      <code class="outside">{{ code.cards }}</code>
+    </section>
+
+    <!-- Chips -->
+    <section aria-labelledby="g-chips">
+      <h2 class="aiw-section-label" id="g-chips">Chips</h2>
+      <aiw-card>
+        <div class="row">
+          <aiw-chip>Idle</aiw-chip>
+          <aiw-chip tone="success" dot>Live</aiw-chip>
+          <aiw-chip tone="writer">Draft ready</aiw-chip>
+          <aiw-chip tone="scheduler">Needs your OK</aiw-chip>
+          <aiw-chip tone="researcher">Working…</aiw-chip>
+          <aiw-chip tone="danger" dot>Recording</aiw-chip>
+          <aiw-chip><aiw-icon name="lock" [size]="14" /> Transcribed on company servers</aiw-chip>
+        </div>
+        <div class="row">
+          <button
+            aiw-chip
+            variant="outline"
+            time="00:02"
+            type="button"
+            data-interactive="chip-topic"
+            (click)="click()"
+          >
+            Cleanup levels
+          </button>
+          <button aiw-chip variant="outline" time="01:15" type="button">IT security</button>
+          @for (agent of agents; track agent.id) {
+            <button aiw-chip variant="outline" [tone]="agent.id" type="button">
+              &#64;{{ agent.name }}
+            </button>
+          }
+          <button
+            aiw-chip
+            variant="outline"
+            time="02:03"
+            type="button"
+            disabled
+            data-disabled="chip-topic"
+          >
+            Pilot size
+          </button>
+        </div>
+        <code>{{ code.chips }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Keys, avatars, badge -->
+    <section aria-labelledby="g-small">
+      <h2 class="aiw-section-label" id="g-small">Key caps, agent avatars, badge</h2>
+      <aiw-card>
+        <div class="row" data-gallery="keys">
+          <span>Hold <aiw-keys keys="Ctrl" /> to dictate</span>
+          <aiw-keys [keys]="['Ctrl', 'Shift', 'Space']" />
+          <aiw-keys keys="Ctrl" size="lg" />
+        </div>
+        <code>{{ code.keys }}</code>
+        <div class="row" data-gallery="avatars">
+          @for (agent of agents; track agent.id) {
+            <span class="agent">
+              <aiw-agent-avatar [agent]="agent.id" size="sm" />
+              <aiw-agent-avatar [agent]="agent.id" />
+              <aiw-agent-avatar [agent]="agent.id" size="lg" decorative />
+              {{ agent.name }}
+            </span>
+          }
+        </div>
+        <code>{{ code.avatars }}</code>
+        <div class="row" data-gallery="badge">
+          <span class="badge-demo"
+            ><aiw-icon name="chat" /> Agent chats <aiw-badge [count]="2" label="unread"
+          /></span>
+          <aiw-badge [count]="120" label="unread" />
+        </div>
+        <code>{{ code.badge }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Icons -->
+    <section aria-labelledby="g-icons">
+      <h2 class="aiw-section-label" id="g-icons">Icons (Lucide)</h2>
+      <aiw-card>
+        <ul class="icons">
+          @for (name of iconNames; track name) {
+            <li>
+              <aiw-icon [name]="name" [size]="22" /><span class="mono">{{ name }}</span>
+            </li>
+          }
+        </ul>
+        <code>{{ code.icons }}</code>
+      </aiw-card>
+    </section>
+
+    <!-- Labels -->
+    <section aria-labelledby="g-labels">
+      <h2 class="aiw-section-label" id="g-labels">Section label</h2>
+      <code class="outside">{{ code.labels }}</code>
+    </section>
+  </div>
+</main>

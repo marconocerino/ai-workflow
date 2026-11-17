@@ -47,7 +47,7 @@ VAI-201,E2 Design system & shell,Design tokens,"As a developer, I want the green
 • Changing a token updates every screen",3,Must,S0,ui,Done
 VAI-202,E2 Design system & shell,Core components,"As a developer, I want reusable buttons, inputs, toggles, cards, chips, keycaps and agent avatars, so new screens are assembled, not redrawn.","• Each component has default, hover, focus and disabled states
 • A gallery page shows every component
-• Components are keyboard accessible",5,Must,S1,ui,To do
+• Components are keyboard accessible",5,Must,S1,ui,Done
 VAI-203,E2 Design system & shell,App shell and sidebar,"As a user, I want a sidebar with Home, Meetings, Agent chats, Dictations and Settings, so I can move around the app easily.","• Routing between all sections
 • Active section highlighted
 • Sidebar shows agent status and the 'runs on company servers' badge",3,Must,S1,ui,To do
