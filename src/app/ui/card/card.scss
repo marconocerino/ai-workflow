@@ -1,0 +1,83 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+  background: var(--aiw-color-surface);
+  border: var(--aiw-border-card);
+  border-radius: var(--aiw-radius-lg);
+  box-shadow: var(--aiw-shadow-card);
+  padding: var(--aiw-space-5);
+  color: var(--aiw-color-ink);
+  text-align: left;
+}
+
+:host(.pad-compact) {
+  padding: var(--aiw-space-4);
+}
+:host(.pad-none) {
+  padding: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aiw-space-3);
+  margin-bottom: var(--aiw-space-3);
+}
+
+.heading {
+  font-size: 20px;
+}
+
+.actions {
+  margin-top: var(--aiw-space-4);
+}
+
+.actions:empty {
+  display: none;
+}
+
+// Clickable cards
+:host(a),
+:host(button) {
+  width: 100%;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 var(--aiw-color-primary-deep);
+  }
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 3px 3px 0 var(--aiw-color-primary-deep);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--aiw-color-primary);
+    outline-offset: 3px;
+  }
+}
+
+:host(button:disabled),
+:host(a[aria-disabled='true']) {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    transition: none !important;
+  }
+  :host(a:hover),
+  :host(button:hover) {
+    transform: none;
+  }
+}

@@ -16,5 +16,10 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: 'gallery',
+    title: 'Component gallery · AI Workflow',
+    loadComponent: () => import('./gallery/gallery').then((m) => m.Gallery),
+  },
   { path: '**', redirectTo: '' },
 ];

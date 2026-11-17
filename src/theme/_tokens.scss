@@ -29,11 +29,12 @@ $colors: (
   'active': #c5db9c, // active nav item, selected
   // Small elements
   'key': #d3dcc3, // keyboard key caps (Ctrl)
+  'track': #bcc8a9, // toggle track when off
   'chip': #e6ebd9, // status chips
   'bubble': #d6e5be, // your messages in agent chat
   // Status
   'danger': #c2361f, // recording, errors
-  'danger-soft': #fae0da, // recording halo, error backgrounds
+  'danger-soft': #fcece8, // recording halo, error chips (design #fae0da, lightened for 4.5:1)
   'on-danger': #ffffff, // text on danger
   'success': #2f6b45, // success text
   // Agents (letter avatars, @mentions, chips)

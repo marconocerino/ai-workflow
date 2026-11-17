@@ -46,6 +46,11 @@ Vitest (unit), Playwright (e2e on the real app), ESLint + Prettier, electron-bui
 - Never edit PLAN.md by hand; a test fails if it's out of sync with the backlog.
 - Styling: use `--aiw-*` token variables only (no hex/rgb outside src/theme/ — a test enforces it).
   Shared classes: `.aiw-card`, `.aiw-chip`, `.aiw-kbd`, `.aiw-section-label`, `.aiw-dotted`, `.aiw-muted`.
+- UI kit (src/app/ui, see /gallery): reuse before building. Material for buttons/inputs/select/toggle/
+  checkbox/radio (`mat-flat-button` primary, `mat-stroked-button` secondary, `.aiw-danger`,
+  `.aiw-option-card`); `aiw-card`, `aiw-chip`, `aiw-keys`, `aiw-agent-avatar`, `aiw-badge`,
+  `aiw-icon` (Lucide; add new icons to icons.ts). Icon-only buttons need `aria-label`.
+  New component → add it to the gallery and to e2e/gallery.e2e.ts.
   New text colour on a new background → add the pair to TEXT_PAIRS in scripts/tokens.mjs.
 - No icon fonts or web fonts from the internet; use inline SVG icons and bundled fonts.
 

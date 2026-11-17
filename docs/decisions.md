@@ -55,3 +55,9 @@ Decision: every colour, font, spacing, radius, shadow and border is written once
 Why: one place to change the look; runtime variables mean a token change reaches every screen and every Material component; contrast is enforced, not hoped for.
 Changes from the screenshots: placeholder #838e81 → #637063, Notetaker avatar background #c5d4bb → #d2dec9 and Writer olive #5e6b1e → #515f1f (all to reach 4.5:1); the black input fields in the mocks are not copied.
 Alternatives: Material palettes only (can't hit exact brand colours); tokens in JSON with a build step (more tooling); Google Fonts (external service, not allowed).
+
+**D-012 — UI kit: Material for behaviour, own components for look** · 2026-11 · Accepted
+Decision: buttons, inputs, selects, toggles, checkboxes and radios are Angular Material components restyled with tokens (`mat.*-overrides`, strong focus indicators, a few `.aiw-*` classes such as `.aiw-danger` and `.aiw-option-card`). Things Material doesn't have are our own standalone components in `src/app/ui/` with the `aiw-` prefix: card, chip, keys (key caps), agent avatar, badge, icon. Interactive variants of card and chip use attribute selectors on native `<button>`/`<a>` so keyboard and screen-reader behaviour stay native. Icons are Lucide shapes copied into `icons.ts` (ISC, no package) and drawn as inline SVG. A gallery at `/gallery` shows every component; e2e checks hover/focus/disabled states, full Tab order, keyboard actions and an axe (WCAG 2.1 AA) scan.
+Why: Material already solves focus, ARIA and keyboard handling; wrapping it again would add bugs. Our own components stay tiny and token-only.
+Alternatives: wrap every Material control in an `aiw-` component (more code, breaks forms and radio groups); lucide-angular package (extra dependency for ~20 icons); icon font (loads from the internet / not allowed).
+Also: `danger-soft` lightened #fae0da → #fcece8 after axe found red-on-pink chip text at 4.36:1.

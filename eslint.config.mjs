@@ -26,13 +26,14 @@ export default tseslint.config(
     ],
     processor: angular.processInlineTemplates,
     rules: {
+      // `app-` for app screens, `aiw-` for the shared UI kit (src/app/ui).
       '@angular-eslint/directive-selector': [
         'error',
-        { type: 'attribute', prefix: 'app', style: 'camelCase' },
+        { type: 'attribute', prefix: ['app', 'aiw'], style: 'camelCase' },
       ],
       '@angular-eslint/component-selector': [
         'error',
-        { type: 'element', prefix: 'app', style: 'kebab-case' },
+        { type: ['element', 'attribute'], prefix: ['app', 'aiw'], style: 'kebab-case' },
       ],
       // Never log transcripts, audio or keys — console use must be deliberate.
       'no-console': ['error', { allow: ['warn', 'error'] }],
