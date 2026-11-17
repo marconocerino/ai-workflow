@@ -91,6 +91,14 @@ scripts/dev.mjs    `npm start` runner
 - Dev/test only: `AIW_USER_DATA_DIR=<dir>` uses a separate profile folder and
   `AIW_MOCK_KEYCHAIN=1` avoids macOS Keychain prompts. Both are ignored in packaged builds.
 
+## AI servers
+
+- Users set the speech-to-text and LLM servers in **Settings → AI servers**: base URL (OpenAI-compatible,
+  usually ending in `/v1`), model and API key. "Test connection" calls `GET {baseUrl}/models`.
+- All AI requests go through `electron/ai/ai-http.ts` (`AiHttpClient`) in the main process: only to the
+  configured host, no redirects, key added as `Authorization: Bearer …`, never logged. The renderer
+  never talks to AI servers directly. See D-009.
+
 ## Adding an IPC call
 
 1. Add the channel to `IpcContract` in `shared/ipc-contract.ts` and a method to `AiWorkflowApi`.

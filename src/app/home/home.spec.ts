@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import type { AiWorkflowApi, AppInfo } from '../../../shared/ipc-contract';
 import { AI_WORKFLOW_BRIDGE } from '../core/electron-api';
 import { Home } from './home';
@@ -14,7 +15,7 @@ const info: AppInfo = {
 async function render(bridge: Pick<AiWorkflowApi, 'app'> | null) {
   TestBed.configureTestingModule({
     imports: [Home],
-    providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
+    providers: [provideRouter([]), { provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
   });
   const fixture = TestBed.createComponent(Home);
   await fixture.whenStable();

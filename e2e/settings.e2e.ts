@@ -89,6 +89,7 @@ test('API key is encrypted on disk and can never be read back by the renderer', 
     app: ['getInfo'],
     settings: ['get', 'update'],
     secrets: ['clear', 'has', 'set'],
+    ai: ['testConnection'],
   });
   await app.close();
 

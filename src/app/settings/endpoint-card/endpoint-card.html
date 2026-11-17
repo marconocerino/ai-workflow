@@ -1,0 +1,143 @@
+<section class="card" [attr.aria-labelledby]="id('heading')">
+  <header>
+    <h2 [id]="id('heading')">{{ heading() }}</h2>
+    @if (description()) {
+      <p class="hint">{{ description() }}</p>
+    }
+  </header>
+
+  <div class="row">
+    <mat-form-field appearance="outline" class="grow" subscriptSizing="dynamic">
+      <mat-label>Server URL</mat-label>
+      <input
+        matInput
+        type="url"
+        autocomplete="off"
+        spellcheck="false"
+        [formControl]="baseUrl"
+        [placeholder]="urlPlaceholder()"
+        [attr.data-testid]="id('base-url')"
+        (blur)="save('baseUrl')"
+        (keydown.enter)="save('baseUrl')"
+      />
+      <mat-hint>OpenAI-compatible base URL, usually ending in /v1</mat-hint>
+      @if (baseUrl.invalid) {
+        <mat-error [attr.data-testid]="id('base-url-error')">{{ errorText(baseUrl) }}</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div class="row">
+    <mat-form-field appearance="outline" class="grow" subscriptSizing="dynamic">
+      <mat-label>Model</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        spellcheck="false"
+        [formControl]="model"
+        [placeholder]="modelPlaceholder()"
+        [attr.data-testid]="id('model')"
+        (blur)="save('model')"
+        (keydown.enter)="save('model')"
+      />
+      @if (model.invalid) {
+        <mat-error>{{ errorText(model) }}</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div class="key">
+    <div class="key-label">
+      <span class="label">API key</span>
+      <span
+        class="pill"
+        [class.pill-ok]="hasKey()"
+        role="status"
+        [attr.data-testid]="id('key-status')"
+      >
+        {{ hasKey() ? 'Saved' : 'Not set' }}
+      </span>
+    </div>
+
+    @if (hasKey() && !replacingKey()) {
+      <p class="hint">Stored encrypted on this computer. It can't be shown again.</p>
+      <div class="actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="keyBusy()"
+          [attr.data-testid]="id('replace-key')"
+          (click)="startReplace()"
+        >
+          Replace
+        </button>
+        <button
+          mat-button
+          type="button"
+          [disabled]="keyBusy()"
+          [attr.data-testid]="id('remove-key')"
+          (click)="removeKey()"
+        >
+          Remove
+        </button>
+      </div>
+    } @else {
+      <div class="row">
+        <mat-form-field appearance="outline" class="grow" subscriptSizing="dynamic">
+          <mat-label>API key</mat-label>
+          <input
+            matInput
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            [formControl]="key"
+            [attr.data-testid]="id('key')"
+            (keydown.enter)="saveKey()"
+          />
+          <mat-hint>Only needed if your server asks for one</mat-hint>
+        </mat-form-field>
+        <button
+          mat-flat-button
+          type="button"
+          class="inline-button"
+          [disabled]="keyBusy() || !key.value.trim()"
+          [attr.data-testid]="id('save-key')"
+          (click)="saveKey()"
+        >
+          Save key
+        </button>
+        @if (replacingKey()) {
+          <button mat-button type="button" class="inline-button" (click)="cancelReplace()">
+            Cancel
+          </button>
+        }
+      </div>
+    }
+    @if (keyError(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+  </div>
+
+  <footer>
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="testing()"
+      [attr.data-testid]="id('test')"
+      (click)="test()"
+    >
+      {{ testing() ? 'Testing…' : 'Test connection' }}
+    </button>
+    @if (result(); as r) {
+      <p
+        class="result"
+        [class.ok]="r.ok"
+        [class.error]="!r.ok"
+        role="status"
+        [attr.data-testid]="id('test-result')"
+      >
+        <span aria-hidden="true">{{ r.ok ? '✓' : '✕' }}</span> {{ r.message }}
+      </p>
+    }
+  </footer>
+</section>

@@ -1,0 +1,80 @@
+@use '../settings-card' as card;
+
+.card {
+  @include card.card;
+}
+
+header h2 {
+  @include card.title;
+}
+
+.hint {
+  margin: 4px 0 16px;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.grow {
+  flex: 1;
+}
+
+.inline-button {
+  margin-top: 10px;
+}
+
+.key {
+  margin-top: 24px;
+}
+
+.key-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  .label {
+    font: var(--mat-sys-title-small);
+  }
+}
+
+.pill {
+  @include card.pill;
+}
+
+.pill-ok {
+  @include card.pill-ok;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--aiw-divider);
+}
+
+.result {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+}
+
+.ok {
+  color: var(--aiw-success);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

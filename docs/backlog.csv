@@ -41,7 +41,7 @@ VAI-112,E1 Foundation,Privacy-safe usage metrics,"As the product owner, I want o
 VAI-113,E1 Foundation,AI server settings,"As a user, I want to set the AI server URLs, API key and model names in Settings, so I can connect the app to our company AI servers myself.","• Settings page has fields for speech-to-text and LLM base URL, model name and API key
 • Values are validated and saved through the settings store (VAI-105); the API key is encrypted and never shown again, only 'saved' or 'not set'
 • A Test connection button checks each server and shows the result
-• Requests only go to the configured hosts (see D-009)",3,Must,S0,"settings, ai",To do
+• Requests only go to the configured hosts (see D-009)",3,Must,S0,"settings, ai",Done
 VAI-201,E2 Design system & shell,Design tokens,"As a developer, I want the green retro palette, fonts (Fraunces, Archivo), spacing, radii and offset shadows as theme tokens, so every screen looks consistent.","• Tokens defined once as an Angular Material theme plus CSS variables
 • Text colours meet 4.5:1 contrast
 • Changing a token updates every screen",3,Must,S0,ui,To do

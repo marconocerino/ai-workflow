@@ -1,0 +1,31 @@
+// Shared look for settings cards (placeholder until VAI-201/204 bring the real tokens).
+
+@mixin card {
+  background: var(--aiw-surface);
+  border: 2px solid var(--aiw-ink);
+  border-radius: 16px;
+  box-shadow: 6px 6px 0 var(--aiw-shadow);
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+@mixin title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+
+@mixin pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--aiw-divider);
+  background: var(--aiw-page-bg);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+}
+
+@mixin pill-ok {
+  background: var(--aiw-active);
+  border-color: transparent;
+  color: var(--aiw-ink);
+}
