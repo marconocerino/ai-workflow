@@ -1,12 +1,13 @@
-<main class="home">
-  <h1>AI Workflow</h1>
-  <p class="lead">Dictation, meeting notes and AI agents — running on your company's AI servers.</p>
+<main class="home-wrap aiw-dotted">
+  <div class="home">
+    <h1>AI Workflow</h1>
+    <p class="lead aiw-muted">
+      Hold <kbd class="aiw-kbd">Ctrl</kbd> anywhere to dictate — running on your company's AI
+      servers.
+    </p>
 
-  <mat-card appearance="outlined" class="info-card">
-    <mat-card-header>
-      <mat-card-title>Desktop connection</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+    <section class="aiw-card info-card" aria-labelledby="connection-heading">
+      <h2 id="connection-heading">Desktop connection</h2>
       @if (info(); as i) {
         <dl data-testid="app-info">
           <dt>Version</dt>
@@ -23,18 +24,18 @@
       } @else {
         <p>Connecting…</p>
       }
-    </mat-card-content>
-    <mat-card-actions>
-      <button
-        mat-flat-button
-        type="button"
-        data-testid="refresh"
-        [disabled]="loading()"
-        (click)="refresh()"
-      >
-        Check again
-      </button>
-      <a mat-stroked-button routerLink="/settings" data-testid="open-settings">Settings</a>
-    </mat-card-actions>
-  </mat-card>
+      <div class="actions">
+        <button
+          mat-flat-button
+          type="button"
+          data-testid="refresh"
+          [disabled]="loading()"
+          (click)="refresh()"
+        >
+          Check again
+        </button>
+        <a mat-stroked-button routerLink="/settings" data-testid="open-settings">Settings</a>
+      </div>
+    </section>
+  </div>
 </main>

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
 import type { AppInfo } from '../../../shared/ipc-contract';
 import { ElectronApi } from '../core/electron-api';
@@ -8,7 +7,7 @@ import { ElectronApi } from '../core/electron-api';
 /** Placeholder start page (VAI-101): proves Material and the typed IPC round trip work. */
 @Component({
   selector: 'app-home',
-  imports: [MatCardModule, MatButtonModule, RouterLink],
+  imports: [MatButtonModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
   styleUrl: './home.scss',

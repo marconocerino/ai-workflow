@@ -11,3 +11,4 @@ design/
 CLAUDE.md
 .claude/
 PLAN.md
+src/theme/_tokens.scss

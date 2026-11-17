@@ -31,5 +31,4 @@ they're in.
 
 ## Tokens
 
-`tokens.md` (colours, fonts, spacing, radii, shadows) doesn't exist yet. It will be written with
-VAI-201 (Design tokens), starting from colours sampled from these screenshots.
+See `tokens.md` (generated from `src/theme/_tokens.scss` by `npm run tokens`).

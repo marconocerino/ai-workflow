@@ -2,9 +2,11 @@
   <header class="page-header">
     <div>
       <h1>AI servers</h1>
-      <p class="lead">Where speech-to-text and the AI assistant run. Use your company's servers.</p>
+      <p class="lead aiw-muted">
+        Where speech-to-text and the AI assistant run. Use your company's servers.
+      </p>
     </div>
-    <span class="save-pill" role="status" data-testid="save-status">
+    <span class="aiw-chip save-pill" role="status" data-testid="save-status">
       @switch (saveState()) {
         @case ('saving') {
           Saving…
@@ -41,7 +43,7 @@
       (saveState)="onSaveState($event)"
     />
 
-    <section class="card" aria-labelledby="advanced-heading">
+    <section class="aiw-card" aria-labelledby="advanced-heading">
       <h2 id="advanced-heading">Advanced</h2>
       <div class="row">
         <mat-form-field appearance="outline">

@@ -14,8 +14,8 @@
   flex-direction: column;
   gap: 24px;
   padding: 24px 16px;
-  background: var(--aiw-sidebar-bg);
-  border-right: 2px solid var(--aiw-ink);
+  background: var(--aiw-color-sidebar);
+  border-right: var(--aiw-border-card);
 }
 
 .brand {
@@ -30,19 +30,19 @@
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: var(--aiw-primary);
-  color: var(--aiw-on-primary);
+  border-radius: var(--aiw-radius-md);
+  background: var(--aiw-color-primary);
+  color: var(--aiw-color-on-primary);
 }
 
 .brand-name {
-  font: var(--mat-sys-title-medium);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
 }
 
 .brand-sub {
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-on-surface-variant);
+  font-size: 13px;
+  color: var(--aiw-color-ink-muted);
 }
 
 nav {
@@ -55,23 +55,19 @@ nav {
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    border-radius: 10px;
-    color: var(--mat-sys-on-surface-variant);
+    border-radius: var(--aiw-radius-md);
+    color: var(--aiw-color-ink-muted);
     text-decoration: none;
-    font: var(--mat-sys-label-large);
+    font-weight: 500;
 
     &:hover {
-      background: color-mix(in srgb, var(--aiw-active) 50%, transparent);
+      background: color-mix(in srgb, var(--aiw-color-active) 50%, transparent);
     }
 
     &.active {
-      background: var(--aiw-active);
-      color: var(--aiw-ink);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--aiw-primary);
-      outline-offset: 2px;
+      background: var(--aiw-color-active);
+      color: var(--aiw-color-ink);
+      font-weight: 600;
     }
   }
 }
@@ -85,20 +81,17 @@ nav {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--aiw-primary);
+  color: var(--aiw-color-primary);
   text-decoration: none;
-  font: var(--mat-sys-label-large);
+  font-weight: 500;
 }
 
 .version {
   margin-top: 12px;
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-on-surface-variant);
+  font-size: 13px;
+  color: var(--aiw-color-ink-muted);
 }
 
 .content {
   overflow: auto;
-  background-color: var(--aiw-page-bg);
-  background-image: radial-gradient(var(--aiw-dot) 1px, transparent 1px);
-  background-size: 16px 16px;
 }

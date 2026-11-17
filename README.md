@@ -99,6 +99,14 @@ scripts/dev.mjs    `npm start` runner
   configured host, no redirects, key added as `Authorization: Bearer …`, never logged. The renderer
   never talks to AI servers directly. See D-009.
 
+## Design tokens
+
+- All colours, fonts, spacing, radii, shadows and borders live in `src/theme/_tokens.scss` and become
+  `--aiw-*` CSS variables. Angular Material is pointed at them in `src/theme/_theme.scss`.
+- Use the variables (and the `.aiw-*` helper classes in `src/styles.scss`), never raw colours —
+  `npm test` fails on hex/rgb values outside `src/theme/` and on text pairs below 4.5:1 contrast.
+- After changing tokens run `npm run tokens` to update `design/tokens.md`.
+
 ## Adding an IPC call
 
 1. Add the channel to `IpcContract` in `shared/ipc-contract.ts` and a method to `AiWorkflowApi`.

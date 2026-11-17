@@ -1,0 +1,106 @@
+// AI Workflow design tokens — the ONLY place colours and other design values are written.
+//
+// Each map entry becomes a CSS variable on :root, e.g. 'primary' → --aiw-color-primary.
+// Components use the variables (never raw values), so changing a value here updates every screen.
+// Angular Material's colours point at these variables too (see _theme.scss).
+//
+// Format matters: scripts/tokens.mjs and the contrast test read this file.
+// Keep one `'name': value, // comment` entry per line.
+// Values sampled from design/*.png. After a change run `npm run tokens` (updates design/tokens.md).
+
+$colors: (
+  // Surfaces
+  'page': #eef0e2, // app background
+  'page-dot': #cfd8bf, // dotted pattern on the page background
+  'sidebar': #e2e8d2, // sidebars
+  'surface': #fbfcf4, // cards, inputs, popovers
+  'surface-tint': #ebf1e6, // selected option, your transcript lines
+  // Text
+  'ink': #1f2e25, // headings and main text
+  'ink-muted': #4f5e52, // secondary text, hints, inactive nav
+  'ink-subtle': #637063, // placeholders (darker than the design's #838e81 to pass 4.5:1)
+  // Lines
+  'line': #2b3d31, // card and control borders
+  'line-soft': #d6dccb, // dividers inside cards
+  // Brand
+  'primary': #2f6b45, // buttons, links, logo, focus ring
+  'on-primary': #ffffff, // text on primary
+  'primary-deep': #1f4d3a, // offset shadows, section labels
+  'active': #c5db9c, // active nav item, selected
+  // Small elements
+  'key': #d3dcc3, // keyboard key caps (Ctrl)
+  'chip': #e6ebd9, // status chips
+  'bubble': #d6e5be, // your messages in agent chat
+  // Status
+  'danger': #c2361f, // recording, errors
+  'danger-soft': #fae0da, // recording halo, error backgrounds
+  'on-danger': #ffffff, // text on danger
+  'success': #2f6b45, // success text
+  // Agents (letter avatars, @mentions, chips)
+  'agent-notetaker': #2f6b45, // N
+  'agent-notetaker-soft': #d2dec9, // N avatar background (design #c5d4bb, lightened for 4.5:1)
+  'agent-researcher': #1f4d3a, // R
+  'agent-researcher-soft': #c6d2bd, // R avatar background
+  'agent-writer': #515f1f, // W (design #5e6b1e, darkened for 4.5:1)
+  'agent-writer-soft': #cfd6b9, // W avatar background
+  'agent-scheduler': #8e3b5a, // S
+  'agent-scheduler-soft': #d6d0c1, // S avatar background
+  // Speakers in transcripts (beyond the agent colours)
+  'speaker-blue': #2f4f8f, // third speaker
+);
+
+$fonts: (
+  'display': "'Fraunces Variable', Georgia, 'Times New Roman', serif", // headings
+  'text': "'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif", // everything else
+  'mono': "'JetBrains Mono Variable', ui-monospace, Consolas, 'SF Mono', monospace", // keys, timestamps
+);
+
+$space: (
+  '1': 4px, // tight gaps
+  '2': 8px, // small gaps
+  '3': 12px, // control padding
+  '4': 16px, // default gap
+  '5': 24px, // card padding
+  '6': 32px, // section spacing
+  '7': 48px, // page padding
+);
+
+$radius: (
+  'sm': 6px, // key caps, small chips
+  'md': 10px, // buttons, inputs, nav items
+  'lg': 16px, // cards
+  'pill': 999px, // pills and badges
+);
+
+$shadows: (
+  'card': '6px 6px 0 var(--aiw-color-primary-deep)', // offset shadow under cards
+  'button': '3px 3px 0 var(--aiw-color-primary-deep)', // offset shadow under primary buttons
+  'focus': '0 0 0 3px color-mix(in srgb, var(--aiw-color-primary) 35%, transparent)', // focus halo
+);
+
+$borders: (
+  'card': '2px solid var(--aiw-color-line)', // cards
+  'control': '1.5px solid var(--aiw-color-line)', // outlined buttons, key caps
+);
+
+/// Writes every token as a CSS custom property. Included once on :root (styles.scss).
+@mixin css-variables() {
+  @each $name, $value in $colors {
+    --aiw-color-#{$name}: #{$value};
+  }
+  @each $name, $value in $fonts {
+    --aiw-font-#{$name}: #{$value};
+  }
+  @each $name, $value in $space {
+    --aiw-space-#{$name}: #{$value};
+  }
+  @each $name, $value in $radius {
+    --aiw-radius-#{$name}: #{$value};
+  }
+  @each $name, $value in $shadows {
+    --aiw-shadow-#{$name}: #{$value};
+  }
+  @each $name, $value in $borders {
+    --aiw-border-#{$name}: #{$value};
+  }
+}

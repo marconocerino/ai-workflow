@@ -12,7 +12,7 @@ Vitest (unit), Playwright (e2e on the real app), ESLint + Prettier, electron-bui
 - docs/backlog.csv — all stories with acceptance criteria and Status (the source of truth)
 - PLAN.md — epics and stories with checkboxes, generated from the backlog (`npm run plan`)
 - design/*.png — the UI to match; design/README.md maps screens to stories and lists missing ones
-  (design/tokens.md doesn't exist yet — tokens come with VAI-201)
+- design/tokens.md — all design tokens (generated from src/theme/_tokens.scss) + contrast table
 - docs/decisions.md — record any architecture decision here
 - README.md — setup, security model, how to add an IPC call
 
@@ -34,6 +34,7 @@ Vitest (unit), Playwright (e2e on the real app), ESLint + Prettier, electron-bui
 - `npm run build` — renderer + electron build into dist/
 - `npm run dist:win` / `npm run dist:mac` — packaged app in release/
 - `npm run plan` — regenerate PLAN.md from docs/backlog.csv
+- `npm run tokens` — regenerate design/tokens.md after changing src/theme/_tokens.scss
 - Full check before every commit: `npm run lint && npm test && npm run e2e`
 
 ## Gotchas
@@ -43,6 +44,10 @@ Vitest (unit), Playwright (e2e on the real app), ESLint + Prettier, electron-bui
   (steps in README.md, "Adding an IPC call"); every handler is registered with `handle()`.
 - The sandboxed preload may only `import type` from our own files.
 - Never edit PLAN.md by hand; a test fails if it's out of sync with the backlog.
+- Styling: use `--aiw-*` token variables only (no hex/rgb outside src/theme/ — a test enforces it).
+  Shared classes: `.aiw-card`, `.aiw-chip`, `.aiw-kbd`, `.aiw-section-label`, `.aiw-dotted`, `.aiw-muted`.
+  New text colour on a new background → add the pair to TEXT_PAIRS in scripts/tokens.mjs.
+- No icon fonts or web fonts from the internet; use inline SVG icons and bundled fonts.
 
 ## Reference project: OpenWhispr (for inspiration)
 OpenWhispr (https://github.com/OpenWhispr/openwhispr) is an open-source Electron app with

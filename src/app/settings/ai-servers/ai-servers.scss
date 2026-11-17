@@ -1,51 +1,41 @@
-@use '../settings-card' as card;
-
 .page {
   max-width: 760px;
-  padding: 48px 48px 64px;
+  padding: var(--aiw-space-7) var(--aiw-space-7) 64px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: var(--aiw-space-5);
+  margin-bottom: var(--aiw-space-6);
 
   h1 {
-    margin: 0 0 8px;
-    font: var(--mat-sys-headline-medium);
-    font-weight: 700;
+    margin-bottom: var(--aiw-space-2);
   }
 }
 
 .lead {
   margin: 0;
-  color: var(--mat-sys-on-surface-variant);
 }
 
 .save-pill {
-  @include card.pill;
   white-space: nowrap;
   padding: 6px 14px;
-  background: var(--aiw-surface);
+  background: var(--aiw-color-surface);
+  border: 1px solid var(--aiw-color-line-soft);
 }
 
-.card {
-  @include card.card;
-
-  h2 {
-    @include card.title;
-    margin-bottom: 16px;
-  }
+.aiw-card h2 {
+  margin-bottom: var(--aiw-space-4);
 }
 
 .row {
   display: flex;
-  gap: 16px;
+  gap: var(--aiw-space-4);
   flex-wrap: wrap;
 }
 
 .error {
-  color: var(--mat-sys-error);
+  color: var(--aiw-color-danger);
 }

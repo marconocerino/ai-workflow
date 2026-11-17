@@ -1,3 +1,4 @@
+// Global styles. Values come from design tokens only (src/theme/_tokens.scss).
 @use 'theme/theme';
 
 html {
@@ -11,7 +12,123 @@ body {
 
 body {
   margin: 0;
-  background: var(--aiw-page-bg);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-large);
+  background-color: var(--aiw-color-page);
+  color: var(--aiw-color-ink);
+  font-family: var(--aiw-font-text);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--aiw-font-display);
+  color: var(--aiw-color-ink);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+h3 {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+a {
+  color: var(--aiw-color-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--aiw-color-primary);
+  outline-offset: 2px;
+}
+
+code,
+kbd,
+.aiw-mono {
+  font-family: var(--aiw-font-mono);
+}
+
+// ── Shared building blocks (from design/) ────────────────────────────────
+
+/// Dotted page background (Settings, Meeting notes).
+.aiw-dotted {
+  background-color: var(--aiw-color-page);
+  background-image: radial-gradient(var(--aiw-color-page-dot) 1px, transparent 1.2px);
+  background-size: 16px 16px;
+}
+
+/// Card with border and offset shadow.
+.aiw-card {
+  background: var(--aiw-color-surface);
+  border: var(--aiw-border-card);
+  border-radius: var(--aiw-radius-lg);
+  box-shadow: var(--aiw-shadow-card);
+  padding: var(--aiw-space-5);
+}
+
+/// Small uppercase section label, e.g. "SHORTCUT".
+.aiw-section-label {
+  margin: var(--aiw-space-6) 0 var(--aiw-space-3);
+  font-family: var(--aiw-font-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aiw-color-primary-deep);
+}
+
+/// Keyboard key cap, e.g. <kbd class="aiw-kbd">Ctrl</kbd>.
+.aiw-kbd {
+  display: inline-block;
+  padding: 1px 7px;
+  border: var(--aiw-border-control);
+  border-bottom-width: 3px;
+  border-radius: var(--aiw-radius-sm);
+  background: var(--aiw-color-key);
+  color: var(--aiw-color-ink);
+  font-family: var(--aiw-font-mono);
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+/// Pill / chip, e.g. "Saved", "Draft ready".
+.aiw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aiw-space-1);
+  padding: 2px 10px;
+  border-radius: var(--aiw-radius-pill);
+  background: var(--aiw-color-chip);
+  color: var(--aiw-color-ink-muted);
+  font-size: 13px;
+  font-weight: 500;
+
+  &.is-success {
+    background: var(--aiw-color-active);
+    color: var(--aiw-color-ink);
+  }
+}
+
+/// Primary buttons get the design's offset shadow.
+.mat-mdc-unelevated-button.mat-primary:not(:disabled),
+.mat-mdc-unelevated-button:not(.mat-accent, .mat-warn, :disabled) {
+  box-shadow: var(--aiw-shadow-button);
+}
+
+/// Hint and helper text.
+.aiw-muted {
+  color: var(--aiw-color-ink-muted);
 }
