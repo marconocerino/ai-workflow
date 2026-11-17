@@ -44,7 +44,7 @@ VAI-113,E1 Foundation,AI server settings,"As a user, I want to set the AI server
 • Requests only go to the configured hosts (see D-009)",3,Must,S0,"settings, ai",Done
 VAI-201,E2 Design system & shell,Design tokens,"As a developer, I want the green retro palette, fonts (Fraunces, Archivo), spacing, radii and offset shadows as theme tokens, so every screen looks consistent.","• Tokens defined once as an Angular Material theme plus CSS variables
 • Text colours meet 4.5:1 contrast
-• Changing a token updates every screen",3,Must,S0,ui,To do
+• Changing a token updates every screen",3,Must,S0,ui,Done
 VAI-202,E2 Design system & shell,Core components,"As a developer, I want reusable buttons, inputs, toggles, cards, chips, keycaps and agent avatars, so new screens are assembled, not redrawn.","• Each component has default, hover, focus and disabled states
 • A gallery page shows every component
 • Components are keyboard accessible",5,Must,S1,ui,To do

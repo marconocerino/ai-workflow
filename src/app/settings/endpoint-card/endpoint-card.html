@@ -1,4 +1,4 @@
-<section class="card" [attr.aria-labelledby]="id('heading')">
+<section class="aiw-card card" [attr.aria-labelledby]="id('heading')">
   <header>
     <h2 [id]="id('heading')">{{ heading() }}</h2>
     @if (description()) {
@@ -50,8 +50,8 @@
     <div class="key-label">
       <span class="label">API key</span>
       <span
-        class="pill"
-        [class.pill-ok]="hasKey()"
+        class="aiw-chip"
+        [class.is-success]="hasKey()"
         role="status"
         [attr.data-testid]="id('key-status')"
       >

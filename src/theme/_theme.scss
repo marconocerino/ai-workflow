@@ -1,11 +1,16 @@
-// Placeholder theme for VAI-101: proves Angular Material is wired in.
-// The real design tokens (green retro palette, Fraunces/Archivo, offset shadows,
-// contrast checks) replace this in VAI-201.
+// Angular Material theme wired to our design tokens (_tokens.scss).
+// Material reads its own --mat-sys-* variables; we point those at our --aiw-* variables, so
+// changing a token recolours Material components as well.
 @use '@angular/material' as mat;
+@use 'tokens';
 
 @mixin apply() {
   color-scheme: light;
 
+  // Tokens as CSS variables.
+  @include tokens.css-variables();
+
+  // Base Material theme: structure, typography and density. Colours are overridden below.
   @include mat.theme(
     (
       color: (
@@ -13,33 +18,71 @@
         theme-type: light,
       ),
       typography: (
-        plain-family: (
-          system-ui,
-          -apple-system,
-          'Segoe UI',
-          sans-serif,
-        ),
-        brand-family: (
-          system-ui,
-          -apple-system,
-          'Segoe UI',
-          sans-serif,
-        ),
+        plain-family: var(--aiw-font-text),
+        brand-family: var(--aiw-font-display),
+        bold-weight: 700,
+        medium-weight: 600,
+        regular-weight: 400,
       ),
       density: 0,
     )
   );
 
-  // Colours sampled from design/ — approximate placeholders until VAI-201 (Design tokens).
-  --aiw-page-bg: #eef0e2;
-  --aiw-sidebar-bg: #e2e8d2;
-  --aiw-active: #c5db9c;
-  --aiw-surface: #fbfcf4;
-  --aiw-ink: #1f2e25;
-  --aiw-shadow: #1f4d3a;
-  --aiw-primary: #2f6b45;
-  --aiw-on-primary: #ffffff;
-  --aiw-divider: #d6dccb;
-  --aiw-dot: #d3d8c4;
-  --aiw-success: #2f6b45;
+  // Material system colours → our tokens.
+  @include mat.theme-overrides(
+    (
+      primary: var(--aiw-color-primary),
+      on-primary: var(--aiw-color-on-primary),
+      primary-container: var(--aiw-color-active),
+      on-primary-container: var(--aiw-color-ink),
+      secondary-container: var(--aiw-color-active),
+      on-secondary-container: var(--aiw-color-ink),
+      background: var(--aiw-color-page),
+      on-background: var(--aiw-color-ink),
+      surface: var(--aiw-color-surface),
+      on-surface: var(--aiw-color-ink),
+      on-surface-variant: var(--aiw-color-ink-muted),
+      surface-container-lowest: var(--aiw-color-surface),
+      surface-container-low: var(--aiw-color-surface),
+      surface-container: var(--aiw-color-surface),
+      surface-container-high: var(--aiw-color-surface),
+      surface-container-highest: var(--aiw-color-key),
+      outline: var(--aiw-color-line),
+      outline-variant: var(--aiw-color-line-soft),
+      error: var(--aiw-color-danger),
+      on-error: var(--aiw-color-on-danger),
+      error-container: var(--aiw-color-danger-soft),
+      on-error-container: var(--aiw-color-ink),
+      corner-extra-small: var(--aiw-radius-sm),
+      corner-small: var(--aiw-radius-md),
+      corner-medium: var(--aiw-radius-md),
+      corner-large: var(--aiw-radius-lg),
+    )
+  );
+
+  // Buttons: rounded rectangles like the design, not M3 pills.
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--aiw-radius-md),
+      outlined-container-shape: var(--aiw-radius-md),
+      text-container-shape: var(--aiw-radius-md),
+      protected-container-shape: var(--aiw-radius-md),
+      outlined-outline-color: var(--aiw-color-line),
+      outlined-outline-width: 1.5px,
+      outlined-label-text-color: var(--aiw-color-ink),
+      filled-label-text-weight: 600,
+      outlined-label-text-weight: 600,
+    )
+  );
+
+  // Inputs: light surface inside the outline (the design's black fields are not copied).
+  @include mat.form-field-overrides(
+    (
+      outlined-outline-color: var(--aiw-color-line-soft),
+      outlined-hover-outline-color: var(--aiw-color-line),
+      outlined-focus-outline-color: var(--aiw-color-primary),
+      outlined-container-shape: var(--aiw-radius-md),
+      outlined-input-text-placeholder-color: var(--aiw-color-ink-subtle),
+    )
+  );
 }
