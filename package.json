@@ -18,7 +18,7 @@
     "format": "prettier --write .",
     "test": "npm run test:renderer && npm run test:electron",
     "test:renderer": "ng test --watch=false",
-    "test:electron": "tsc -p electron/tsconfig.spec.json && vitest run --config vitest.electron.config.ts",
+    "test:electron": "tsc -p electron/tsconfig.spec.json && node scripts/run-in-electron.mjs node_modules/vitest/vitest.mjs run --config vitest.electron.config.ts",
     "e2e": "npm run build && playwright test",
     "dist:mac": "npm run build && electron-builder --mac --dir",
     "dist:win": "npm run build && electron-builder --win --x64",
@@ -64,6 +64,10 @@
     "electron-winstaller": false,
     "fsevents": false,
     "lmdb": false,
-    "msgpackr-extract": false
+    "msgpackr-extract": false,
+    "better-sqlite3-multiple-ciphers": false
+  },
+  "dependencies": {
+    "better-sqlite3-multiple-ciphers": "^13.2.0"
   }
 }

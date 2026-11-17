@@ -1,4 +1,4 @@
-import type { SecretStore } from '../settings/secret-store';
+import { InvalidSecretError, type SecretStore, isSecretName } from '../settings/secret-store';
 import type { SettingsStore } from '../settings/settings-store';
 import type { createIpcRegistrar } from './handle';
 
@@ -16,10 +16,15 @@ export function registerSettingsIpc(
 ): void {
   handle('settings:get', () => settings.get());
   handle('settings:update', (_event, patch) => settings.update(patch));
+  // Only renderer-settable names; main-only secrets (e.g. the database key) are refused here.
+  const rendererName = (name: unknown) => {
+    if (!isSecretName(name)) throw new InvalidSecretError('Unknown secret name.');
+    return name;
+  };
   handle('secrets:set', (_event, payload) => {
     const p = payload as { name?: unknown; value?: unknown } | null | undefined;
-    secrets.set(p?.name, p?.value);
+    secrets.set(rendererName(p?.name), p?.value);
   });
-  handle('secrets:has', (_event, name) => secrets.has(name));
-  handle('secrets:clear', (_event, name) => secrets.clear(name));
+  handle('secrets:has', (_event, name) => secrets.has(rendererName(name)));
+  handle('secrets:clear', (_event, name) => secrets.clear(rendererName(name)));
 }

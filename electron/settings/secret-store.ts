@@ -30,8 +30,21 @@ export class InvalidSecretError extends Error {
   }
 }
 
+/** Secrets only the main process may touch (never accepted over IPC). */
+export const MAIN_ONLY_SECRET_NAMES = ['db.key'] as const;
+export type MainOnlySecretName = (typeof MAIN_ONLY_SECRET_NAMES)[number];
+export type AnySecretName = SecretName | MainOnlySecretName;
+
+/** Names the renderer may set, check or clear. */
 export function isSecretName(name: unknown): name is SecretName {
   return typeof name === 'string' && (SECRET_NAMES as readonly string[]).includes(name);
+}
+
+function isAnySecretName(name: unknown): name is AnySecretName {
+  return (
+    isSecretName(name) ||
+    (typeof name === 'string' && (MAIN_ONLY_SECRET_NAMES as readonly string[]).includes(name))
+  );
 }
 
 /**
@@ -81,7 +94,7 @@ export class SecretStore {
   }
 
   /** Main process only — never expose over IPC. Returns null if unset or unreadable. */
-  get(name: SecretName): string | null {
+  get(name: AnySecretName): string | null {
     const stored = this.readAll()[name];
     if (stored === undefined) return null;
     if (!this.encryptor.isEncryptionAvailable()) return null;
@@ -93,11 +106,16 @@ export class SecretStore {
     }
   }
 
-  private assertName(name: unknown): asserts name is SecretName {
-    if (!isSecretName(name)) throw new InvalidSecretError('Unknown secret name.');
+  /** True if OS encryption can be used right now. */
+  isAvailable(): boolean {
+    return this.encryptor.isEncryptionAvailable();
   }
 
-  private readAll(): Partial<Record<SecretName, string>> {
+  private assertName(name: unknown): asserts name is AnySecretName {
+    if (!isAnySecretName(name)) throw new InvalidSecretError('Unknown secret name.');
+  }
+
+  private readAll(): Partial<Record<AnySecretName, string>> {
     let text: string | null;
     try {
       text = readFileOrNull(this.file);
@@ -111,9 +129,9 @@ export class SecretStore {
       if (!isObject(parsed) || parsed['version'] !== 1 || !isObject(parsed['secrets'])) {
         throw new Error('bad format');
       }
-      const out: Partial<Record<SecretName, string>> = {};
+      const out: Partial<Record<AnySecretName, string>> = {};
       for (const [k, v] of Object.entries(parsed['secrets'])) {
-        if (isSecretName(k) && typeof v === 'string') out[k] = v;
+        if (isAnySecretName(k) && typeof v === 'string') out[k] = v;
       }
       return out;
     } catch {
@@ -130,7 +148,7 @@ export class SecretStore {
     }
   }
 
-  private writeAll(secrets: Partial<Record<SecretName, string>>): void {
+  private writeAll(secrets: Partial<Record<AnySecretName, string>>): void {
     writeFileAtomic(this.file, JSON.stringify({ version: 1, secrets }, null, 2) + '\n');
   }
 }

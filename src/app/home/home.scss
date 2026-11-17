@@ -50,3 +50,11 @@ dd {
   gap: var(--aiw-space-3);
   margin-top: var(--aiw-space-5);
 }
+
+.db {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aiw-space-2);
+  font-family: var(--aiw-font-text);
+}

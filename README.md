@@ -99,6 +99,15 @@ scripts/dev.mjs    `npm start` runner
   configured host, no redirects, key added as `Authorization: Bearer …`, never logged. The renderer
   never talks to AI servers directly. See D-009.
 
+## Local database
+
+- Encrypted SQLite (SQLCipher format) at `<userData>/data/app.db`; the key is created on first run
+  and stored encrypted by the OS. The Home card shows the status ("Encrypted · schema vN").
+- Schema changes: add `electron/db/migrations/NNN-name.ts` **and** `NNN-name.spec.ts`, then append it
+  to `migrations/index.ts`. Never edit a shipped migration. Failed migrations roll back and are logged.
+- Only the main process uses the database. Add typed IPC calls per feature; never expose raw SQL.
+- `npm run test:electron` runs inside Electron's Node (the SQLite driver is built for Electron).
+
 ## Design tokens
 
 - All colours, fonts, spacing, radii, shadows and borders live in `src/theme/_tokens.scss` and become

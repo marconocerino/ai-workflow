@@ -8,13 +8,29 @@ directories:
 files:
   - dist/app/**/*
   - '!dist/app/**/*.map'
+  - '!dist/app/**/*.spec.js'
+  - '!dist/app/electron/db/test-helpers.js'
   - dist/renderer/**/*
   - package.json
+  # Encrypted SQLite driver: ship only its JS and the one prebuilt binary for the target.
+  - '!node_modules/better-sqlite3-multiple-ciphers/{deps,src,build}/**'
+  # (each platform below drops the other operating systems' prebuilt binaries)
 asar: true
+asarUnpack:
+  - '**/*.node'
+# The driver ships N-API prebuilds for every platform, so no native rebuild is needed (D-013).
+npmRebuild: false
+linux:
+  files:
+    - '!node_modules/better-sqlite3-multiple-ciphers/prebuilds/{darwin,win32}-*.node'
 win:
+  files:
+    - '!node_modules/better-sqlite3-multiple-ciphers/prebuilds/{darwin,linux,linuxmusl}-*.node'
   target:
     - target: zip
       arch: [x64]
 mac:
+  files:
+    - '!node_modules/better-sqlite3-multiple-ciphers/prebuilds/{win32,linux,linuxmusl}-*.node'
   target: dir
   category: public.app-category.productivity

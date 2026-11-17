@@ -3,11 +3,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import type { AppInfo } from '../../../shared/ipc-contract';
 import { ElectronApi } from '../core/electron-api';
+import { Chip } from '../ui';
 
 /** Placeholder start page (VAI-101): proves Material and the typed IPC round trip work. */
 @Component({
   selector: 'app-home',
-  imports: [MatButtonModule, RouterLink],
+  imports: [MatButtonModule, RouterLink, Chip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
   styleUrl: './home.scss',

@@ -22,6 +22,7 @@ const info: AppInfo = {
   platform: 'win32',
   electron: '45.0.0',
   chrome: '140.0.0',
+  database: { status: 'ok', schemaVersion: 1, encrypted: true },
 };
 
 describe('createIpcRegistrar', () => {
@@ -66,6 +67,7 @@ describe('getAppInfo', () => {
         version: '0.1.0',
         platform: 'darwin',
         versions: { electron: '45.3.3', chrome: '142.0.0' },
+        database: { status: 'ok', schemaVersion: 1, encrypted: true },
       }),
     ).toEqual({
       name: 'AI Workflow',
@@ -73,10 +75,17 @@ describe('getAppInfo', () => {
       platform: 'darwin',
       electron: '45.3.3',
       chrome: '142.0.0',
+      database: { status: 'ok', schemaVersion: 1, encrypted: true },
     });
   });
   it('falls back when versions are missing', () => {
-    const r = getAppInfo({ name: 'x', version: '1', platform: 'linux', versions: {} });
+    const r = getAppInfo({
+      name: 'x',
+      version: '1',
+      platform: 'linux',
+      versions: {},
+      database: { status: 'error', schemaVersion: 0, encrypted: true },
+    });
     expect(r.electron).toBe('unknown');
     expect(r.chrome).toBe('unknown');
   });
