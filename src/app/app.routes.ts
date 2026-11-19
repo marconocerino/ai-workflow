@@ -3,6 +3,8 @@ import { feature } from './core/feature-flags';
 import { Home } from './home/home';
 import { WorkspaceShell } from './shell/workspace-shell';
 
+const comingSoon = () => import('./settings/coming-soon/coming-soon').then((m) => m.ComingSoon);
+
 export const routes: Routes = [
   {
     // Workspace sections share the sidebar (VAI-203).
@@ -36,18 +38,65 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./settings/settings-layout/settings-layout').then((m) => m.SettingsLayout),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'ai-servers' },
+      { path: '', pathMatch: 'full', redirectTo: 'dictation' },
+      {
+        path: 'dictation',
+        title: 'Dictation · Settings · AI Workflow',
+        loadComponent: () =>
+          import('./settings/dictation/dictation').then((m) => m.DictationSettings),
+      },
+      {
+        path: 'transcription',
+        title: 'Transcription · Settings · AI Workflow',
+        loadComponent: comingSoon,
+        data: {
+          heading: 'Transcription',
+          lead: 'How your speech is turned into text.',
+          coming: 'Language and speech-to-text options will be here.',
+        },
+      },
       {
         path: 'ai-servers',
         title: 'AI servers · Settings · AI Workflow',
         loadComponent: () => import('./settings/ai-servers/ai-servers').then((m) => m.AiServers),
       },
       {
-        path: 'diagnostics',
-        title: 'Diagnostics · Settings · AI Workflow',
-        loadComponent: () =>
-          import('./settings/diagnostics/diagnostics').then((m) => m.Diagnostics),
+        path: 'ai-cleanup',
+        title: 'AI cleanup · Settings · AI Workflow',
+        loadComponent: comingSoon,
+        data: {
+          heading: 'AI cleanup',
+          lead: 'How much the AI tidies up what you said.',
+          coming: 'Choose Light (punctuation, fillers) or Polished cleanup.',
+        },
       },
+      {
+        path: 'vocabulary',
+        title: 'Vocabulary · Settings · AI Workflow',
+        loadComponent: comingSoon,
+        data: {
+          heading: 'Vocabulary',
+          lead: 'Names and terms the AI should always get right.',
+          coming: 'Add your own words, names and abbreviations.',
+        },
+      },
+      {
+        path: 'style',
+        title: 'Style per app · Settings · AI Workflow',
+        loadComponent: comingSoon,
+        data: {
+          heading: 'Style per app',
+          lead: 'A different writing style for each app you dictate into.',
+          coming: 'Set a style per app, e.g. casual for chat and formal for email.',
+        },
+      },
+      {
+        path: 'about',
+        title: 'About & diagnostics · Settings · AI Workflow',
+        loadComponent: () => import('./settings/about/about').then((m) => m.About),
+      },
+      // Old address (VAI-107).
+      { path: 'diagnostics', redirectTo: 'about' },
     ],
   },
   {

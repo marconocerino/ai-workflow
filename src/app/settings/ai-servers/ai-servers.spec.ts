@@ -3,9 +3,11 @@ import type { AiWorkflowApi } from '../../../../shared/ipc-contract';
 import type { SecretName, Settings } from '../../../../shared/settings';
 import { AI_WORKFLOW_BRIDGE } from '../../core/electron-api';
 import { FeatureFlags } from '../../core/feature-flags';
+import { SaveStatus } from '../shared/save-status';
 import { AiServers } from './ai-servers';
 
 const stored: Settings = {
+  dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
   ai: {
     asr: { baseUrl: 'https://asr.company/v1', model: 'qwen3-asr' },
     llm: { baseUrl: '', model: '' },
@@ -41,7 +43,7 @@ function fakeBridge() {
 async function render(bridge = fakeBridge()) {
   TestBed.configureTestingModule({
     imports: [AiServers],
-    providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
+    providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }, SaveStatus],
   });
   await TestBed.inject(FeatureFlags).load();
   const fixture = TestBed.createComponent(AiServers);

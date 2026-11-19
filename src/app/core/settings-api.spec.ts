@@ -5,6 +5,7 @@ import { AI_WORKFLOW_BRIDGE, DesktopBridgeUnavailableError } from './electron-ap
 import { SettingsApi } from './settings-api';
 
 const settings: Settings = {
+  dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
   ai: {
     asr: { baseUrl: '', model: 'qwen3-asr' },
     llm: { baseUrl: 'https://llm.company', model: 'm' },

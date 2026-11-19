@@ -14,6 +14,12 @@ Screenshots of the target UI. They still say "Voice AI"; the product name is **A
 
 Notes on what's built:
 
+- **Settings (VAI-204):** sidebar and Dictation page match the design, with two differences.
+  An "AI servers" section sits after Transcription (D-009), and the status card says "Not active
+  yet" until the hotkey exists (VAI-301). Dictation's Microphone and Startup sections arrive with
+  VAI-302 and VAI-205. Transcription, AI cleanup, Vocabulary and Style per app show a "Coming
+  soon" page until their stories (design still missing). About & diagnostics is built from the
+  UI kit (no design).
 - **Sidebar (VAI-203):** matches the design. Meetings, Agent chats and the "Your agents" roster
   appear only when their feature flags are on (VAI-109). Agent status is "Idle" for every agent
   and the unread badge is hidden until the agent runtime exists (VAI-801+). The Ctrl hint is shown
@@ -34,7 +40,6 @@ they're in.
 | Meetings list                      | VAI-409          | S4     |
 | Name speakers                      | VAI-503          | S6     |
 | Other Settings pages (AI cleanup, vocabulary, style per app, about & diagnostics) | VAI-204, VAI-307–309 | S1–S2 |
-| Settings → Diagnostics (built in VAI-107 with the UI kit; VAI-204 folds it into "About & diagnostics") | VAI-107 | S1 |
 | Agent roster and permissions       | VAI-809          | S10    |
 
 ## Tokens

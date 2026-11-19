@@ -12,17 +12,17 @@ type ExportState =
   | { kind: 'error'; message: string };
 
 /**
- * Settings → Diagnostics (VAI-107): one-click export of logs and non-secret settings for
- * support. VAI-204 folds this into "About & diagnostics".
+ * Diagnostics export card (VAI-107): one-click export of logs and non-secret settings for
+ * support. Shown on Settings → About & diagnostics (VAI-204).
  */
 @Component({
-  selector: 'app-diagnostics',
+  selector: 'app-diagnostics-card',
   imports: [MatButtonModule, Chip, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './diagnostics.html',
   styleUrl: './diagnostics.scss',
 })
-export class Diagnostics {
+export class DiagnosticsCard {
   private readonly api = inject(DiagnosticsApi);
 
   protected readonly state = signal<ExportState>({ kind: 'idle' });

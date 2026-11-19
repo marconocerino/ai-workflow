@@ -45,7 +45,9 @@ test('default policy: meetings, agents and voiceprints leave no UI traces', asyn
   for (const url of [
     'app://renderer/',
     'app://renderer/settings/ai-servers',
-    'app://renderer/settings/diagnostics',
+    'app://renderer/settings/dictation',
+    'app://renderer/settings/about',
+    'app://renderer/settings/transcription',
   ]) {
     await page.goto(url);
     await page.locator('h1').waitFor();

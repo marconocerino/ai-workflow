@@ -1,10 +1,17 @@
-import type { AiEndpointSettings, Settings, SettingsPatch } from '../../shared/settings';
+import type {
+  AiEndpointSettings,
+  DictationMode,
+  DictationSettings,
+  Settings,
+  SettingsPatch,
+} from '../../shared/settings';
 
 /** Bump when the stored shape changes, and add a migration in migrations.ts. */
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 export function defaultSettings(): Settings {
   return {
+    dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
       llm: { baseUrl: '', model: '' },
@@ -18,6 +25,7 @@ export const LIMITS = {
   timeoutMs: { min: 1_000, max: 600_000 },
   retries: { min: 0, max: 10 },
   modelLength: 200,
+  shortcutKeys: { min: 2, max: 4 },
   urlLength: 2_000,
 } as const;
 
@@ -123,6 +131,44 @@ function readEndpoint(
   };
 }
 
+const DICTATION_MODES: readonly DictationMode[] = ['hold', 'toggle'];
+/** Modifier names or a single key name such as Space, F9, K. */
+const KEY_NAME = /^(Ctrl|Alt|Shift|Meta|Space|Enter|Tab|F([1-9]|1[0-9]|2[0-4])|[A-Z0-9])$/;
+
+function readDictation(
+  raw: unknown,
+  fallback: DictationSettings,
+  issues: SettingsIssue[],
+): DictationSettings {
+  if (raw === undefined) return structuredClone(fallback);
+  if (!isObject(raw)) {
+    issues.push({ path: 'dictation', message: 'must be an object' });
+    return structuredClone(fallback);
+  }
+  let mode = fallback.mode;
+  if (raw['mode'] !== undefined) {
+    if (DICTATION_MODES.includes(raw['mode'] as DictationMode)) mode = raw['mode'] as DictationMode;
+    else issues.push({ path: 'dictation.mode', message: 'must be "hold" or "toggle"' });
+  }
+  let toggleShortcut = [...fallback.toggleShortcut];
+  const keys = raw['toggleShortcut'];
+  if (keys !== undefined) {
+    const { min, max } = LIMITS.shortcutKeys;
+    if (
+      Array.isArray(keys) &&
+      keys.length >= min &&
+      keys.length <= max &&
+      keys.every((k) => typeof k === 'string' && KEY_NAME.test(k)) &&
+      new Set(keys).size === keys.length
+    ) {
+      toggleShortcut = [...(keys as string[])];
+    } else {
+      issues.push({ path: 'dictation.toggleShortcut', message: `must be ${min}–${max} key names` });
+    }
+  }
+  return { mode, toggleShortcut };
+}
+
 /**
  * Turn untrusted data into valid Settings. Every bad or missing field falls back to `base`
  * (defaults when loading from disk) and is reported in `issues`. Unknown keys are dropped.
@@ -144,6 +190,7 @@ export function sanitizeSettings(
   const a: Obj = ai ?? {};
   return {
     settings: {
+      dictation: readDictation(raw['dictation'], base.dictation, issues),
       ai: {
         asr: readEndpoint(a['asr'], base.ai.asr, 'ai.asr', issues),
         llm: readEndpoint(a['llm'], base.ai.llm, 'ai.llm', issues),

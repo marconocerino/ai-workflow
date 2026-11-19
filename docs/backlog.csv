@@ -56,7 +56,7 @@ VAI-203,E2 Design system & shell,App shell and sidebar,"As a user, I want a side
 • Sidebar shows agent status and the 'runs on company servers' badge",3,Must,S1,ui,Done
 VAI-204,E2 Design system & shell,Settings screen redesign,"As a user, I want Settings split into clear sections that save automatically, so I can find and change options quickly.","• Sections: Dictation, Transcription, AI cleanup, Vocabulary, Style per app, About & diagnostics
 • Changes save automatically with a visible confirmation
-• Existing settings carry over unchanged",5,Must,S1,ui,To do
+• Existing settings carry over unchanged",5,Must,S1,ui,Done
 VAI-205,E2 Design system & shell,Tray icon and window behaviour,"As a user, I want Voice AI in the system tray with its status, so it runs quietly in the background.","• Tray icon shows idle, listening and recording states
 • Closing the window keeps the app running in the tray
 • Option to start at sign-in",3,Should,S1,"ui, platform",To do

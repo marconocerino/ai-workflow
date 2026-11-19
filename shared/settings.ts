@@ -9,7 +9,17 @@ export interface AiEndpointSettings {
   model: string;
 }
 
+/** hold: hold Ctrl to talk, release to stop · toggle: press once to start, again to stop. */
+export type DictationMode = 'hold' | 'toggle';
+
+export interface DictationSettings {
+  mode: DictationMode;
+  /** Keys of the toggle shortcut, e.g. ['Ctrl', 'Shift', 'Space']. Changeable from VAI-301. */
+  toggleShortcut: string[];
+}
+
 export interface Settings {
+  dictation: DictationSettings;
   ai: {
     asr: AiEndpointSettings;
     llm: AiEndpointSettings;

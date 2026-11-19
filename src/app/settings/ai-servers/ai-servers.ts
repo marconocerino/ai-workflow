@@ -7,6 +7,8 @@ import { fieldError, ipcErrorMessage } from '../../core/ipc-errors';
 import { FeatureFlags } from '../../core/feature-flags';
 import { SettingsApi } from '../../core/settings-api';
 import { EndpointCard, type SaveState } from '../endpoint-card/endpoint-card';
+import { SaveStatus } from '../shared/save-status';
+import { SettingsHeader } from '../shared/settings-header';
 import { errorText } from '../validators';
 
 interface Loaded {
@@ -18,7 +20,7 @@ interface Loaded {
 /** Settings → AI servers (VAI-113): where the app's speech-to-text and LLM servers are set. */
 @Component({
   selector: 'app-ai-servers',
-  imports: [EndpointCard, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+  imports: [EndpointCard, SettingsHeader, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ai-servers.html',
   styleUrl: './ai-servers.scss',
@@ -26,6 +28,7 @@ interface Loaded {
 export class AiServers {
   private readonly api = inject(SettingsApi);
   private readonly features = inject(FeatureFlags);
+  private readonly status = inject(SaveStatus);
 
   // Hidden features leave no traces, not even in descriptions (VAI-109).
   protected readonly asrDescription = computed(
@@ -46,7 +49,6 @@ export class AiServers {
 
   protected readonly loaded = signal<Loaded | null>(null);
   protected readonly loadError = signal<string | null>(null);
-  protected readonly saveState = signal<SaveState | null>(null);
   protected readonly errorText = errorText;
 
   protected readonly timeoutSeconds = new FormControl(30, {
@@ -69,6 +71,7 @@ export class AiServers {
   });
 
   constructor() {
+    this.status.reset();
     void this.load();
   }
 
@@ -88,7 +91,7 @@ export class AiServers {
   }
 
   protected onSaveState(state: SaveState): void {
-    this.saveState.set(state);
+    this.status.set(state);
   }
 
   async saveTimeout(): Promise<void> {
@@ -108,15 +111,12 @@ export class AiServers {
     path: string,
     patch: Parameters<SettingsApi['update']>[0],
   ): Promise<void> {
-    this.saveState.set('saving');
     try {
-      await this.api.update(patch);
+      await this.status.track(this.api.update(patch));
       control.markAsPristine();
-      this.saveState.set('saved');
     } catch (e) {
       control.setErrors({ server: fieldError(e, path) ?? ipcErrorMessage(e) });
       control.markAsTouched();
-      this.saveState.set('error');
     }
   }
 }

@@ -49,6 +49,22 @@ describe('SettingsStore', () => {
     expect(readJson()).toMatchObject({ version: SETTINGS_VERSION });
   });
 
+  it('v1 file from an earlier build (VAI-204): every value carries over unchanged', () => {
+    const v1 = fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v1.json'), 'utf8');
+    write(v1);
+    const loaded = store().load();
+    expect(loaded.ai).toEqual(JSON.parse(v1).data.ai);
+    expect(loaded.dictation).toEqual(defaultSettings().dictation);
+    expect(warnings).toEqual([]);
+    // Written back as the current version, old values intact.
+    expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
+    // And still intact after an unrelated change.
+    const s = store();
+    s.load();
+    s.update({ dictation: { mode: 'toggle' } });
+    expect((readJson() as { data: { ai: unknown } }).data.ai).toEqual(JSON.parse(v1).data.ai);
+  });
+
   it.each([
     ['broken JSON', '{"version": 1, "data": {'],
     ['empty file', ''],

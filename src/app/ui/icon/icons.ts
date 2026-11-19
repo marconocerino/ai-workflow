@@ -12,6 +12,34 @@ export type IconShape =
   | ['polygon', { points: string }];
 
 export const ICONS = {
+  book: [
+    [
+      'path',
+      {
+        d: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20',
+      },
+    ],
+  ],
+  'layout-grid': [
+    ['rect', { x: '3', y: '3', width: '7', height: '7', rx: '1' }],
+    ['rect', { x: '14', y: '3', width: '7', height: '7', rx: '1' }],
+    ['rect', { x: '14', y: '14', width: '7', height: '7', rx: '1' }],
+    ['rect', { x: '3', y: '14', width: '7', height: '7', rx: '1' }],
+  ],
+  activity: [
+    [
+      'path',
+      {
+        d: 'M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2',
+      },
+    ],
+  ],
+  server: [
+    ['rect', { x: '2', y: '2', width: '20', height: '8', rx: '2', ry: '2' }],
+    ['rect', { x: '2', y: '14', width: '20', height: '8', rx: '2', ry: '2' }],
+    ['line', { x1: '6', y1: '6', x2: '6.01', y2: '6' }],
+    ['line', { x1: '6', y1: '18', x2: '6.01', y2: '18' }],
+  ],
   mic: [
     ['path', { d: 'M12 19v3' }],
     ['path', { d: 'M19 10v2a7 7 0 0 1-14 0v-2' }],

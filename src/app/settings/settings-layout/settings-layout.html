@@ -2,55 +2,39 @@
   <aside class="sidebar">
     <app-brand subtitle="Settings" />
 
-    <nav aria-label="Settings sections">
-      <a
-        routerLink="ai-servers"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        data-testid="nav-ai-servers"
-      >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          width="18"
-          height="18"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="7" rx="2" />
-          <rect x="3" y="13" width="18" height="7" rx="2" />
-          <path d="M7 7.5h.01M7 16.5h.01" stroke-linecap="round" stroke-width="2.5" />
-        </svg>
-        AI servers
-      </a>
-      <a
-        routerLink="diagnostics"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        data-testid="nav-diagnostics"
-      >
-        <aiw-icon name="file" [size]="18" />
-        Diagnostics
-      </a>
+    <!-- The hotkey arrives with VAI-301; until then dictation isn't listening. -->
+    <div class="status-card" data-testid="dictation-status">
+      <div class="status"><span class="dot" aria-hidden="true"></span> Not active yet</div>
+      <div class="how aiw-muted">
+        @if (mode() === 'toggle') {
+          Press <aiw-keys [keys]="toggleShortcut()" /> to dictate
+        } @else {
+          Hold <aiw-keys keys="Ctrl" /> to dictate
+        }
+      </div>
+    </div>
+
+    <nav aria-label="Settings sections" data-testid="settings-nav">
+      <ul>
+        @for (section of sections; track section.path) {
+          <li>
+            <a
+              [routerLink]="section.path"
+              routerLinkActive="active"
+              ariaCurrentWhenActive="page"
+              [attr.data-testid]="'nav-' + section.path"
+            >
+              <aiw-icon [name]="section.icon" [size]="18" />
+              {{ section.label }}
+            </a>
+          </li>
+        }
+      </ul>
     </nav>
 
     <div class="bottom">
       <a routerLink="/" class="back" data-testid="back-to-workspace">
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          width="16"
-          height="16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M15 6l-6 6 6 6" />
-        </svg>
+        <aiw-icon name="chevron-left" [size]="16" />
         Back to workspace
       </a>
       @if (version(); as v) {

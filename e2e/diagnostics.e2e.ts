@@ -31,6 +31,7 @@ test('logs have levels and timestamps, never keys; export makes a zip of logs an
 
   // Use the key: save it and send it to the server in a request header.
   await page.getByTestId('nav-settings').click();
+  await page.getByTestId('nav-ai-servers').click();
   await page.getByTestId('llm-base-url').fill(server.baseUrl);
   await page.getByTestId('llm-base-url').blur();
   await page.getByTestId('llm-model').fill('qwen3-32b');
@@ -48,8 +49,10 @@ test('logs have levels and timestamps, never keys; export makes a zip of logs an
   }, KEY);
 
   // Export from Settings → Diagnostics.
-  await page.getByTestId('nav-diagnostics').click();
-  await expect(page.getByRole('heading', { name: 'Diagnostics', exact: true })).toBeVisible();
+  await page.getByTestId('nav-about').click();
+  await expect(
+    page.getByRole('heading', { name: 'About & diagnostics', exact: true }),
+  ).toBeVisible();
   await page.getByTestId('export-diagnostics').click();
   await expect(page.getByTestId('export-status')).toContainText('Saved');
   await expect(page.getByTestId('export-status')).toContainText(

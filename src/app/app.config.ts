@@ -5,7 +5,7 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
 import { ReportingErrorHandler } from './core/error-reporter';
@@ -16,7 +16,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     // Flags before the first screen, so hidden features never flash (VAI-109).
     provideAppInitializer(() => inject(FeatureFlags).load()),
-    provideRouter(routes),
+    // Route data → component inputs (Settings "coming soon" pages).
+    provideRouter(routes, withComponentInputBinding()),
     { provide: ErrorHandler, useClass: ReportingErrorHandler },
   ],
 };
