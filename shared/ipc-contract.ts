@@ -6,6 +6,7 @@
  * or payload is a compile error on both sides.
  */
 import type { AiService, ConnectionResult } from './ai';
+import type { FeatureState } from './features';
 import type { SecretName, Settings, SettingsPatch } from './settings';
 
 /** Local database health (VAI-106). Never contains data or keys. */
@@ -42,6 +43,8 @@ export type DiagnosticsExportResult = { saved: true; fileName: string } | { save
 /** channel → request payload and response type. */
 export interface IpcContract {
   'app:get-info': { request: void; response: AppInfo };
+  /** Feature flags from the managed policy, fixed at startup. Read-only: there is no setter. */
+  'features:get': { request: void; response: FeatureState };
   'settings:get': { request: void; response: Settings };
   /** Validates and saves; rejects with a message naming the bad field. Returns the saved settings. */
   'settings:update': { request: SettingsPatch; response: Settings };
@@ -70,6 +73,9 @@ export type IpcArgs<C extends IpcChannel> = IpcRequest<C> extends void ? [] : [I
 export interface AiWorkflowApi {
   app: {
     getInfo(): Promise<AppInfo>;
+  };
+  features: {
+    get(): Promise<FeatureState>;
   };
   settings: {
     get(): Promise<Settings>;

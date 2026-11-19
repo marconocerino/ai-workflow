@@ -26,6 +26,7 @@ function fakeBridge() {
       clear: vi.fn().mockResolvedValue(undefined),
     },
     ai: { testConnection: vi.fn() },
+    features: { get: vi.fn() },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },
     diagnostics: { export: vi.fn(), openLogs: vi.fn() },
   } satisfies AiWorkflowApi;

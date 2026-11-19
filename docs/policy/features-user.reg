@@ -1,0 +1,10 @@
+Windows Registry Editor Version 5.00
+
+; AI Workflow feature flags for one user (pilot group) (VAI-109). Normally written by GPO
+; (User Configuration) or Intune for the users in the pilot group: the Policies key is read-only
+; for normal users. 1 = on, 0 = off. Missing = off. Restart AI Workflow to apply.
+
+[HKEY_CURRENT_USER\Software\Policies\AI Workflow]
+"Meetings"=dword:00000001
+"Agents"=dword:00000000
+"Voiceprints"=dword:00000000

@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+; AI Workflow feature flags for everyone on this PC (VAI-109). Needs admin. Wins over per-user.
+; 1 = on, 0 = off. Missing = off. Restart AI Workflow to apply.
+
+[HKEY_LOCAL_MACHINE\Software\Policies\AI Workflow]
+"Meetings"=dword:00000001
+"Agents"=dword:00000000
+"Voiceprints"=dword:00000000

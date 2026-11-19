@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import type { AiWorkflowApi } from '../../../../shared/ipc-contract';
 import type { SecretName, Settings } from '../../../../shared/settings';
 import { AI_WORKFLOW_BRIDGE } from '../../core/electron-api';
+import { FeatureFlags } from '../../core/feature-flags';
 import { AiServers } from './ai-servers';
 
 const stored: Settings = {
@@ -26,6 +27,12 @@ function fakeBridge() {
       clear: vi.fn(),
     },
     ai: { testConnection: vi.fn() },
+    features: {
+      get: vi.fn().mockResolvedValue({
+        flags: { meetings: false, agents: false, voiceprints: false },
+        sources: ['defaults'],
+      }),
+    },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },
     diagnostics: { export: vi.fn(), openLogs: vi.fn() },
   } satisfies AiWorkflowApi;
@@ -36,6 +43,7 @@ async function render(bridge = fakeBridge()) {
     imports: [AiServers],
     providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
   });
+  await TestBed.inject(FeatureFlags).load();
   const fixture = TestBed.createComponent(AiServers);
   await fixture.whenStable();
   fixture.detectChanges();
@@ -45,6 +53,21 @@ async function render(bridge = fakeBridge()) {
 }
 
 describe('AiServers', () => {
+  it('descriptions mention meetings and agents only when those features are on', async () => {
+    const off = await render();
+    expect(off.el.textContent).not.toMatch(/meeting|agent/i);
+    TestBed.resetTestingModule();
+    const bridge = fakeBridge();
+    bridge.features.get.mockResolvedValue({
+      flags: { meetings: true, agents: true, voiceprints: false },
+      sources: ['registry'],
+    });
+    const on = await render(bridge);
+    expect(on.el.textContent).toContain('dictation and meetings');
+    expect(on.el.textContent).toContain('Writes meeting summaries.');
+    expect(on.el.textContent).toContain('Powers the agents.');
+  });
+
   it('loads both servers, key status and advanced values', async () => {
     const { q } = await render();
     expect(q<HTMLInputElement>('asr-base-url')!.value).toBe('https://asr.company/v1');

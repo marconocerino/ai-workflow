@@ -73,7 +73,19 @@ start /wait "" "%LOCALAPPDATA%\Programs\AI Workflow\Uninstall AI Workflow.exe" /
 
 - [ ] App and `%APPDATA%\AI Workflow` both removed, no prompts.
 
-## 7. Custom folder
+## 7. Feature flags (registry policy)
+
+Needs an admin account for this step (the policy keys are admin-only). Copy `docs/policy/*.reg`.
+
+1. With no policy: Home has **no** Meetings or Agents buttons.
+2. As admin, double-click `features-machine.reg` (turns Meetings on). Restart AI Workflow.
+   - [ ] Home shows a **Meetings** button; it opens a "Coming soon" page. No Agents button.
+   - [ ] `%APPDATA%\AI Workflow\logs\main.log` has `[policy] Features meetings=on agents=off voiceprints=off source=registry`.
+3. As the standard user, try `reg add "HKCU\Software\Policies\AI Workflow" /v Agents /t REG_DWORD /d 1`.
+   - [ ] "Access is denied" (users can't enable features themselves).
+4. As admin, double-click `features-remove-machine.reg`, restart: the Meetings button is gone.
+
+## 8. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

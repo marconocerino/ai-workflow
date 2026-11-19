@@ -40,6 +40,7 @@ function fakeBridge() {
         .fn()
         .mockResolvedValue({ ok: true, code: 'ok', message: 'Connected (12 ms).', latencyMs: 12 }),
     },
+    features: { get: vi.fn() },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },
     diagnostics: { export: vi.fn(), openLogs: vi.fn() },
   } satisfies AiWorkflowApi;

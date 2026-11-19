@@ -87,6 +87,7 @@ test('API key is encrypted on disk and can never be read back by the renderer', 
   });
   expect(exposed).toEqual({
     app: ['getInfo'],
+    features: ['get'],
     settings: ['get', 'update'],
     secrets: ['clear', 'has', 'set'],
     ai: ['testConnection'],

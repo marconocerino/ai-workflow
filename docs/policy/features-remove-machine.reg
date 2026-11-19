@@ -1,0 +1,5 @@
+Windows Registry Editor Version 5.00
+
+; Removes the per-machine AI Workflow policy (all features back to off unless set per user).
+
+[-HKEY_LOCAL_MACHINE\Software\Policies\AI Workflow]
