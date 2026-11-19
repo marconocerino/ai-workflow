@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { DatabaseStatus } from '../../shared/ipc-contract';
 import type { AnySecretName } from '../settings/secret-store';
+import { consoleLogger } from '../logging/logger';
 import { MIGRATIONS } from './migrations';
 import { MigrationFailedError, currentVersion, runMigrations } from './migrator';
 import { KEY_PATTERN, WrongKeyError, openEncrypted } from './open';
@@ -10,10 +11,10 @@ import type { Db, DbLogger, Migration } from './types';
 
 /** The parts of SecretStore the database needs (main-only key). */
 export interface KeyStore {
-  isAvailable(): boolean;
+  isAvailable(): Promise<boolean>;
   has(name: AnySecretName): boolean;
-  get(name: AnySecretName): string | null;
-  set(name: AnySecretName, value: string): void;
+  get(name: AnySecretName): Promise<string | null>;
+  set(name: AnySecretName, value: string): Promise<void>;
 }
 
 export interface AppDatabaseOptions {
@@ -33,7 +34,7 @@ const KEY_NAME = 'db.key';
  * - Key lost or wrong: moves the unreadable file aside and starts a new database.
  * - Migration fails: that migration is rolled back and logged; status "error".
  *
- * Never throws from open(): the app always starts. Main process only.
+ * open() never rejects: the app always starts. Main process only.
  */
 export class AppDatabase {
   readonly file: string;
@@ -49,22 +50,22 @@ export class AppDatabase {
     options: AppDatabaseOptions = {},
   ) {
     this.file = path.join(dir, 'app.db');
-    this.logger = options.logger ?? console;
+    this.logger = options.logger ?? consoleLogger;
     this.now = options.now ?? (() => new Date());
     this.migrations = options.migrations ?? MIGRATIONS;
   }
 
-  open(): DatabaseStatus {
+  async open(): Promise<DatabaseStatus> {
     this.close();
 
-    if (!this.keys.isAvailable()) {
+    if (!(await this.keys.isAvailable().catch(() => false))) {
       this.logger.warn('Database: OS encryption is not available; local storage is disabled.');
       return this.set('unavailable', 0, 'Secure storage is not available on this computer.');
     }
 
     let db: Db;
     try {
-      db = this.openWithKey();
+      db = await this.openWithKey();
     } catch (e) {
       this.logger.error(`Database: could not open (${e instanceof Error ? e.name : 'error'}).`);
       return this.set('error', 0, 'The local database could not be opened.');
@@ -101,28 +102,28 @@ export class AppDatabase {
   }
 
   /** Read the stored key, or create one on first run. Recovers from a lost or wrong key. */
-  private openWithKey(): Db {
+  private async openWithKey(): Promise<Db> {
     fs.mkdirSync(path.dirname(this.file), { recursive: true });
     const exists = fs.existsSync(this.file);
-    const stored = this.keys.has(KEY_NAME) ? this.keys.get(KEY_NAME) : null;
+    const stored = this.keys.has(KEY_NAME) ? await this.keys.get(KEY_NAME) : null;
     const usable = stored !== null && KEY_PATTERN.test(stored);
 
     if (exists && !usable) {
       this.moveAside('the key is missing or unreadable');
     }
-    const key = usable ? stored : this.newKey();
+    const key = usable ? stored : await this.newKey();
     try {
       return openEncrypted(this.file, key);
     } catch (e) {
       if (!(e instanceof WrongKeyError)) throw e;
       this.moveAside('it could not be decrypted with the stored key');
-      return openEncrypted(this.file, this.newKey());
+      return openEncrypted(this.file, await this.newKey());
     }
   }
 
-  private newKey(): string {
+  private async newKey(): Promise<string> {
     const key = randomBytes(32).toString('hex');
-    this.keys.set(KEY_NAME, key);
+    await this.keys.set(KEY_NAME, key);
     return key;
   }
 

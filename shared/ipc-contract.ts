@@ -29,6 +29,16 @@ export interface AppInfo {
   database: DatabaseStatus;
 }
 
+/** An unexpected renderer error, sent to the main-process log (VAI-107). Capped and scrubbed. */
+export interface RendererErrorReport {
+  name: string;
+  message: string;
+  stack?: string;
+}
+
+/** Result of Settings → Diagnostics → Export. `fileName` only (no folder path). */
+export type DiagnosticsExportResult = { saved: true; fileName: string } | { saved: false };
+
 /** channel → request payload and response type. */
 export interface IpcContract {
   'app:get-info': { request: void; response: AppInfo };
@@ -41,6 +51,12 @@ export interface IpcContract {
   'secrets:clear': { request: SecretName; response: void };
   /** Calls GET {baseUrl}/models on the saved server with the saved key. */
   'ai:test-connection': { request: AiService; response: ConnectionResult };
+  /** Log an unexpected renderer error. The renderer can't write anything else to the log. */
+  'log:renderer-error': { request: RendererErrorReport; response: void };
+  /** Asks where to save, writes the diagnostics zip, shows it in the file manager. */
+  'diagnostics:export': { request: void; response: DiagnosticsExportResult };
+  /** Opens the logs folder in the file manager. */
+  'diagnostics:open-logs': { request: void; response: void };
 }
 
 export type IpcChannel = keyof IpcContract;
@@ -66,5 +82,12 @@ export interface AiWorkflowApi {
   };
   ai: {
     testConnection(service: AiService): Promise<ConnectionResult>;
+  };
+  log: {
+    rendererError(report: RendererErrorReport): Promise<void>;
+  };
+  diagnostics: {
+    export(): Promise<DiagnosticsExportResult>;
+    openLogs(): Promise<void>;
   };
 }

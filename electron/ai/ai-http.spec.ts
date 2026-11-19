@@ -25,7 +25,7 @@ function setup(
 ) {
   const settings = opts.settings ?? settingsWith();
   const key = opts.key === undefined ? KEY : opts.key;
-  const secrets = { get: (name: SecretName) => (name === 'ai.llm.apiKey' ? key : null) };
+  const secrets = { get: async (name: SecretName) => (name === 'ai.llm.apiKey' ? key : null) };
   const fetchFn = vi.fn(respond);
   const client = new AiHttpClient(
     () => settings,
@@ -163,7 +163,7 @@ describe('testConnection', () => {
     expect((await blocked.test()).code).toBe('blocked');
 
     expect(
-      (await testConnection('evil', blocked.client, defaultSettings, { get: () => null })).ok,
+      (await testConnection('evil', blocked.client, defaultSettings, { get: async () => null })).ok,
     ).toBe(false);
   });
 

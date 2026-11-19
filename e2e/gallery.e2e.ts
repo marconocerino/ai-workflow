@@ -230,11 +230,12 @@ test.describe('gallery', () => {
   });
 });
 
-test('automated accessibility check (axe) passes on gallery, home and settings', async () => {
+test('automated accessibility check (axe) passes on gallery, home and settings pages', async () => {
   for (const url of [
     'app://renderer/gallery',
     'app://renderer/',
     'app://renderer/settings/ai-servers',
+    'app://renderer/settings/diagnostics',
   ]) {
     await page.goto(url);
     await page.locator('h1').waitFor();

@@ -21,9 +21,9 @@ export function registerSettingsIpc(
     if (!isSecretName(name)) throw new InvalidSecretError('Unknown secret name.');
     return name;
   };
-  handle('secrets:set', (_event, payload) => {
+  handle('secrets:set', async (_event, payload) => {
     const p = payload as { name?: unknown; value?: unknown } | null | undefined;
-    secrets.set(rendererName(p?.name), p?.value);
+    await secrets.set(rendererName(p?.name), p?.value);
   });
   handle('secrets:has', (_event, name) => secrets.has(rendererName(name)));
   handle('secrets:clear', (_event, name) => secrets.clear(rendererName(name)));

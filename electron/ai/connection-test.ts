@@ -26,7 +26,7 @@ export async function testConnection(
     return { ok: false, code: 'bad-response', message: 'Unknown server.' };
   }
   const { model } = settings().ai[service];
-  const hasKey = secrets.get(SECRET_FOR[service]) !== null;
+  const hasKey = (await secrets.get(SECRET_FOR[service])) !== null;
 
   const started = now();
   let res: Response;

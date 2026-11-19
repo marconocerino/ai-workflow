@@ -1,12 +1,27 @@
-import { BrowserWindow, app, ipcMain, net, protocol, safeStorage, session, shell } from 'electron';
+import {
+  BrowserWindow,
+  app,
+  dialog,
+  ipcMain,
+  net,
+  protocol,
+  safeStorage,
+  session,
+  shell,
+} from 'electron';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { AiHttpClient } from './ai/ai-http';
 import { AppDatabase } from './db/app-database';
+import { buildDiagnosticsZip, diagnosticsFileName } from './diagnostics/export';
 import { registerAiIpc } from './ipc/ai';
 import { getAppInfo } from './ipc/app-info';
+import { registerDiagnosticsIpc } from './ipc/diagnostics';
 import { createIpcRegistrar } from './ipc/handle';
 import { registerSettingsIpc } from './ipc/settings';
+import { Logger, RotatingFile, parseLogLevel } from './logging';
+import { terminalEcho } from './logging/logger';
 import {
   APP_ORIGIN,
   APP_SCHEME,
@@ -18,6 +33,7 @@ import {
 import { type Encryptor, SecretStore } from './settings/secret-store';
 import { SettingsStore } from './settings/settings-store';
 import { APP_TITLE, createMainWindowOptions } from './window';
+import { SECRET_NAMES, type SecretName } from '../shared/settings';
 
 // Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
 // so e2e tests never touch the real profile or pop up a Keychain prompt.
@@ -27,6 +43,37 @@ if (!app.isPackaged && process.env['AIW_USER_DATA_DIR']) {
 if (!app.isPackaged && process.env['AIW_MOCK_KEYCHAIN'] === '1') {
   app.commandLine.appendSwitch('use-mock-keychain');
 }
+
+// Logging (VAI-107): <userData>/logs/main.log, rotated at 1 MB, 5 files kept. Level `info`;
+// dev/test may set AIW_LOG_LEVEL. Never log transcripts, audio or keys (see electron/logging).
+const logFile = new RotatingFile(path.join(app.getPath('userData'), 'logs'));
+const logger = new Logger({
+  sink: (line) => logFile.write(line),
+  level: (!app.isPackaged && parseLogLevel(process.env['AIW_LOG_LEVEL'])) || 'info',
+  ...(!app.isPackaged ? { echo: terminalEcho } : {}),
+});
+const appLog = logger.scope('app');
+appLog.info('Starting', {
+  version: app.getVersion(),
+  platform: process.platform,
+  arch: process.arch,
+  electron: process.versions.electron,
+  packaged: app.isPackaged,
+});
+// Observe only: doesn't change Electron's default handling of crashes (VAI-111 adds recovery).
+process.on('uncaughtExceptionMonitor', (error, origin) =>
+  appLog.error('Uncaught exception in the main process', { origin, error }),
+);
+app.on('render-process-gone', (_e, _wc, details) =>
+  appLog.error('Window process stopped', { reason: details.reason, exitCode: details.exitCode }),
+);
+app.on('child-process-gone', (_e, details) =>
+  appLog.error('Helper process stopped', {
+    type: details.type,
+    reason: details.reason,
+    exitCode: details.exitCode,
+  }),
+);
 
 /** Dev only: URL of `ng serve`. Ignored in packaged builds. */
 const devServerUrl = !app.isPackaged ? process.env['AIW_DEV_SERVER_URL'] : undefined;
@@ -66,16 +113,25 @@ if (!app.requestSingleInstanceLock()) {
     contents.on('will-attach-webview', (event) => event.preventDefault());
   });
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     configureSession();
     registerAppProtocol();
     const settingsDir = app.getPath('userData');
-    const settings = new SettingsStore(settingsDir);
+    const settings = new SettingsStore(settingsDir, { logger: logger.scope('settings') });
     settings.load();
-    const secrets = new SecretStore(settingsDir, osEncryptor());
-    const database = new AppDatabase(path.join(settingsDir, 'data'), secrets);
-    database.open();
-    app.on('will-quit', () => database.close());
+    const secrets = new SecretStore(settingsDir, osEncryptor(), {
+      logger: logger.scope('secrets'),
+      onSecret: (value) => logger.addSecret(value),
+    });
+    const database = new AppDatabase(path.join(settingsDir, 'data'), secrets, {
+      logger: logger.scope('db'),
+    });
+    const db = await database.open();
+    logger.scope('db').info('Database opened', { status: db.status, schema: db.schemaVersion });
+    app.on('will-quit', () => {
+      database.close();
+      appLog.info('Quit');
+    });
     registerIpc(settings, secrets, database);
     createMainWindow();
 
@@ -119,11 +175,14 @@ function registerAppProtocol(): void {
  */
 function osEncryptor(): Encryptor {
   return {
-    isEncryptionAvailable: () =>
-      safeStorage.isEncryptionAvailable() &&
+    isEncryptionAvailable: async () =>
+      (await safeStorage.isAsyncEncryptionAvailable()) &&
       !(process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text'),
-    encryptString: (text) => safeStorage.encryptString(text),
-    decryptString: (data) => safeStorage.decryptString(data),
+    encryptString: (text) => safeStorage.encryptStringAsync(text),
+    decryptString: async (data) => {
+      const { result, shouldReEncrypt } = await safeStorage.decryptStringAsync(data);
+      return { value: result, shouldReEncrypt };
+    },
   };
 }
 
@@ -132,16 +191,17 @@ function registerIpc(settings: SettingsStore, secrets: SecretStore, database: Ap
     isTrustedUrl(event.senderFrame?.url, trustedOrigins),
   );
 
-  handle('app:get-info', () =>
+  const appInfo = () =>
     getAppInfo({
       name: APP_TITLE,
       version: app.getVersion(),
       platform: process.platform,
       versions: process.versions,
       database: database.status(),
-    }),
-  );
+    });
+  handle('app:get-info', appInfo);
   registerSettingsIpc(handle, settings, secrets);
+  registerDiagnosticsIpc(handle, diagnosticsDeps(settings, secrets, appInfo));
 
   // Electron's net.fetch uses Chromium's network stack: system proxy and company certificates work.
   const aiClient = new AiHttpClient(
@@ -149,7 +209,57 @@ function registerIpc(settings: SettingsStore, secrets: SecretStore, database: Ap
     secrets,
     (url, init) => net.fetch(url, init),
   );
-  registerAiIpc(handle, aiClient, settings, secrets);
+  registerAiIpc(handle, aiClient, settings, secrets, logger.scope('ai'));
+}
+
+/** Dev/test only: save diagnostics into this folder without a dialog (for e2e). */
+const testDiagnosticsDir = !app.isPackaged ? process.env['AIW_DIAGNOSTICS_DIR'] : undefined;
+
+function diagnosticsDeps(
+  settings: SettingsStore,
+  secrets: SecretStore,
+  appInfo: () => ReturnType<typeof getAppInfo>,
+): Parameters<typeof registerDiagnosticsIpc>[1] {
+  return {
+    logger: logger.scope('diagnostics'),
+    rendererLogger: logger.scope('renderer'),
+    defaultName: () => diagnosticsFileName(new Date()),
+    chooseFile: async (name) => {
+      if (testDiagnosticsDir) return path.join(testDiagnosticsDir, name);
+      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+      const options = {
+        title: 'Export diagnostics',
+        defaultPath: path.join(app.getPath('downloads'), name),
+        filters: [{ name: 'Zip archive', extensions: ['zip'] }],
+      };
+      const result = win
+        ? await dialog.showSaveDialog(win, options)
+        : await dialog.showSaveDialog(options);
+      return result.canceled || !result.filePath ? null : result.filePath;
+    },
+    writeZip: (file) => {
+      const zip = buildDiagnosticsZip({
+        logFiles: logFile.files(),
+        settings: settings.get(),
+        appInfo: appInfo(),
+        secretsSet: Object.fromEntries(SECRET_NAMES.map((n) => [n, secrets.has(n)])) as Record<
+          SecretName,
+          boolean
+        >,
+        redactor: logger.redactor,
+        now: new Date(),
+      });
+      fs.writeFileSync(file, zip);
+    },
+    reveal: (file) => {
+      if (!testDiagnosticsDir) shell.showItemInFolder(file);
+    },
+    openLogsFolder: async () => {
+      fs.mkdirSync(logFile.dir, { recursive: true });
+      const error = await shell.openPath(logFile.dir);
+      if (error) throw new Error('The logs folder could not be opened.');
+    },
+  };
 }
 
 function createMainWindow(): void {

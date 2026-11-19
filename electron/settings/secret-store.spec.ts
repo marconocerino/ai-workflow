@@ -13,14 +13,14 @@ import {
 function fakeEncryptor(available = true): Encryptor & { available: boolean } {
   return {
     available,
-    isEncryptionAvailable() {
+    async isEncryptionAvailable() {
       return this.available;
     },
-    encryptString: (t) => Buffer.from(`enc:${[...t].reverse().join('')}`),
-    decryptString: (b) => {
+    encryptString: async (t) => Buffer.from(`enc:${[...t].reverse().join('')}`),
+    decryptString: async (b) => {
       const s = b.toString();
       if (!s.startsWith('enc:')) throw new Error('bad ciphertext');
-      return [...s.slice(4)].reverse().join('');
+      return { value: [...s.slice(4)].reverse().join(''), shouldReEncrypt: false };
     },
   };
 }
@@ -42,20 +42,47 @@ beforeEach(() => {
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
 describe('SecretStore', () => {
-  it('stores, checks, reads (main only) and clears a secret', () => {
+  it('stores, checks, reads (main only) and clears a secret', async () => {
     const s = make();
     expect(s.has('ai.llm.apiKey')).toBe(false);
-    s.set('ai.llm.apiKey', KEY);
+    await s.set('ai.llm.apiKey', KEY);
     expect(s.has('ai.llm.apiKey')).toBe(true);
     expect(s.has('ai.asr.apiKey')).toBe(false);
-    expect(make().get('ai.llm.apiKey')).toBe(KEY);
+    expect(await make().get('ai.llm.apiKey')).toBe(KEY);
     s.clear('ai.llm.apiKey');
     expect(s.has('ai.llm.apiKey')).toBe(false);
-    expect(s.get('ai.llm.apiKey')).toBeNull();
+    expect(await s.get('ai.llm.apiKey')).toBeNull();
   });
 
-  it('never writes the plain text to disk', () => {
-    make().set('ai.llm.apiKey', KEY);
+  it('reports every saved or read value so logs can scrub it', async () => {
+    const seen: string[] = [];
+    const withHook = () => new SecretStore(dir, fakeEncryptor(), { onSecret: (v) => seen.push(v) });
+    await withHook().set('ai.llm.apiKey', `  ${KEY}  `);
+    expect(seen).toEqual([KEY]);
+    await withHook().get('ai.llm.apiKey');
+    expect(seen).toEqual([KEY, KEY]);
+  });
+
+  it('re-encrypts when the OS says the key was rotated, keeping the value', async () => {
+    await make().set('ai.llm.apiKey', KEY);
+    const before = fs.readFileSync(file(), 'utf8');
+    const rotated = fakeEncryptor();
+    let calls = 0;
+    const decrypt = rotated.decryptString;
+    rotated.decryptString = async (b) => ({
+      ...(await decrypt(b)),
+      shouldReEncrypt: calls++ === 0,
+    });
+    rotated.encryptString = async (t) => Buffer.from(`enc:${[...t].reverse().join('')}#v2`);
+    const s = make(rotated);
+    expect(await s.get('ai.llm.apiKey')).toBe(KEY);
+    const after = fs.readFileSync(file(), 'utf8');
+    expect(after).not.toBe(before);
+    expect(after).not.toContain(KEY);
+  });
+
+  it('never writes the plain text to disk', async () => {
+    await make().set('ai.llm.apiKey', KEY);
     const text = fs.readFileSync(file(), 'utf8');
     expect(text).not.toContain(KEY);
     expect(JSON.parse(text)).toEqual({
@@ -64,15 +91,15 @@ describe('SecretStore', () => {
     });
   });
 
-  it('writes the file readable by the current user only', () => {
-    make().set('ai.llm.apiKey', KEY);
+  it('writes the file readable by the current user only', async () => {
+    await make().set('ai.llm.apiKey', KEY);
     if (process.platform !== 'win32') {
       expect(fs.statSync(file()).mode & 0o777).toBe(0o600);
     }
   });
 
-  it('refuses to store when OS encryption is unavailable (no plain-text fallback)', () => {
-    expect(() => make(fakeEncryptor(false)).set('ai.llm.apiKey', KEY)).toThrow(
+  it('refuses to store when OS encryption is unavailable (no plain-text fallback)', async () => {
+    await expect(make(fakeEncryptor(false)).set('ai.llm.apiKey', KEY)).rejects.toThrow(
       SecretEncryptionUnavailableError,
     );
     expect(fs.existsSync(file())).toBe(false);
@@ -84,8 +111,8 @@ describe('SecretStore', () => {
     ['empty value', 'ai.llm.apiKey', '   '],
     ['non-string value', 'ai.llm.apiKey', { k: 1 }],
     ['too long value', 'ai.llm.apiKey', 'x'.repeat(4097)],
-  ])('rejects %s', (_label, name, value) => {
-    expect(() => make().set(name, value)).toThrow(InvalidSecretError);
+  ])('rejects %s', async (_label, name, value) => {
+    await expect(make().set(name, value)).rejects.toThrow(InvalidSecretError);
   });
 
   it('rejects unknown names for has/clear', () => {
@@ -93,17 +120,17 @@ describe('SecretStore', () => {
     expect(() => make().clear('constructor')).toThrow(InvalidSecretError);
   });
 
-  it('moves a corrupt secrets file aside and starts empty, without logging contents', () => {
+  it('moves a corrupt secrets file aside and starts empty, without logging contents', async () => {
     fs.writeFileSync(file(), `{"oops": "${KEY}"`);
     const s = make();
     expect(s.has('ai.llm.apiKey')).toBe(false);
     expect(fs.readdirSync(dir)).toEqual(['secrets.corrupt-2026-11-16T12-00-00-000Z.json']);
-    s.set('ai.llm.apiKey', 'new');
-    expect(s.get('ai.llm.apiKey')).toBe('new');
+    await s.set('ai.llm.apiKey', 'new');
+    expect(await s.get('ai.llm.apiKey')).toBe('new');
     expect(warnings.join()).not.toContain(KEY);
   });
 
-  it('returns null (and warns without the value) when decryption fails', () => {
+  it('returns null (and warns without the value) when decryption fails', async () => {
     fs.writeFileSync(
       file(),
       JSON.stringify({
@@ -111,7 +138,7 @@ describe('SecretStore', () => {
         secrets: { 'ai.llm.apiKey': Buffer.from('junk').toString('base64') },
       }),
     );
-    expect(make().get('ai.llm.apiKey')).toBeNull();
+    expect(await make().get('ai.llm.apiKey')).toBeNull();
     expect(warnings).toEqual([
       'Secrets: could not decrypt ai.llm.apiKey; it needs to be entered again.',
     ]);

@@ -6,7 +6,7 @@ import { originOf } from '../security';
 export type FetchFn = (url: string, init: RequestInit) => Promise<Response>;
 
 export interface SecretReader {
-  get(name: SecretName): string | null;
+  get(name: SecretName): Promise<string | null>;
 }
 
 export class AiNotConfiguredError extends Error {
@@ -71,7 +71,7 @@ export class AiHttpClient {
     }
 
     const headers: Record<string, string> = { Accept: 'application/json', ...req.headers };
-    const key = this.secrets.get(SECRET_FOR[service]);
+    const key = await this.secrets.get(SECRET_FOR[service]);
     if (key) headers['Authorization'] = `Bearer ${key}`;
 
     const timeoutMs = req.timeoutMs ?? current.ai.timeoutMs;

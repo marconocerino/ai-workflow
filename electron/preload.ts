@@ -24,6 +24,13 @@ const api: AiWorkflowApi = {
   ai: {
     testConnection: (service) => invoke('ai:test-connection', service),
   },
+  log: {
+    rendererError: (report) => invoke('log:renderer-error', report),
+  },
+  diagnostics: {
+    export: () => invoke('diagnostics:export'),
+    openLogs: () => invoke('diagnostics:open-logs'),
+  },
 };
 
 contextBridge.exposeInMainWorld('aiWorkflow', api);

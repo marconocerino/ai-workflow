@@ -14,6 +14,12 @@ export const routes: Routes = [
         title: 'AI servers · Settings · AI Workflow',
         loadComponent: () => import('./settings/ai-servers/ai-servers').then((m) => m.AiServers),
       },
+      {
+        path: 'diagnostics',
+        title: 'Diagnostics · Settings · AI Workflow',
+        loadComponent: () =>
+          import('./settings/diagnostics/diagnostics').then((m) => m.Diagnostics),
+      },
     ],
   },
   {

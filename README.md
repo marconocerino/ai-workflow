@@ -83,7 +83,8 @@ scripts/dev.mjs    `npm start` runner
 - Settings: `<userData>/settings.json`, versioned (`{ "version": 1, "data": { … } }`) and migrated
   on load (`electron/settings/migrations.ts`). Corrupt files are moved aside and defaults are used.
 - Secrets (API keys): `<userData>/secrets.json`, each value encrypted with Electron `safeStorage`
-  (DPAPI on Windows, Keychain on macOS). The renderer can set, check and clear them, never read them.
+  (DPAPI on Windows, Keychain on macOS; async API). The renderer can set, check and clear them, never
+  read them. Main process: `await secrets.get(name)` — lint fails on an unawaited promise.
 - `<userData>` is `%APPDATA%\AI Workflow` on Windows and `~/Library/Application Support/AI Workflow`
   on macOS.
 - To change the settings shape: bump `SETTINGS_VERSION` in `electron/settings/schema.ts`, add a
@@ -110,6 +111,17 @@ scripts/dev.mjs    `npm start` runner
 - `npm run test:electron` runs inside Electron's Node, the same runtime the app uses.
 - No compiling: `npm ci` installs the prebuilt binary for your platform. `npm run dist:win` on a Mac
   fetches the Windows binary first (`scripts/fetch-native.mjs`).
+
+## Logs and diagnostics
+
+- Logs: `<userData>/logs/main.log` (macOS `~/Library/Application Support/AI Workflow/logs`, Windows
+  `%APPDATA%\AI Workflow\logs`), rotated at 1 MB, 5 files kept. Dev: `AIW_LOG_LEVEL=debug npm start`.
+- In main-process code use the logger, never `console`:
+  `logger.scope('meetings').info('Recording started', { meetingId, channels: 2 })`.
+  Put facts in fields (ids, counts, codes). Never pass transcripts, audio, notes or keys — fields
+  named like `text`, `transcript`, `audio`, `prompt`, `key`, `token` are redacted anyway (D-014).
+- Support: Settings → Diagnostics → **Export diagnostics** saves a zip of the logs, non-secret
+  settings and app info. No keys, transcripts, audio or database.
 
 ## Design tokens
 

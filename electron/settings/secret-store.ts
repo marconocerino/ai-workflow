@@ -1,14 +1,19 @@
 import * as path from 'node:path';
 import { SECRET_NAMES, type SecretName } from '../../shared/settings';
+import { consoleLogger } from '../logging/logger';
 import { moveAside, readFileOrNull, writeFileAtomic } from './files';
 import { isObject } from './schema';
 import type { StoreLogger } from './settings-store';
 
-/** The parts of Electron's safeStorage we use (injectable for tests). */
+/**
+ * The parts of Electron's safeStorage we use (injectable for tests). Async API: the sync
+ * functions are deprecated in Electron 45; data written by them decrypts with the async ones.
+ */
 export interface Encryptor {
-  isEncryptionAvailable(): boolean;
-  encryptString(plainText: string): Buffer;
-  decryptString(encrypted: Buffer): string;
+  isEncryptionAvailable(): Promise<boolean>;
+  encryptString(plainText: string): Promise<Buffer>;
+  /** `shouldReEncrypt`: the OS key was rotated or upgraded; store a fresh ciphertext. */
+  decryptString(encrypted: Buffer): Promise<{ value: string; shouldReEncrypt: boolean }>;
 }
 
 export const MAX_SECRET_LENGTH = 4_096;
@@ -56,27 +61,38 @@ export class SecretStore {
   readonly file: string;
   private readonly logger: StoreLogger;
   private readonly now: () => Date;
+  private readonly onSecret: (value: string) => void;
 
   constructor(
     dir: string,
     private readonly encryptor: Encryptor,
-    options: { logger?: StoreLogger; now?: () => Date } = {},
+    options: {
+      logger?: StoreLogger;
+      now?: () => Date;
+      /** Called with every secret value saved or read, so logs can scrub it (VAI-107). */
+      onSecret?: (value: string) => void;
+    } = {},
   ) {
     this.file = path.join(dir, 'secrets.json');
-    this.logger = options.logger ?? console;
+    this.logger = options.logger ?? consoleLogger;
     this.now = options.now ?? (() => new Date());
+    this.onSecret = options.onSecret ?? (() => undefined);
   }
 
-  set(name: unknown, value: unknown): void {
+  async set(name: unknown, value: unknown): Promise<void> {
     this.assertName(name);
     if (typeof value !== 'string' || value.trim() === '') {
       throw new InvalidSecretError('Secret value must be a non-empty string.');
     }
     if (value.length > MAX_SECRET_LENGTH) throw new InvalidSecretError('Secret value is too long.');
-    if (!this.encryptor.isEncryptionAvailable()) throw new SecretEncryptionUnavailableError();
+    if (!(await this.encryptor.isEncryptionAvailable()))
+      throw new SecretEncryptionUnavailableError();
 
+    this.onSecret(value.trim());
+    const encrypted = (await this.encryptor.encryptString(value.trim())).toString('base64');
+    // Read-modify-write with no await in between, so concurrent calls can't lose each other.
     const secrets = this.readAll();
-    secrets[name] = this.encryptor.encryptString(value.trim()).toString('base64');
+    secrets[name] = encrypted;
     this.writeAll(secrets);
   }
 
@@ -94,21 +110,41 @@ export class SecretStore {
   }
 
   /** Main process only — never expose over IPC. Returns null if unset or unreadable. */
-  get(name: AnySecretName): string | null {
+  async get(name: AnySecretName): Promise<string | null> {
     const stored = this.readAll()[name];
     if (stored === undefined) return null;
-    if (!this.encryptor.isEncryptionAvailable()) return null;
+    if (!(await this.encryptor.isEncryptionAvailable())) return null;
+    let value: string;
+    let shouldReEncrypt: boolean;
     try {
-      return this.encryptor.decryptString(Buffer.from(stored, 'base64'));
+      ({ value, shouldReEncrypt } = await this.encryptor.decryptString(
+        Buffer.from(stored, 'base64'),
+      ));
     } catch {
       this.logger.warn(`Secrets: could not decrypt ${name}; it needs to be entered again.`);
       return null;
     }
+    this.onSecret(value);
+    if (shouldReEncrypt) await this.reEncrypt(name, stored, value);
+    return value;
   }
 
   /** True if OS encryption can be used right now. */
-  isAvailable(): boolean {
+  isAvailable(): Promise<boolean> {
     return this.encryptor.isEncryptionAvailable();
+  }
+
+  /** Store a fresh ciphertext after an OS key rotation, unless the value changed meanwhile. */
+  private async reEncrypt(name: AnySecretName, previous: string, value: string): Promise<void> {
+    try {
+      const encrypted = (await this.encryptor.encryptString(value)).toString('base64');
+      const secrets = this.readAll();
+      if (secrets[name] !== previous) return;
+      secrets[name] = encrypted;
+      this.writeAll(secrets);
+    } catch {
+      this.logger.warn(`Secrets: could not re-encrypt ${name}; the old copy still works.`);
+    }
   }
 
   private assertName(name: unknown): asserts name is AnySecretName {
