@@ -8,6 +8,7 @@ const info: AppInfo = {
   platform: 'win32',
   electron: '45.3.3',
   chrome: '142.0.0',
+  database: { status: 'ok', schemaVersion: 1, encrypted: true },
 };
 
 function setup(bridge: Pick<AiWorkflowApi, 'app'> | null): ElectronApi {

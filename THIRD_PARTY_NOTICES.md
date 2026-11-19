@@ -64,3 +64,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Local database
+
+The main process ships these packages (not bundled into the renderer). Full licence texts are in
+each package's `LICENSE` file inside the app.
+
+| Package                                  | Licence    | Copyright                                             |
+| ---------------------------------------- | ---------- | ----------------------------------------------------- |
+| `libsql` 0.5.29 and `@libsql/<platform>` | MIT        | Copyright (c) 2017 Joshua Wise, (c) 2023 Pekka Enberg |
+| `@neon-rs/load`                          | MIT        | Copyright (c) 2023 David Herman                       |
+| `detect-libc`                            | Apache-2.0 | Lovell Fuller and contributors                        |
+
+The libsql binary includes SQLite (public domain) and SQLite3 Multiple Ciphers (MIT).

@@ -10,6 +10,7 @@ const info: AppInfo = {
   platform: 'darwin',
   electron: '45.3.3',
   chrome: '142.0.0',
+  database: { status: 'ok', schemaVersion: 1, encrypted: true },
 };
 
 async function render(bridge: Pick<AiWorkflowApi, 'app'> | null) {
@@ -28,6 +29,9 @@ describe('Home', () => {
     expect(el.querySelector('h1')?.textContent).toContain('AI Workflow');
     expect(el.querySelector('[data-testid="app-version"]')?.textContent?.trim()).toBe('0.1.0');
     expect(el.querySelector('[data-testid="app-platform"]')?.textContent?.trim()).toBe('darwin');
+    expect(el.querySelector('[data-testid="db-status"]')?.textContent).toContain(
+      'Encrypted · schema v1',
+    );
   });
 
   it('shows an error when the bridge is missing', async () => {

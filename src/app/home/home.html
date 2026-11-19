@@ -18,6 +18,24 @@
           <dd>{{ i.electron }}</dd>
           <dt>Chromium</dt>
           <dd>{{ i.chrome }}</dd>
+          <dt>Database</dt>
+          <dd class="db" data-testid="db-status">
+            @switch (i.database.status) {
+              @case ('ok') {
+                <aiw-chip tone="success" dot
+                  >Encrypted · schema v{{ i.database.schemaVersion }}</aiw-chip
+                >
+              }
+              @case ('unavailable') {
+                <aiw-chip tone="danger">Unavailable</aiw-chip>
+                <span class="aiw-muted">{{ i.database.message }}</span>
+              }
+              @default {
+                <aiw-chip tone="danger">Error</aiw-chip>
+                <span class="aiw-muted">{{ i.database.message }}</span>
+              }
+            }
+          </dd>
         </dl>
       } @else if (error(); as message) {
         <p class="error" role="alert" data-testid="app-info-error">{{ message }}</p>

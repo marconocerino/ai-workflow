@@ -19,7 +19,7 @@ VAI-105,E1 Foundation,Encrypted settings store,"As a user, I want my settings sa
 VAI-106,E1 Foundation,Local database and migrations,"As a developer, I want a local SQLite database with versioned migrations, so dictations, meetings and agent data can evolve safely.","• Database opens on first run and applies migrations in order
 • Each migration has a test
 • Database file is encrypted at rest or stored in an encrypted location
-• A failed migration rolls back and is logged",5,Must,S1,"platform, data",To do
+• A failed migration rolls back and is logged",5,Must,S1,"platform, data",Done
 VAI-107,E1 Foundation,Structured logging and diagnostics,"As a support person, I want readable logs and a one-click diagnostics export, so problems can be fixed without asking users for screenshots.","• Rotating log files with levels and timestamps
 • Logs never contain transcripts, audio or keys
 • Export diagnostics creates a zip of logs and non-secret settings",3,Must,S1,platform,To do

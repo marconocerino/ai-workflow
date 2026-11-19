@@ -2,6 +2,7 @@ import { BrowserWindow, app, ipcMain, net, protocol, safeStorage, session, shell
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { AiHttpClient } from './ai/ai-http';
+import { AppDatabase } from './db/app-database';
 import { registerAiIpc } from './ipc/ai';
 import { getAppInfo } from './ipc/app-info';
 import { createIpcRegistrar } from './ipc/handle';
@@ -72,7 +73,10 @@ if (!app.requestSingleInstanceLock()) {
     const settings = new SettingsStore(settingsDir);
     settings.load();
     const secrets = new SecretStore(settingsDir, osEncryptor());
-    registerIpc(settings, secrets);
+    const database = new AppDatabase(path.join(settingsDir, 'data'), secrets);
+    database.open();
+    app.on('will-quit', () => database.close());
+    registerIpc(settings, secrets, database);
     createMainWindow();
 
     app.on('activate', () => {
@@ -123,7 +127,7 @@ function osEncryptor(): Encryptor {
   };
 }
 
-function registerIpc(settings: SettingsStore, secrets: SecretStore): void {
+function registerIpc(settings: SettingsStore, secrets: SecretStore, database: AppDatabase): void {
   const handle = createIpcRegistrar(ipcMain, (event) =>
     isTrustedUrl(event.senderFrame?.url, trustedOrigins),
   );
@@ -134,6 +138,7 @@ function registerIpc(settings: SettingsStore, secrets: SecretStore): void {
       version: app.getVersion(),
       platform: process.platform,
       versions: process.versions,
+      database: database.status(),
     }),
   );
   registerSettingsIpc(handle, settings, secrets);

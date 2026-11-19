@@ -8,6 +8,16 @@
 import type { AiService, ConnectionResult } from './ai';
 import type { SecretName, Settings, SettingsPatch } from './settings';
 
+/** Local database health (VAI-106). Never contains data or keys. */
+export interface DatabaseStatus {
+  /** ok: open and up to date · unavailable: OS encryption missing · error: could not open/migrate */
+  status: 'ok' | 'unavailable' | 'error';
+  schemaVersion: number;
+  encrypted: boolean;
+  /** Short, user-facing explanation when not ok. */
+  message?: string;
+}
+
 /** Basic facts about the running app. Contains nothing sensitive. */
 export interface AppInfo {
   name: string;
@@ -16,6 +26,7 @@ export interface AppInfo {
   platform: string;
   electron: string;
   chrome: string;
+  database: DatabaseStatus;
 }
 
 /** channel → request payload and response type. */

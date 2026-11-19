@@ -10,7 +10,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | Sprint | Stories done | Points done |
 | --- | --- | --- |
 | S0 | 6 / 10 | 16 / 26 |
-| S1 | 1 / 13 | 5 / 46 |
+| S1 | 2 / 13 | 10 / 46 |
 | S2 | 0 / 12 | 0 / 39 |
 | S3 | 0 / 5 | 0 / 24 |
 | S4 | 0 / 4 | 0 / 23 |
@@ -21,7 +21,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | S9 | 0 / 9 | 0 / 35 |
 | S10 | 0 / 7 | 0 / 23 |
 | Backlog | 0 / 2 | 0 / 10 |
-| **Total** | **7 / 86** | **21 / 326** |
+| **Total** | **8 / 86** | **26 / 326** |
 
 ## E1 Foundation
 
@@ -31,7 +31,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 - [x] VAI-104 Company AI endpoint configuration — S0 · 3 pts · Must
 - [x] VAI-105 Encrypted settings store — S0 · 3 pts · Must
 - [x] VAI-113 AI server settings — S0 · 3 pts · Must
-- [ ] VAI-106 Local database and migrations — S1 · 5 pts · Must
+- [x] VAI-106 Local database and migrations — S1 · 5 pts · Must
 - [ ] VAI-107 Structured logging and diagnostics — S1 · 3 pts · Must
 - [ ] VAI-108 Windows installer and code signing — S1 · 5 pts · Must
 - [ ] VAI-109 Feature flags — S1 · 2 pts · Should

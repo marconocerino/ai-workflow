@@ -1,10 +1,11 @@
-import type { AppInfo } from '../../shared/ipc-contract';
+import type { AppInfo, DatabaseStatus } from '../../shared/ipc-contract';
 
 export interface AppInfoSource {
   name: string;
   version: string;
   platform: string;
   versions: { electron?: string; chrome?: string };
+  database: DatabaseStatus;
 }
 
 /** Handler for 'app:get-info'. Pure so it can be unit-tested without Electron. */
@@ -15,5 +16,6 @@ export function getAppInfo(source: AppInfoSource): AppInfo {
     platform: source.platform,
     electron: source.versions.electron ?? 'unknown',
     chrome: source.versions.chrome ?? 'unknown',
+    database: { ...source.database },
   };
 }

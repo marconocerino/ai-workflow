@@ -8,13 +8,27 @@ directories:
 files:
   - dist/app/**/*
   - '!dist/app/**/*.map'
+  - '!dist/app/**/*.spec.js'
+  - '!dist/app/electron/db/test-helpers.js'
   - dist/renderer/**/*
   - package.json
+  # Encrypted SQLite (libsql): each platform below ships only its own prebuilt binary package.
 asar: true
+asarUnpack:
+  - '**/*.node'
+# libsql ships prebuilt Node-API binaries per platform, so no native rebuild is needed (D-013).
+npmRebuild: false
+linux:
+  files:
+    - '!node_modules/@libsql/{darwin,win32}-*/**'
 win:
+  files:
+    - '!node_modules/@libsql/{darwin,linux}-*/**'
   target:
     - target: zip
       arch: [x64]
 mac:
+  files:
+    - '!node_modules/@libsql/{win32,linux}-*/**'
   target: dir
   category: public.app-category.productivity

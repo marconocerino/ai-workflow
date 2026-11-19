@@ -18,7 +18,7 @@ Why: data must not leave the company.
 Decision: capture the microphone and the computer's own audio output (WASAPI process loopback on Windows) as two separate channels, via a native helper process.
 Why: works with Teams and Zoom without admin approval of a meeting bot; mic channel identifies the user.
 
-**D-004 — Local SQLite storage** · 2026-11 · Accepted
+**D-004 — Local SQLite storage** · 2026-11 · Accepted (library: see D-013)
 Decision: better-sqlite3 with versioned migrations; transcripts stored at word level with channel and timestamps; secrets via Electron safeStorage.
 
 **D-005 — No stored voiceprints in the pilot** · 2026-11 · Accepted
@@ -61,3 +61,13 @@ Decision: buttons, inputs, selects, toggles, checkboxes and radios are Angular M
 Why: Material already solves focus, ARIA and keyboard handling; wrapping it again would add bugs. Our own components stay tiny and token-only.
 Alternatives: wrap every Material control in an `aiw-` component (more code, breaks forms and radio groups); lucide-angular package (extra dependency for ~20 icons); icon font (loads from the internet / not allowed).
 Also: `danger-soft` lightened #fae0da → #fcece8 after axe found red-on-pink chip text at 4.36:1.
+
+**D-013 — Encrypted SQLite: libsql + ordered migrations** · 2026-11 · Accepted (replaces the library in D-004)
+Decision: the local database is `<userData>/data/app.db`, opened with `libsql` (pinned 0.5.29; Turso's SQLite fork with a better-sqlite3-style synchronous API) using its built-in whole-file encryption, cipher `aes256cbc`. The key is 32 random bytes created on first run and kept in the secret store (encrypted by DPAPI/Keychain) under a main-only name the renderer can't set, read or clear. No OS encryption → the database stays closed (never plain text). Lost/wrong key → the unreadable file is moved aside (`app.unreadable-<time>.db`) and a new database starts. Schema changes are TypeScript migrations in `electron/db/migrations/` (versions 1, 2, 3 … checked at startup), each applied in its own transaction and recorded in `schema_migrations` + `PRAGMA user_version`; a failure rolls back that migration, is logged, and leaves the app running with database status "error". One backup copy is made before migrating an existing database. Each migration must have its own test file (enforced by a test). Only the main process touches the database; features get their own typed IPC calls, never generic SQL.
+Local only: libsql can also sync to Turso's cloud; we never use it. `electron/db/open.ts` passes only the cipher, key and timeout, and a test fails if any main-process code uses the sync/remote options or `libsql/promise`.
+libsql quirks handled in `open.ts`: `Statement.get()` adds an enumerable `_metadata` timing field to rows and ignores `pluck()`; both are fixed once for every statement, so rows are plain objects (tested). Use `pragmaValue()` instead of `db.pragma()` (which also returns `_metadata`).
+Packaging: this is the app's first runtime dependency. libsql ships prebuilt Node-API binaries as one optional package per platform (`@libsql/<platform>`), with no install script, so electron-builder's native rebuild is off and each platform build keeps only its own binary package (`asarUnpack` for `.node`). npm installs only the current platform's binary, so `dist:win` first runs `scripts/fetch-native.mjs win32-x64-msvc` (via `npm pack`, so the configured registry and integrity check apply). Electron-side unit tests run inside Electron's Node (`scripts/run-in-electron.mjs`).
+Why: real encryption at rest that doesn't depend on IT enabling BitLocker; better-sqlite3-style API; libsql is on the company's approved package list. Our first choice, better-sqlite3-multiple-ciphers 13.x (SQLCipher v4 format), isn't approved; the only approved version, 11.10.0, can't be used: no prebuilt binary for Electron 45 and its C++ no longer compiles against Electron 45's V8 (checked 2026-11-19).
+Alternatives: better-sqlite3-multiple-ciphers (see above); @signalapp/sqlcipher (AGPL-3.0); @journeyapps/sqlcipher (always compiles, async API); `node:sqlite` built in, or plain better-sqlite3, with column-level encryption (table structure stays readable, breaks search); sql.js (whole database in memory).
+Note: dev databases created with the earlier SQLCipher build are unreadable now and are moved aside automatically on first start.
+OpenWhispr reference: its database uses plain better-sqlite3 with WAL and `CREATE TABLE IF NOT EXISTS` + ad-hoc alters; we took only WAL mode.

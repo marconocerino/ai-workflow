@@ -111,7 +111,10 @@ test('API key is encrypted on disk and can never be read back by the renderer', 
   await page.evaluate(() =>
     (window as unknown as { aiWorkflow: AiWorkflowApi }).aiWorkflow.secrets.clear('ai.llm.apiKey'),
   );
-  expect(JSON.parse(readFileSync(join(profile, 'secrets.json'), 'utf8')).secrets).toEqual({});
+  // The API key is gone; only the main-only database key remains.
+  expect(
+    Object.keys(JSON.parse(readFileSync(join(profile, 'secrets.json'), 'utf8')).secrets),
+  ).toEqual(['db.key']);
   await app.close();
   expect(existsSync(join(profile, 'secrets.json'))).toBe(true);
 });
