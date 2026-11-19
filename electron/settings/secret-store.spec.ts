@@ -54,6 +54,15 @@ describe('SecretStore', () => {
     expect(s.get('ai.llm.apiKey')).toBeNull();
   });
 
+  it('reports every saved or read value so logs can scrub it', () => {
+    const seen: string[] = [];
+    const withHook = () => new SecretStore(dir, fakeEncryptor(), { onSecret: (v) => seen.push(v) });
+    withHook().set('ai.llm.apiKey', `  ${KEY}  `);
+    expect(seen).toEqual([KEY]);
+    withHook().get('ai.llm.apiKey');
+    expect(seen).toEqual([KEY, KEY]);
+  });
+
   it('never writes the plain text to disk', () => {
     make().set('ai.llm.apiKey', KEY);
     const text = fs.readFileSync(file(), 'utf8');

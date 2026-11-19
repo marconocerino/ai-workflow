@@ -98,5 +98,6 @@ Rules for using it:
 - Never break dictation; run the full check (`npm run lint && npm test && npm run e2e`) before every commit.
 - Don't start the next story without my OK.
 - If a story is too big or unclear, say so and propose a split instead of guessing.
-- Never log transcripts, audio or keys.
+- Never log transcripts, audio or keys. Main process: use the logger (`logger.scope('x')`), never
+  `console`; put facts in fields, not content (README "Logs and diagnostics", D-014).
 - Ask before adding a new dependency.

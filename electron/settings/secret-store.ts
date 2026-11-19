@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { SECRET_NAMES, type SecretName } from '../../shared/settings';
+import { consoleLogger } from '../logging/logger';
 import { moveAside, readFileOrNull, writeFileAtomic } from './files';
 import { isObject } from './schema';
 import type { StoreLogger } from './settings-store';
@@ -56,15 +57,22 @@ export class SecretStore {
   readonly file: string;
   private readonly logger: StoreLogger;
   private readonly now: () => Date;
+  private readonly onSecret: (value: string) => void;
 
   constructor(
     dir: string,
     private readonly encryptor: Encryptor,
-    options: { logger?: StoreLogger; now?: () => Date } = {},
+    options: {
+      logger?: StoreLogger;
+      now?: () => Date;
+      /** Called with every secret value saved or read, so logs can scrub it (VAI-107). */
+      onSecret?: (value: string) => void;
+    } = {},
   ) {
     this.file = path.join(dir, 'secrets.json');
-    this.logger = options.logger ?? console;
+    this.logger = options.logger ?? consoleLogger;
     this.now = options.now ?? (() => new Date());
+    this.onSecret = options.onSecret ?? (() => undefined);
   }
 
   set(name: unknown, value: unknown): void {
@@ -75,6 +83,7 @@ export class SecretStore {
     if (value.length > MAX_SECRET_LENGTH) throw new InvalidSecretError('Secret value is too long.');
     if (!this.encryptor.isEncryptionAvailable()) throw new SecretEncryptionUnavailableError();
 
+    this.onSecret(value.trim());
     const secrets = this.readAll();
     secrets[name] = this.encryptor.encryptString(value.trim()).toString('base64');
     this.writeAll(secrets);
@@ -99,7 +108,9 @@ export class SecretStore {
     if (stored === undefined) return null;
     if (!this.encryptor.isEncryptionAvailable()) return null;
     try {
-      return this.encryptor.decryptString(Buffer.from(stored, 'base64'));
+      const value = this.encryptor.decryptString(Buffer.from(stored, 'base64'));
+      this.onSecret(value);
+      return value;
     } catch {
       this.logger.warn(`Secrets: could not decrypt ${name}; it needs to be entered again.`);
       return null;

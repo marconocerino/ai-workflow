@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import type { Settings, SettingsPatch } from '../../shared/settings';
+import { consoleLogger } from '../logging/logger';
 import { moveAside, readFileOrNull, writeFileAtomic } from './files';
 import { migrate, readEnvelope } from './migrations';
 import { SETTINGS_VERSION, applyPatch, defaultSettings, sanitizeSettings } from './schema';
@@ -42,7 +43,7 @@ export class SettingsStore {
 
   constructor(dir: string, options: SettingsStoreOptions = {}) {
     this.file = path.join(dir, 'settings.json');
-    this.logger = options.logger ?? console;
+    this.logger = options.logger ?? consoleLogger;
     this.now = options.now ?? (() => new Date());
   }
 

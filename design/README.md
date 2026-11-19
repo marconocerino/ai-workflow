@@ -27,6 +27,7 @@ they're in.
 | Meetings list                      | VAI-409          | S4     |
 | Name speakers                      | VAI-503          | S6     |
 | Other Settings pages (AI cleanup, vocabulary, style per app, about & diagnostics) | VAI-204, VAI-307–309 | S1–S2 |
+| Settings → Diagnostics (built in VAI-107 with the UI kit; VAI-204 folds it into "About & diagnostics") | VAI-107 | S1 |
 | Agent roster and permissions       | VAI-809          | S10    |
 
 ## Tokens

@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { DatabaseStatus } from '../../shared/ipc-contract';
 import type { AnySecretName } from '../settings/secret-store';
+import { consoleLogger } from '../logging/logger';
 import { MIGRATIONS } from './migrations';
 import { MigrationFailedError, currentVersion, runMigrations } from './migrator';
 import { KEY_PATTERN, WrongKeyError, openEncrypted } from './open';
@@ -49,7 +50,7 @@ export class AppDatabase {
     options: AppDatabaseOptions = {},
   ) {
     this.file = path.join(dir, 'app.db');
-    this.logger = options.logger ?? console;
+    this.logger = options.logger ?? consoleLogger;
     this.now = options.now ?? (() => new Date());
     this.migrations = options.migrations ?? MIGRATIONS;
   }

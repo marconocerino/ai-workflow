@@ -1,0 +1,66 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Diagnostics</h1>
+    <p class="lead aiw-muted">
+      If something isn't working, export a diagnostics file and send it to support.
+    </p>
+  </header>
+
+  <section class="aiw-card" aria-labelledby="export-heading">
+    <h2 id="export-heading">Export diagnostics</h2>
+
+    <div class="lists">
+      <div>
+        <h3 class="aiw-section-label">Included</h3>
+        <ul data-testid="diagnostics-included">
+          <li>The app's log files</li>
+          <li>Settings without secrets: server addresses, model names, timeouts</li>
+          <li>App version, operating system and database status</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="aiw-section-label">Never included</h3>
+        <ul data-testid="diagnostics-excluded">
+          <li>API keys or the database key</li>
+          <li>Dictations, meeting transcripts, audio or notes</li>
+          <li>The database itself</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button
+        mat-flat-button
+        type="button"
+        data-testid="export-diagnostics"
+        [disabled]="state().kind === 'working'"
+        (click)="exportDiagnostics()"
+      >
+        <aiw-icon name="file" />
+        Export diagnostics
+      </button>
+      <button mat-stroked-button type="button" data-testid="open-logs" (click)="openLogs()">
+        Open logs folder
+      </button>
+    </div>
+
+    <div class="status" role="status" data-testid="export-status">
+      @switch (state().kind) {
+        @case ('working') {
+          <span class="aiw-muted">Preparing…</span>
+        }
+        @case ('saved') {
+          <aiw-chip tone="success" dot>Saved</aiw-chip>
+          <span class="file">{{ $any(state()).fileName }}</span>
+        }
+        @case ('error') {
+          <aiw-chip tone="danger">Not saved</aiw-chip>
+          <span class="aiw-muted">{{ $any(state()).message }}</span>
+        }
+      }
+      @if (logsError(); as message) {
+        <span class="aiw-muted">{{ message }}</span>
+      }
+    </div>
+  </section>
+</div>

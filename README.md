@@ -111,6 +111,17 @@ scripts/dev.mjs    `npm start` runner
 - No compiling: `npm ci` installs the prebuilt binary for your platform. `npm run dist:win` on a Mac
   fetches the Windows binary first (`scripts/fetch-native.mjs`).
 
+## Logs and diagnostics
+
+- Logs: `<userData>/logs/main.log` (macOS `~/Library/Application Support/AI Workflow/logs`, Windows
+  `%APPDATA%\AI Workflow\logs`), rotated at 1 MB, 5 files kept. Dev: `AIW_LOG_LEVEL=debug npm start`.
+- In main-process code use the logger, never `console`:
+  `logger.scope('meetings').info('Recording started', { meetingId, channels: 2 })`.
+  Put facts in fields (ids, counts, codes). Never pass transcripts, audio, notes or keys — fields
+  named like `text`, `transcript`, `audio`, `prompt`, `key`, `token` are redacted anyway (D-014).
+- Support: Settings → Diagnostics → **Export diagnostics** saves a zip of the logs, non-secret
+  settings and app info. No keys, transcripts, audio or database.
+
 ## Design tokens
 
 - All colours, fonts, spacing, radii, shadows and borders live in `src/theme/_tokens.scss` and become

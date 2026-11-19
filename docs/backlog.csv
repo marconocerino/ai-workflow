@@ -22,7 +22,7 @@ VAI-106,E1 Foundation,Local database and migrations,"As a developer, I want a lo
 • A failed migration rolls back and is logged",5,Must,S1,"platform, data",Done
 VAI-107,E1 Foundation,Structured logging and diagnostics,"As a support person, I want readable logs and a one-click diagnostics export, so problems can be fixed without asking users for screenshots.","• Rotating log files with levels and timestamps
 • Logs never contain transcripts, audio or keys
-• Export diagnostics creates a zip of logs and non-secret settings",3,Must,S1,platform,To do
+• Export diagnostics creates a zip of logs and non-secret settings",3,Must,S1,platform,Done
 VAI-108,E1 Foundation,Windows installer and code signing,"As IT, I want a signed installer that supports silent installs, so the app can be rolled out to a pilot group without warnings.","• Signed per-user installer (no admin rights needed)
 • Silent install and uninstall switches documented
 • Uninstall removes app files and offers to keep or delete user data",5,Must,S1,"platform, release",To do
