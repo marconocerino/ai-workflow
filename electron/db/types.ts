@@ -1,6 +1,6 @@
-import type BetterSqlite3 from 'better-sqlite3-multiple-ciphers';
+import type Libsql from 'libsql';
 
-export type Db = BetterSqlite3.Database;
+export type Db = Libsql.Database;
 
 /**
  * One schema change. `up` runs inside a transaction; throwing rolls it back.

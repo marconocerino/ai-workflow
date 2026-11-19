@@ -56,6 +56,7 @@ Vitest (unit), Playwright (e2e on the real app), ESLint + Prettier, electron-bui
 - Database (electron/db): new tables only via a new migration NNN-name.ts + NNN-name.spec.ts
   (a test enforces it); never edit shipped migrations; no raw-SQL IPC; never store transcripts
   or keys outside the encrypted DB / secret store. Electron unit tests run inside Electron.
+  Driver is libsql (local files only — never its cloud sync); use `pragmaValue()`, not `db.pragma()`.
 
 ## Reference project: OpenWhispr (for inspiration)
 OpenWhispr (https://github.com/OpenWhispr/openwhispr) is an open-source Electron app with

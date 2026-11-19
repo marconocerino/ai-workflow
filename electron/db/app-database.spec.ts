@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3-multiple-ciphers';
+import Database from 'libsql';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -77,7 +77,7 @@ describe('AppDatabase', () => {
       .connection()!
       .prepare("INSERT INTO app_meta (key, value) VALUES ('secret', 'top-secret-text')")
       .run();
-    database.connection()!.pragma('wal_checkpoint(TRUNCATE)');
+    database.connection()!.exec('PRAGMA wal_checkpoint(TRUNCATE)');
     database.close();
     const file = path.join(dir, 'app.db');
     const bytes = fs.readFileSync(file);
@@ -86,9 +86,15 @@ describe('AppDatabase', () => {
     expect(bytes.includes(Buffer.from('top-secret-text'))).toBe(false);
     expect(bytes.includes(Buffer.from('app_meta'))).toBe(false);
 
-    const plain = new Database(file);
-    expect(() => plain.prepare('SELECT * FROM sqlite_master').all()).toThrow(/not a database/);
-    plain.close();
+    // Opening without a key fails (libsql reads the header on open or on first query).
+    expect(() => {
+      const plain = new Database(file);
+      try {
+        plain.prepare('SELECT * FROM sqlite_master').all();
+      } finally {
+        plain.close();
+      }
+    }).toThrow(/not a database/);
     expect(() => openEncrypted(file, 'cd'.repeat(32))).toThrow(WrongKeyError);
     const right = openEncrypted(file, keys.values.get('db.key')!);
     expect(right.prepare("SELECT value FROM app_meta WHERE key='secret'").get()).toEqual({

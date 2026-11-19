@@ -1,4 +1,5 @@
 import type { Db, DbLogger, Migration } from './types';
+import { pragmaValue } from './open';
 
 export class MigrationListError extends Error {
   constructor(message: string) {
@@ -35,7 +36,7 @@ export function validateMigrations(list: readonly Migration[]): void {
 }
 
 export function currentVersion(db: Db): number {
-  return db.pragma('user_version', { simple: true }) as number;
+  return Number(pragmaValue(db, 'user_version') ?? 0);
 }
 
 export interface MigrationResult {
@@ -82,7 +83,7 @@ export function runMigrations(
         migration.name,
         now().toISOString(),
       );
-      db.pragma(`user_version = ${migration.version}`);
+      db.exec(`PRAGMA user_version = ${migration.version}`);
     });
     try {
       apply();

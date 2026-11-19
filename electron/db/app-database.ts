@@ -140,7 +140,7 @@ export class AppDatabase {
   /** One copy of the database before applying new migrations (still encrypted). */
   private backup(db: Db): void {
     try {
-      db.pragma('wal_checkpoint(TRUNCATE)');
+      db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
       fs.copyFileSync(this.file, `${this.file}.bak`);
     } catch {
       this.logger.warn('Database: could not write a backup before updating.');
