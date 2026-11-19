@@ -37,14 +37,46 @@ Run `npm run lint && npm test && npm run e2e` before every commit.
 
 ## Build
 
-| Command            | Output                                                    |
-| ------------------ | --------------------------------------------------------- |
-| `npm run build`    | `dist/renderer` (Angular) + `dist/app` (main and preload) |
-| `npm run dist:win` | `release/AI Workflow-<version>-win.zip` (x64, unsigned)   |
-| `npm run dist:mac` | `release/mac-*/AI Workflow.app` (unsigned, for dev)       |
+| Command                  | Output                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `npm run build`          | `dist/renderer` (Angular) + `dist/app` (main and preload)                     |
+| `npm run dist:win`       | `release/AI-Workflow-Setup-<version>.exe` + portable zip (x64, unsigned)      |
+| `npm run release:win`    | Same, **signed**; fails if `CSC_LINK` is missing or a file isn't signed       |
+| `npm run dist:mac`       | `release/mac-*/AI Workflow.app` (unsigned, for dev)                           |
+| `npm run smoke:packaged` | Starts the packaged build with a throwaway profile; checks the database opens |
 
-`dist:win` also works from macOS. Installer, code signing and auto-update come later (VAI-108,
-VAI-110).
+Windows builds also work from macOS. Packaged builds have Electron fuses on (no Node mode, no
+`--inspect`, code only from the checked app archive), so Playwright can't drive them — e2e tests
+use the dev build, and `smoke:packaged` checks a packaged build through its log. Auto-update comes
+in VAI-110.
+
+## Installing on Windows
+
+Per-user install: no admin rights and no UAC prompt. Installs to
+`%LOCALAPPDATA%\Programs\AI Workflow`; user data lives in `%APPDATA%\AI Workflow`.
+
+| Task                          | Command                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| Install (interactive)         | Double-click `AI-Workflow-Setup-<version>.exe`                                              |
+| Silent install                | `AI-Workflow-Setup-<version>.exe /S`                                                        |
+| Silent install, other folder  | `AI-Workflow-Setup-<version>.exe /S /D=C:\Users\<you>\Apps\AI Workflow` (last, no quotes)   |
+| Uninstall (interactive)       | Settings → Apps → AI Workflow → Uninstall; asks whether to delete your data (default: keep) |
+| Silent uninstall, keep data   | `"%LOCALAPPDATA%\Programs\AI Workflow\Uninstall AI Workflow.exe" /S`                        |
+| Silent uninstall, delete data | `"%LOCALAPPDATA%\Programs\AI Workflow\Uninstall AI Workflow.exe" /S /DELETEDATA`            |
+
+- Exit code 0 means success. Silent installs run in the background; wait for the process to end.
+- Updates never ask about or delete user data.
+- **Intune:** add the `.exe` as a Win32 app (package it with the Win32 Content Prep Tool), install
+  command `AI-Workflow-Setup-<version>.exe /S`, uninstall command as above, **install behavior: User**,
+  detection rule: file `%LOCALAPPDATA%\Programs\AI Workflow\AI Workflow.exe` exists.
+- **Signing:** `release:win` signs with the certificate in `CSC_LINK` (path or base64 of a `.pfx`)
+  and `CSC_KEY_PASSWORD`; never commit either. Check on Windows:
+  `Get-AuthenticodeSignature "AI-Workflow-Setup-<version>.exe"` → Status `Valid`. Test certificate
+  for trying the pipeline: `node scripts/make-test-cert.mjs <folder>` (self-signed; Windows will
+  still warn). Company certificate: VAI-108b, waiting on IT.
+- **SmartScreen** may still warn about a newly signed app until it builds reputation. For the pilot,
+  IT can allow the publisher through Intune / Defender policy.
+- Manual test checklist: [docs/windows-install-test.md](docs/windows-install-test.md).
 
 ## Project layout
 

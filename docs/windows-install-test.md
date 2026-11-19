@@ -1,0 +1,82 @@
+# Windows install test (VAI-108)
+
+Run on a Windows 10/11 PC **signed in as a standard (non-admin) user**. Takes about 15 minutes.
+Build the installer first: `npm run dist:win` (or `release:win` for a signed one) and copy
+`release/AI-Workflow-Setup-<version>.exe` to the PC.
+
+Write down the result of each step (✓ / ✗ + what happened) and send it back.
+
+## 1. Interactive install, no admin
+
+1. Double-click `AI-Workflow-Setup-<version>.exe`.
+   - [ ] No UAC (admin) prompt appears.
+   - [ ] The app starts by itself when the install finishes.
+   - [ ] Start menu and desktop have an "AI Workflow" shortcut.
+2. In the app, Home shows **Database: Encrypted · schema v1**.
+3. Settings → AI servers: enter any URL, model and API key. Close the app.
+4. Check folders:
+   - [ ] `%LOCALAPPDATA%\Programs\AI Workflow\AI Workflow.exe` exists.
+   - [ ] `%APPDATA%\AI Workflow` has `settings.json`, `secrets.json`, `data\app.db`, `logs\main.log`.
+
+## 2. Signature (signed builds only)
+
+Right-click the installer → Properties → Digital Signatures.
+
+- [ ] The signer is the expected publisher. Or in PowerShell:
+      `Get-AuthenticodeSignature .\AI-Workflow-Setup-<version>.exe | Format-List` → Status `Valid`.
+- [ ] Same for `%LOCALAPPDATA%\Programs\AI Workflow\AI Workflow.exe`.
+
+## 3. Upgrade keeps data
+
+Build the next version (bump `version` in package.json) and run its installer.
+
+- [ ] No question about deleting data.
+- [ ] The app starts with the settings and API key from step 1.3 still there.
+
+## 4. Interactive uninstall — keep data
+
+Settings → Apps → AI Workflow → Uninstall.
+
+- [ ] "Are you sure" question, then **"Also delete your AI Workflow data?"** with **No** preselected.
+- Choose **No**.
+- [ ] `%LOCALAPPDATA%\Programs\AI Workflow` is gone; shortcuts are gone.
+- [ ] `%APPDATA%\AI Workflow` is still there.
+- Reinstall: [ ] the settings and key from step 1.3 are back.
+
+## 5. Interactive uninstall — delete data
+
+Uninstall again, choose **Yes**.
+
+- [ ] Both `%LOCALAPPDATA%\Programs\AI Workflow` and `%APPDATA%\AI Workflow` are gone.
+
+## 6. Silent install and uninstall (Command Prompt, not admin)
+
+```
+start /wait AI-Workflow-Setup-<version>.exe /S
+echo %ERRORLEVEL%
+```
+
+- [ ] Prints `0`; no windows or prompts; the app is installed.
+
+```
+start /wait "" "%LOCALAPPDATA%\Programs\AI Workflow\Uninstall AI Workflow.exe" /S
+echo %ERRORLEVEL%
+```
+
+- [ ] Prints `0`; app removed, **`%APPDATA%\AI Workflow` kept**, no prompts.
+
+Install silently again, then:
+
+```
+start /wait "" "%LOCALAPPDATA%\Programs\AI Workflow\Uninstall AI Workflow.exe" /S /DELETEDATA
+```
+
+- [ ] App and `%APPDATA%\AI Workflow` both removed, no prompts.
+
+## 7. Custom folder
+
+```
+start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow
+```
+
+- [ ] Installed there; the app starts from the Start menu shortcut.

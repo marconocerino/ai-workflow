@@ -1,5 +1,6 @@
-# Packaging config. VAI-101: unpacked/zip builds only.
-# Installer (NSIS), code signing, Electron fuses and auto-update come in VAI-108 / VAI-110.
+# Packaging config (D-015). Windows: per-user NSIS installer + portable zip (VAI-108).
+# Signing: set CSC_LINK (.pfx path or base64) and CSC_KEY_PASSWORD; `npm run release:win`
+# refuses to finish unsigned. Auto-update comes in VAI-110.
 appId: com.aiworkflow.desktop # placeholder until IT gives the company reverse-DNS id
 productName: AI Workflow
 directories:
@@ -18,6 +19,18 @@ asarUnpack:
   - '**/*.node'
 # libsql ships prebuilt Node-API binaries per platform, so no native rebuild is needed (D-013).
 npmRebuild: false
+# Hardening: the signed app can't be turned into a Node runner or have its code swapped.
+# (Playwright can't drive packaged builds because of this; e2e uses the dev build.)
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableCookieEncryption: true
+  onlyLoadAppFromAsar: true
+  enableEmbeddedAsarIntegrityValidation: true
+  grantFileProtocolExtraPrivileges: false
+  # Flipping fuses breaks the ad-hoc signature on Apple Silicon; re-sign ad hoc (dev builds).
+  resetAdHocDarwinSignature: true
 linux:
   files:
     - '!node_modules/@libsql/{darwin,win32}-*/**'
@@ -25,8 +38,29 @@ win:
   files:
     - '!node_modules/@libsql/{darwin,linux}-*/**'
   target:
+    - target: nsis
+      arch: [x64]
     - target: zip
       arch: [x64]
+  artifactName: AI-Workflow-${version}-win-${arch}.${ext}
+  # Sign the app exe and installer when CSC_LINK is set (VAI-108b: company certificate).
+  signAndEditExecutable: true
+nsis:
+  # Per-user install into %LOCALAPPDATA%\Programs\AI Workflow — no admin rights, no UAC prompt.
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  packElevateHelper: false
+  runAfterFinish: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  # Fixed upgrade id, so replacing the placeholder appId later doesn't break upgrades.
+  guid: 1f2814c2-f415-46ca-bac8-27dcd3312670
+  # Uninstall: keep or delete user data; never during updates (build/installer.nsh).
+  include: build/installer.nsh
+  deleteAppDataOnUninstall: false
+  artifactName: AI-Workflow-Setup-${version}.${ext}
+  uninstallDisplayName: AI Workflow
 mac:
   files:
     - '!node_modules/@libsql/{win32,linux}-*/**'

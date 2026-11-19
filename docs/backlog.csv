@@ -25,7 +25,10 @@ VAI-107,E1 Foundation,Structured logging and diagnostics,"As a support person, I
 • Export diagnostics creates a zip of logs and non-secret settings",3,Must,S1,platform,Done
 VAI-108,E1 Foundation,Windows installer and code signing,"As IT, I want a signed installer that supports silent installs, so the app can be rolled out to a pilot group without warnings.","• Signed per-user installer (no admin rights needed)
 • Silent install and uninstall switches documented
-• Uninstall removes app files and offers to keep or delete user data",5,Must,S1,"platform, release",To do
+• Uninstall removes app files and offers to keep or delete user data",5,Must,S1,"platform, release",Done
+VAI-108b,E1 Foundation,Sign with the company certificate,"As IT, I want the installer and app signed with our company certificate, so Windows shows our name and the pilot installs without warnings.","• Installer, uninstaller and app exe signed with the company certificate (type from IT: .pfx file, hardware token/HSM, or a signing service)
+• Signature verified on Windows (Get-AuthenticodeSignature: Valid, publisher = company name)
+• Certificate and password never stored in the repo",2,Must,S1,"platform, release",Blocked
 VAI-109,E1 Foundation,Feature flags,"As the product owner, I want to switch features on per user or pilot group, so meetings and agents can be released gradually.","• Flags for meetings, agents and voiceprints
 • Flags can be set by a managed config
 • Hidden features leave no UI traces",2,Should,S1,platform,To do
