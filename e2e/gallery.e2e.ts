@@ -235,7 +235,9 @@ test('automated accessibility check (axe) passes on gallery, home and settings p
     'app://renderer/gallery',
     'app://renderer/',
     'app://renderer/settings/ai-servers',
-    'app://renderer/settings/diagnostics',
+    'app://renderer/settings/dictation',
+    'app://renderer/settings/about',
+    'app://renderer/settings/transcription',
   ]) {
     await page.goto(url);
     await page.locator('h1').waitFor();

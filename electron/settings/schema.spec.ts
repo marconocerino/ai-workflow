@@ -63,7 +63,10 @@ describe('sanitizeSettings', () => {
       ai: { llm: { model: 'm', extra: 1 }, other: true },
       x: 1,
     });
-    expect(settings).toEqual({ ai: { ...defaultSettings().ai, llm: { baseUrl: '', model: 'm' } } });
+    expect(settings).toEqual({
+      ...defaultSettings(),
+      ai: { ...defaultSettings().ai, llm: { baseUrl: '', model: 'm' } },
+    });
   });
 
   it('falls back to defaults for non-objects', () => {
@@ -72,6 +75,34 @@ describe('sanitizeSettings', () => {
       expect(issues.length).toBeGreaterThan(0);
       expect(settings).toEqual(defaultSettings());
     }
+  });
+});
+
+describe('dictation settings (v2)', () => {
+  it('defaults: hold Ctrl, toggle shortcut Ctrl+Shift+Space', () => {
+    expect(defaultSettings().dictation).toEqual({
+      mode: 'hold',
+      toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+    });
+  });
+
+  it('accepts toggle mode and a valid shortcut', () => {
+    const next = applyPatch(defaultSettings(), {
+      dictation: { mode: 'toggle', toggleShortcut: ['Ctrl', 'Alt', 'F9'] },
+    });
+    expect(next.dictation).toEqual({ mode: 'toggle', toggleShortcut: ['Ctrl', 'Alt', 'F9'] });
+    expect(next.ai).toEqual(defaultSettings().ai);
+  });
+
+  it.each([
+    [{ mode: 'push' }, 'dictation.mode'],
+    [{ toggleShortcut: ['Ctrl'] }, 'dictation.toggleShortcut'],
+    [{ toggleShortcut: ['Ctrl', 'Ctrl'] }, 'dictation.toggleShortcut'],
+    [{ toggleShortcut: ['Ctrl', '<script>'] }, 'dictation.toggleShortcut'],
+    [{ toggleShortcut: 'Ctrl+Space' }, 'dictation.toggleShortcut'],
+    ['hold', 'dictation'],
+  ])('rejects %j', (dictation, path) => {
+    expect(() => applyPatch(defaultSettings(), { dictation })).toThrow(path);
   });
 });
 

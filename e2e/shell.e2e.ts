@@ -61,14 +61,14 @@ test('routes between all sections with one active item; back and forward work', 
 
   // Settings has its own layout; "Back to workspace" returns home.
   await page.getByTestId('nav-settings').click();
-  await expect(page.getByRole('heading', { name: 'AI servers' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dictation' })).toBeVisible();
   await expect(page.getByTestId('main-nav')).toHaveCount(0);
   await page.getByTestId('back-to-workspace').click();
   await expectSection('nav-home', 'AI Workflow', 'app://renderer/');
 
   // The company badge leads to the AI server settings.
   await page.getByTestId('company-badge').click();
-  expect(page.url()).toBe('app://renderer/settings/ai-servers');
+  await expect(page).toHaveURL('app://renderer/settings/ai-servers');
 });
 
 test('agent roster shows each agent with its status', async () => {

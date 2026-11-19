@@ -3,29 +3,6 @@
   padding: var(--aiw-space-7) var(--aiw-space-7) 64px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--aiw-space-5);
-  margin-bottom: var(--aiw-space-6);
-
-  h1 {
-    margin-bottom: var(--aiw-space-2);
-  }
-}
-
-.lead {
-  margin: 0;
-}
-
-.save-pill {
-  white-space: nowrap;
-  padding: 6px 14px;
-  background: var(--aiw-color-surface);
-  border: 1px solid var(--aiw-color-line-soft);
-}
-
 .aiw-card h2 {
   margin-bottom: var(--aiw-space-4);
 }

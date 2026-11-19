@@ -10,6 +10,9 @@ export const migrations: Record<number, (data: unknown) => unknown> = {
   // v0: a plain settings object without the { version, data } envelope (pre-release builds).
   // Same field names, so the data carries over as-is; validation drops anything unknown.
   0: (data) => data,
+  // v1 → v2 (VAI-204): adds `dictation` (mode, toggle shortcut). Everything in v1 is kept as-is;
+  // the new section gets its defaults from validation.
+  1: (data) => data,
 };
 
 export class SettingsMigrationError extends Error {

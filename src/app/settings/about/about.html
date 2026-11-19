@@ -1,0 +1,53 @@
+<div class="page">
+  <app-settings-header
+    heading="About & diagnostics"
+    lead="Version details and a diagnostics file for support."
+    [autosave]="false"
+  />
+
+  <section class="aiw-card" aria-labelledby="about-heading">
+    <h2 id="about-heading">AI Workflow</h2>
+    @if (info(); as i) {
+      <dl data-testid="about-info">
+        <dt>Version</dt>
+        <dd data-testid="about-version">{{ i.version }}</dd>
+        <dt>Platform</dt>
+        <dd>{{ i.platform }}</dd>
+        <dt>Electron</dt>
+        <dd>{{ i.electron }}</dd>
+        <dt>Chromium</dt>
+        <dd>{{ i.chrome }}</dd>
+        <dt>Database</dt>
+        <dd data-testid="about-database">
+          @if (i.database.status === 'ok') {
+            <aiw-chip tone="success" dot
+              >Encrypted · schema v{{ i.database.schemaVersion }}</aiw-chip
+            >
+          } @else {
+            <aiw-chip tone="danger">{{
+              i.database.status === 'unavailable' ? 'Unavailable' : 'Error'
+            }}</aiw-chip>
+            <span class="aiw-muted">{{ i.database.message }}</span>
+          }
+        </dd>
+        @if (features(); as f) {
+          <dt>Pilot features</dt>
+          <dd data-testid="about-features">
+            @for (feature of featureList(f); track feature.name) {
+              <aiw-chip>{{ feature.name }}</aiw-chip>
+            } @empty {
+              <span class="aiw-muted">None</span>
+            }
+            <span class="aiw-muted">({{ sourceLabel(f) }})</span>
+          </dd>
+        }
+      </dl>
+    } @else if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    } @else {
+      <p>Loading…</p>
+    }
+  </section>
+
+  <app-diagnostics-card />
+</div>

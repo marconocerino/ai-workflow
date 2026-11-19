@@ -19,6 +19,7 @@ test.afterEach(async () => {
 
 async function openSettings(page: Page) {
   await page.getByTestId('nav-settings').click();
+  await page.getByTestId('nav-ai-servers').click();
   await expect(page.getByRole('heading', { name: 'AI servers' })).toBeVisible();
   expect(page.url()).toBe('app://renderer/settings/ai-servers');
 }
@@ -35,7 +36,7 @@ test('configure the LLM server, save a key and test the connection', async () =>
 
   await fill(page, 'llm-base-url', server.baseUrl);
   await fill(page, 'llm-model', 'qwen3-32b');
-  await expect(page.getByTestId('save-status')).toContainText('Changes save automatically');
+  await expect(page.getByTestId('save-status')).toContainText('Saved');
 
   // No key yet → server refuses.
   await page.getByTestId('llm-test').click();

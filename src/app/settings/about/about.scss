@@ -1,0 +1,38 @@
+.page {
+  max-width: 760px;
+  padding: var(--aiw-space-7) var(--aiw-space-7) 64px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiw-space-5);
+}
+
+app-settings-header {
+  margin-bottom: var(--aiw-space-1);
+}
+
+.aiw-card h2 {
+  margin-bottom: var(--aiw-space-3);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--aiw-space-2) var(--aiw-space-5);
+  margin: 0;
+}
+
+dt {
+  color: var(--aiw-color-ink-muted);
+}
+
+dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aiw-space-2);
+  margin: 0;
+}
+
+.error {
+  color: var(--aiw-color-danger);
+}

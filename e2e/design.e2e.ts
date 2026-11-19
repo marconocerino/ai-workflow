@@ -46,6 +46,7 @@ test('changing one token updates every screen, Material components included', as
 
   // Settings
   await page.getByTestId('nav-settings').click();
+  await page.getByTestId('nav-ai-servers').click();
   await page.getByTestId('llm-base-url').waitFor();
   await setToken(page, '--aiw-color-primary', '#ff0000');
   expect(await css(page, '.logo', 'background-color')).toBe(RED); // our component
@@ -153,6 +154,7 @@ test('all visible text meets 4.5:1 on Home and Settings', async () => {
   await setToken(page, '--aiw-color-ink-muted', null);
 
   await page.getByTestId('nav-settings').click();
+  await page.getByTestId('nav-ai-servers').click();
   await page.getByTestId('llm-base-url').waitFor();
   expect(await lowContrastTexts(page)).toEqual([]);
 

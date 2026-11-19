@@ -1,0 +1,71 @@
+<div class="page">
+  <app-settings-header heading="Dictation" lead="How you start and stop talking." />
+
+  <section class="aiw-card steps" aria-label="How dictation works">
+    <div class="step">
+      <div class="visual">
+        @if (current() === 'toggle' && toggleShortcut().length) {
+          <aiw-keys [keys]="toggleShortcut()" size="lg" />
+        } @else {
+          <aiw-keys keys="Ctrl" size="lg" />
+        }
+      </div>
+      <h2>1. {{ current() === 'toggle' ? 'Press' : 'Hold' }}</h2>
+      <p class="aiw-muted">
+        {{ current() === 'toggle' ? 'Press once in any app.' : 'Press and hold in any app.' }}
+      </p>
+    </div>
+    <div class="step">
+      <div class="visual wave" aria-hidden="true">
+        <aiw-icon name="waveform" [size]="40" [strokeWidth]="2.4" />
+      </div>
+      <h2>2. Speak</h2>
+      <p class="aiw-muted">Talk naturally — pauses are fine.</p>
+    </div>
+    <div class="step">
+      <div class="visual" aria-hidden="true">
+        <span class="pasted">Clean text, pasted<span class="cursor"></span></span>
+      </div>
+      <h2>3. {{ current() === 'toggle' ? 'Press again' : 'Release' }}</h2>
+      <p class="aiw-muted">Text lands where your cursor is.</p>
+    </div>
+  </section>
+
+  <h2 class="aiw-section-label" id="shortcut-heading">Shortcut</h2>
+  <section class="aiw-card shortcut" aria-labelledby="shortcut-heading">
+    @if (loaded()) {
+      <mat-radio-group
+        class="aiw-option-cards"
+        [formControl]="mode"
+        aria-labelledby="shortcut-heading"
+        data-testid="dictation-mode"
+      >
+        <mat-radio-button class="aiw-option-card" value="hold" data-option="hold">
+          <span class="aiw-option-title">Hold Ctrl</span>
+          <span class="aiw-option-desc"
+            >Hold to talk, release to stop. Fastest for short bursts.</span
+          >
+        </mat-radio-button>
+        <mat-radio-button class="aiw-option-card" value="toggle" data-option="toggle">
+          <span class="aiw-option-title">Toggle</span>
+          <span class="aiw-option-desc"
+            >Press once to start, again to stop. Esc cancels. Better for long takes.</span
+          >
+        </mat-radio-button>
+      </mat-radio-group>
+
+      <div class="row">
+        <div>
+          <h3>Toggle shortcut</h3>
+          <p class="aiw-muted">Also used automatically if the keyboard hook can't run.</p>
+        </div>
+        <aiw-keys [keys]="toggleShortcut()" data-testid="toggle-shortcut" />
+      </div>
+    } @else if (!error()) {
+      <p>Loading…</p>
+    }
+    @if (error(); as message) {
+      <p class="error" role="alert" data-testid="dictation-error">{{ message }}</p>
+    }
+  </section>
+</div>

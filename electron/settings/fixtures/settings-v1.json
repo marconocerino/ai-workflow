@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "data": {
+    "ai": {
+      "asr": {
+        "baseUrl": "https://asr.company.internal/v1",
+        "model": "qwen3-asr-flash"
+      },
+      "llm": {
+        "baseUrl": "https://llm.company.internal/v1",
+        "model": "qwen3-32b"
+      },
+      "timeoutMs": 45000,
+      "retries": 4
+    }
+  }
+}

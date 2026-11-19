@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import type { AiWorkflowApi, DiagnosticsExportResult } from '../../../../shared/ipc-contract';
 import { AI_WORKFLOW_BRIDGE } from '../../core/electron-api';
-import { Diagnostics } from './diagnostics';
+import { DiagnosticsCard } from './diagnostics';
 
 async function render(exportResult: () => Promise<DiagnosticsExportResult>) {
   const bridge = {
@@ -11,10 +11,10 @@ async function render(exportResult: () => Promise<DiagnosticsExportResult>) {
     },
   } satisfies Pick<AiWorkflowApi, 'diagnostics'>;
   TestBed.configureTestingModule({
-    imports: [Diagnostics],
+    imports: [DiagnosticsCard],
     providers: [{ provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
   });
-  const fixture = TestBed.createComponent(Diagnostics);
+  const fixture = TestBed.createComponent(DiagnosticsCard);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
   const q = (id: string) => el.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;

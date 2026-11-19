@@ -1,25 +1,8 @@
 <div class="page">
-  <header class="page-header">
-    <div>
-      <h1>AI servers</h1>
-      <p class="lead aiw-muted">
-        Where speech-to-text and the AI assistant run. Use your company's servers.
-      </p>
-    </div>
-    <span class="aiw-chip save-pill" role="status" data-testid="save-status">
-      @switch (saveState()) {
-        @case ('saving') {
-          Saving…
-        }
-        @case ('error') {
-          <span class="error">Couldn't save — see below</span>
-        }
-        @default {
-          <span aria-hidden="true">✓</span> Changes save automatically
-        }
-      }
-    </span>
-  </header>
+  <app-settings-header
+    heading="AI servers"
+    lead="Where speech-to-text and the AI assistant run. Use your company's servers."
+  />
 
   @if (loaded(); as data) {
     <app-endpoint-card

@@ -6,6 +6,7 @@ import { EndpointCard, type SaveState } from './endpoint-card';
 
 function settings(llm: Partial<Settings['ai']['llm']> = {}): Settings {
   return {
+    dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
       llm: { baseUrl: '', model: '', ...llm },
