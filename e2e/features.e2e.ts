@@ -88,10 +88,10 @@ test('default policy: meetings, agents and voiceprints leave no UI traces', asyn
 test('managed policy turns on meetings for this user; agents stay hidden', async () => {
   await start({ features: { meetings: true } });
 
-  await expect(page.getByTestId('open-meetings')).toBeVisible();
-  await expect(page.getByTestId('open-agents')).toHaveCount(0);
+  await expect(page.getByTestId('nav-meetings')).toBeVisible();
+  await expect(page.getByTestId('nav-agents')).toHaveCount(0);
 
-  await page.getByTestId('open-meetings').click();
+  await page.getByTestId('nav-meetings').click();
   await expect(page.getByRole('heading', { name: 'Meetings' })).toBeVisible();
   expect(page.url()).toBe('app://renderer/meetings');
   const axe = await new AxeBuilder({ page })

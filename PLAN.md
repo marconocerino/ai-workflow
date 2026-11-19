@@ -10,7 +10,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | Sprint | Stories done | Points done |
 | --- | --- | --- |
 | S0 | 6 / 10 | 16 / 26 |
-| S1 | 5 / 14 | 20 / 48 |
+| S1 | 6 / 14 | 23 / 48 |
 | S2 | 0 / 12 | 0 / 39 |
 | S3 | 0 / 5 | 0 / 24 |
 | S4 | 0 / 4 | 0 / 23 |
@@ -21,7 +21,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | S9 | 0 / 9 | 0 / 35 |
 | S10 | 0 / 7 | 0 / 23 |
 | Backlog | 0 / 2 | 0 / 10 |
-| **Total** | **11 / 87** | **36 / 328** |
+| **Total** | **12 / 87** | **39 / 328** |
 
 ## E1 Foundation
 
@@ -44,7 +44,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 
 - [x] VAI-201 Design tokens — S0 · 3 pts · Must
 - [x] VAI-202 Core components — S1 · 5 pts · Must
-- [ ] VAI-203 App shell and sidebar — S1 · 3 pts · Must
+- [x] VAI-203 App shell and sidebar — S1 · 3 pts · Must
 - [ ] VAI-204 Settings screen redesign — S1 · 5 pts · Must
 - [ ] VAI-205 Tray icon and window behaviour — S1 · 3 pts · Should
 - [ ] VAI-206 Home dashboard — S2 · 5 pts · Should

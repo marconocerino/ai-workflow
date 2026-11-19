@@ -53,7 +53,7 @@ VAI-202,E2 Design system & shell,Core components,"As a developer, I want reusabl
 • Components are keyboard accessible",5,Must,S1,ui,Done
 VAI-203,E2 Design system & shell,App shell and sidebar,"As a user, I want a sidebar with Home, Meetings, Agent chats, Dictations and Settings, so I can move around the app easily.","• Routing between all sections
 • Active section highlighted
-• Sidebar shows agent status and the 'runs on company servers' badge",3,Must,S1,ui,To do
+• Sidebar shows agent status and the 'runs on company servers' badge",3,Must,S1,ui,Done
 VAI-204,E2 Design system & shell,Settings screen redesign,"As a user, I want Settings split into clear sections that save automatically, so I can find and change options quickly.","• Sections: Dictation, Transcription, AI cleanup, Vocabulary, Style per app, About & diagnostics
 • Changes save automatically with a visible confirmation
 • Existing settings carry over unchanged",5,Must,S1,ui,To do

@@ -1,0 +1,67 @@
+<app-brand subtitle="Workspace" />
+
+<div class="hint" data-testid="ctrl-hint">
+  <span class="hint-icon" aria-hidden="true"><aiw-icon name="mic" [size]="16" /></span>
+  <p>
+    Hold <kbd class="aiw-kbd">Ctrl</kbd> anywhere to dictate{{
+      agentsOn() ? ' or ask an agent' : ''
+    }}
+  </p>
+</div>
+
+<nav aria-label="Main" data-testid="main-nav">
+  <ul>
+    @for (item of nav(); track item.path) {
+      <li>
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+          ariaCurrentWhenActive="page"
+          [attr.data-testid]="item.testId"
+        >
+          <aiw-icon [name]="item.icon" [size]="18" />
+          <span class="label">{{ item.label }}</span>
+          @if (item.path === '/agents') {
+            <aiw-badge [count]="unread()" label="unread" />
+          }
+        </a>
+      </li>
+    }
+  </ul>
+</nav>
+
+@if (agentsOn()) {
+  <section class="agents" aria-labelledby="agents-heading" data-testid="agent-roster">
+    <h2 id="agents-heading" class="agents-heading">Your agents</h2>
+    <ul>
+      @for (agent of roster(); track agent.id) {
+        <li [attr.data-agent]="agent.id">
+          <aiw-agent-avatar [agent]="agent.id" decorative />
+          <span class="agent-name">{{ agent.name }}</span>
+          <span
+            class="activity"
+            [class]="'activity ' + agent.activity"
+            data-testid="agent-activity"
+          >
+            @if (agent.activity === 'live') {
+              <span class="dot" aria-hidden="true"></span>
+            }
+            {{ agent.label }}
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<div class="bottom">
+  <a routerLink="/settings" class="settings-link" data-testid="nav-settings">
+    <aiw-icon name="sliders" [size]="18" />
+    Settings
+  </a>
+  <a routerLink="/settings/ai-servers" class="company" data-testid="company-badge">
+    <aiw-icon name="lock" [size]="16" />
+    <span>Runs on your company's AI servers</span>
+  </a>
+</div>
