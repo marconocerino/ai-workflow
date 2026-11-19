@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { AppInfo } from '../../shared/ipc-contract';
+import type { FeatureState } from '../../shared/features';
 import type { SecretName, Settings } from '../../shared/settings';
 import type { Redactor } from '../logging/redact';
 import { createZip, type ZipEntry } from './zip';
@@ -11,6 +12,8 @@ export interface DiagnosticsSource {
   logFiles: string[];
   settings: Settings;
   appInfo: AppInfo;
+  /** Feature flags and where they came from (policy). */
+  features?: FeatureState;
   /** Which secrets are stored — yes/no only. */
   secretsSet: Record<SecretName, boolean>;
   redactor: Redactor;
@@ -24,7 +27,8 @@ Made with Settings > Diagnostics > Export diagnostics. Send it to support.
 Included
 - logs/       the app's log files (newest is main.log)
 - settings.json  settings without secrets (server addresses, model names, timeouts)
-- app-info.json  app version, operating system, database status, which keys are set (yes/no)
+- app-info.json  app version, operating system, database status, feature flags,
+                 which keys are set (yes/no)
 
 Never included
 - API keys or the database key (the logs are scrubbed of them as well)
@@ -46,7 +50,10 @@ export function diagnosticsEntries(source: DiagnosticsSource): ZipEntry[] {
   });
   const entries: ZipEntry[] = [
     text('README.txt', README),
-    text('app-info.json', json({ ...source.appInfo, keysSet: source.secretsSet })),
+    text(
+      'app-info.json',
+      json({ ...source.appInfo, features: source.features, keysSet: source.secretsSet }),
+    ),
     text('settings.json', json(source.settings)),
   ];
   for (const file of source.logFiles) {

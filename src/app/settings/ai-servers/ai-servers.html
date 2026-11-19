@@ -25,7 +25,7 @@
     <app-endpoint-card
       service="asr"
       heading="Speech-to-text"
-      description="Turns your voice into text for dictation and meetings (Qwen3-ASR)."
+      [description]="asrDescription()"
       urlPlaceholder="https://asr.company.internal/v1"
       modelPlaceholder="qwen3-asr"
       [initial]="data.settings.ai.asr"
@@ -35,7 +35,7 @@
     <app-endpoint-card
       service="llm"
       heading="Language model"
-      description="Cleans up dictation, writes summaries and powers the agents."
+      [description]="llmDescription()"
       urlPlaceholder="https://llm.company.internal/v1"
       modelPlaceholder="qwen3-32b"
       [initial]="data.settings.ai.llm"

@@ -53,6 +53,12 @@
           Check again
         </button>
         <a mat-stroked-button routerLink="/settings" data-testid="open-settings">Settings</a>
+        @if (features.enabled('meetings')) {
+          <a mat-stroked-button routerLink="/meetings" data-testid="open-meetings">Meetings</a>
+        }
+        @if (features.enabled('agents')) {
+          <a mat-stroked-button routerLink="/agents" data-testid="open-agents">Agents</a>
+        }
         <a mat-button routerLink="/gallery" data-testid="open-gallery">Component gallery</a>
       </div>
     </section>

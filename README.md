@@ -144,6 +144,31 @@ scripts/dev.mjs    `npm start` runner
 - No compiling: `npm ci` installs the prebuilt binary for your platform. `npm run dist:win` on a Mac
   fetches the Windows binary first (`scripts/fetch-native.mjs`).
 
+## Feature flags
+
+Meetings, agents and voiceprints are **off** unless IT turns them on (VAI-109, D-016). Flags are
+read once at startup from the Windows registry policy keys, which only admins (GPO, Intune) can
+write:
+
+| Scope              | Key                                  | Use                                 |
+| ------------------ | ------------------------------------ | ----------------------------------- |
+| One user (pilot)   | `HKCU\Software\Policies\AI Workflow` | GPO User Configuration, Intune ADMX |
+| Everyone on the PC | `HKLM\Software\Policies\AI Workflow` | Wins over the per-user value        |
+
+Values (REG_DWORD, 1 = on, 0 = off, missing = off): `Meetings`, `Agents`, `Voiceprints`.
+Examples: [docs/policy/](docs/policy/). Restart the app after a change. The startup log shows the
+result (`[policy] Features meetings=on …`) and diagnostics include it.
+
+- **GPO:** User Configuration → Preferences → Windows Settings → Registry, target the pilot group.
+- **Intune, per machine:** a PowerShell script run as SYSTEM that sets the HKLM values.
+  Per user via Intune needs an ADMX template (ask if IT wants one).
+- **Dev:** `AIW_POLICY_FILE=policy.json npm start` with `{ "features": { "meetings": true } }`
+  (ignored in packaged builds). macOS dev builds read `/Library/Application Support/AI Workflow/policy.json`.
+- **Adding a flagged feature:** add it to `shared/features.ts`; guard its routes with
+  `canMatch: [feature('x')]`; register its IPC with `registerIf('x', …)`; show links and any text
+  that mentions it only when `FeatureFlags.enabled('x')`. The e2e test fails if a hidden feature's
+  name shows up on screen.
+
 ## Logs and diagnostics
 
 - Logs: `<userData>/logs/main.log` (macOS `~/Library/Application Support/AI Workflow/logs`, Windows

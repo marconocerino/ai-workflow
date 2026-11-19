@@ -11,6 +11,10 @@ const api: AiWorkflowApi = {
   app: {
     getInfo: () => invoke('app:get-info'),
   },
+  // Read-only: flags come from IT policy and can't be changed from the page.
+  features: {
+    get: () => invoke('features:get'),
+  },
   settings: {
     get: () => invoke('settings:get'),
     update: (patch) => invoke('settings:update', patch),

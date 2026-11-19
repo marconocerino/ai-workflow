@@ -21,6 +21,8 @@ import { registerDiagnosticsIpc } from './ipc/diagnostics';
 import { createIpcRegistrar } from './ipc/handle';
 import { registerSettingsIpc } from './ipc/settings';
 import { Logger, RotatingFile, parseLogLevel } from './logging';
+import { loadFeaturePolicy } from './policy/policy';
+import { windowsRegQuery } from './policy/registry';
 import { terminalEcho } from './logging/logger';
 import {
   APP_ORIGIN,
@@ -33,6 +35,7 @@ import {
 import { type Encryptor, SecretStore } from './settings/secret-store';
 import { SettingsStore } from './settings/settings-store';
 import { APP_TITLE, createMainWindowOptions } from './window';
+import type { FeatureState } from '../shared/features';
 import { SECRET_NAMES, type SecretName } from '../shared/settings';
 
 // Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
@@ -128,11 +131,25 @@ if (!app.requestSingleInstanceLock()) {
     });
     const db = await database.open();
     logger.scope('db').info('Database opened', { status: db.status, schema: db.schemaVersion });
+    const features = await loadFeaturePolicy({
+      platform: process.platform,
+      regQuery: windowsRegQuery,
+      macFile: '/Library/Application Support/AI Workflow/policy.json',
+      // Dev/test only: a JSON policy file instead of the registry (ignored when packaged).
+      ...(!app.isPackaged && process.env['AIW_POLICY_FILE']
+        ? { testFile: process.env['AIW_POLICY_FILE'] }
+        : {}),
+      logger: logger.scope('policy'),
+    });
+    logger.scope('policy').info('Features', {
+      ...Object.fromEntries(Object.entries(features.flags).map(([k, v]) => [k, v ? 'on' : 'off'])),
+      source: features.sources.join(','),
+    });
     app.on('will-quit', () => {
       database.close();
       appLog.info('Quit');
     });
-    registerIpc(settings, secrets, database);
+    registerIpc(settings, secrets, database, features);
     createMainWindow();
 
     app.on('activate', () => {
@@ -186,7 +203,12 @@ function osEncryptor(): Encryptor {
   };
 }
 
-function registerIpc(settings: SettingsStore, secrets: SecretStore, database: AppDatabase): void {
+function registerIpc(
+  settings: SettingsStore,
+  secrets: SecretStore,
+  database: AppDatabase,
+  features: FeatureState,
+): void {
   const handle = createIpcRegistrar(ipcMain, (event) =>
     isTrustedUrl(event.senderFrame?.url, trustedOrigins),
   );
@@ -200,8 +222,12 @@ function registerIpc(settings: SettingsStore, secrets: SecretStore, database: Ap
       database: database.status(),
     });
   handle('app:get-info', appInfo);
+  handle('features:get', () => features);
+  // Feature IPC is registered through the gate, so a hidden feature has nothing to call:
+  //   const registerIf = featureGate(features.flags, logger.scope('policy'));
+  //   registerIf('meetings', () => registerMeetingsIpc(handle, …));
   registerSettingsIpc(handle, settings, secrets);
-  registerDiagnosticsIpc(handle, diagnosticsDeps(settings, secrets, appInfo));
+  registerDiagnosticsIpc(handle, diagnosticsDeps(settings, secrets, appInfo, features));
 
   // Electron's net.fetch uses Chromium's network stack: system proxy and company certificates work.
   const aiClient = new AiHttpClient(
@@ -219,6 +245,7 @@ function diagnosticsDeps(
   settings: SettingsStore,
   secrets: SecretStore,
   appInfo: () => ReturnType<typeof getAppInfo>,
+  features: FeatureState,
 ): Parameters<typeof registerDiagnosticsIpc>[1] {
   return {
     logger: logger.scope('diagnostics'),
@@ -242,6 +269,7 @@ function diagnosticsDeps(
         logFiles: logFile.files(),
         settings: settings.get(),
         appInfo: appInfo(),
+        features,
         secretsSet: Object.fromEntries(SECRET_NAMES.map((n) => [n, secrets.has(n)])) as Record<
           SecretName,
           boolean

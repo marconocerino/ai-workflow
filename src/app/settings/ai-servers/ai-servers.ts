@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import type { Settings } from '../../../../shared/settings';
 import { fieldError, ipcErrorMessage } from '../../core/ipc-errors';
+import { FeatureFlags } from '../../core/feature-flags';
 import { SettingsApi } from '../../core/settings-api';
 import { EndpointCard, type SaveState } from '../endpoint-card/endpoint-card';
 import { errorText } from '../validators';
@@ -24,6 +25,24 @@ interface Loaded {
 })
 export class AiServers {
   private readonly api = inject(SettingsApi);
+  private readonly features = inject(FeatureFlags);
+
+  // Hidden features leave no traces, not even in descriptions (VAI-109).
+  protected readonly asrDescription = computed(
+    () =>
+      `Turns your voice into text for dictation${
+        this.features.enabled('meetings') ? ' and meetings' : ''
+      } (Qwen3-ASR).`,
+  );
+  protected readonly llmDescription = computed(() =>
+    [
+      'Cleans up dictation.',
+      this.features.enabled('meetings') ? 'Writes meeting summaries.' : '',
+      this.features.enabled('agents') ? 'Powers the agents.' : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
+  );
 
   protected readonly loaded = signal<Loaded | null>(null);
   protected readonly loadError = signal<string | null>(null);

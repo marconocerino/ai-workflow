@@ -31,7 +31,7 @@ VAI-108b,E1 Foundation,Sign with the company certificate,"As IT, I want the inst
 • Certificate and password never stored in the repo",2,Must,S1,"platform, release",Blocked
 VAI-109,E1 Foundation,Feature flags,"As the product owner, I want to switch features on per user or pilot group, so meetings and agents can be released gradually.","• Flags for meetings, agents and voiceprints
 • Flags can be set by a managed config
-• Hidden features leave no UI traces",2,Should,S1,platform,To do
+• Hidden features leave no UI traces",2,Should,S1,platform,Done
 VAI-110,E1 Foundation,Auto-update,"As a user, I want updates to download in the background and install on restart, so I always have fixes without effort.","• Updates download silently and install on quit
 • Pilot and stable channels
 • IT can disable auto-update by policy",3,Should,S2,"platform, release",To do
