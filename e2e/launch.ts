@@ -24,6 +24,7 @@ export async function launchApp(
   delete env['ELECTRON_RUN_AS_NODE'];
   env['AIW_USER_DATA_DIR'] = userDataDir;
   env['AIW_MOCK_KEYCHAIN'] = '1';
+  env['AIW_E2E'] = '1'; // test hooks in the main process (dev builds only)
   Object.assign(env, extraEnv);
 
   const app = await electron.launch({ args: [ROOT], cwd: ROOT, env });

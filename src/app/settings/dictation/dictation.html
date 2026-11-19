@@ -68,4 +68,32 @@
       <p class="error" role="alert" data-testid="dictation-error">{{ message }}</p>
     }
   </section>
+  <h2 class="aiw-section-label" id="startup-heading">Startup</h2>
+  <section class="aiw-card startup" aria-labelledby="startup-heading">
+    @if (startup(); as s) {
+      <div class="row first">
+        <div>
+          <h3 id="open-at-login-label">Open AI Workflow when I sign in</h3>
+          <p class="aiw-muted" id="open-at-login-desc" data-testid="open-at-login-note">
+            @if (s.available) {
+              Starts quietly in the tray, ready to dictate.
+            } @else {
+              Available in the installed app, not when running from source.
+            }
+          </p>
+        </div>
+        <mat-slide-toggle
+          [checked]="s.openAtLogin"
+          [disabled]="!s.available"
+          (change)="setOpenAtLogin($event)"
+          aria-labelledby="open-at-login-label"
+          aria-describedby="open-at-login-desc"
+          data-testid="open-at-login"
+        />
+      </div>
+      @if (startupError(); as message) {
+        <p class="error" role="alert" data-testid="startup-error">{{ message }}</p>
+      }
+    }
+  </section>
 </div>

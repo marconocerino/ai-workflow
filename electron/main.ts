@@ -1,8 +1,11 @@
 import {
   BrowserWindow,
+  Menu,
+  Tray,
   app,
   dialog,
   ipcMain,
+  nativeImage,
   net,
   protocol,
   safeStorage,
@@ -34,7 +37,11 @@ import {
 } from './security';
 import { type Encryptor, SecretStore } from './settings/secret-store';
 import { SettingsStore } from './settings/settings-store';
+import { Startup } from './startup';
+import { DictationStatus } from './tray/dictation-status';
+import { TrayController } from './tray/tray-controller';
 import { APP_TITLE, createMainWindowOptions } from './window';
+import { WindowLifecycle } from './window-lifecycle';
 import type { FeatureState } from '../shared/features';
 import { SECRET_NAMES, type SecretName } from '../shared/settings';
 
@@ -92,16 +99,17 @@ protocol.registerSchemesAsPrivileged([
 
 app.enableSandbox();
 
+// Tray and window behaviour (VAI-205): closing the window hides it; real quits go through.
+const lifecycle = new WindowLifecycle(logger.scope('window'));
+const dictationStatus = new DictationStatus();
+const startup = new Startup(app, process.platform, logger.scope('startup'));
+let tray: TrayController | null = null;
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on('second-instance', () => {
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-      if (win.isMinimized()) win.restore();
-      win.focus();
-    }
-  });
+  app.on('second-instance', () => lifecycle.show());
+  app.on('before-quit', () => lifecycle.quitting());
 
   // Lock down every webContents ever created (main window and anything later).
   app.on('web-contents-created', (_event, contents) => {
@@ -146,14 +154,18 @@ if (!app.requestSingleInstanceLock()) {
       source: features.sources.join(','),
     });
     app.on('will-quit', () => {
+      tray?.destroy();
       database.close();
       appLog.info('Quit');
     });
     registerIpc(settings, secrets, database, features);
-    createMainWindow();
+    createTray();
+    createMainWindow(startup.openedAtLogin(process.argv));
+    exposeTestHooks();
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+      if (BrowserWindow.getAllWindows().length === 0) createMainWindow(false);
+      else lifecycle.show();
     });
   });
 
@@ -223,6 +235,8 @@ function registerIpc(
     });
   handle('app:get-info', appInfo);
   handle('features:get', () => features);
+  handle('startup:get', () => startup.get());
+  handle('startup:set', (_event, openAtLogin) => startup.set(openAtLogin));
   // Feature IPC is registered through the gate, so a hidden feature has nothing to call:
   //   const registerIf = featureGate(features.flags, logger.scope('policy'));
   //   registerIf('meetings', () => registerMeetingsIpc(handle, …));
@@ -290,8 +304,50 @@ function diagnosticsDeps(
   };
 }
 
-function createMainWindow(): void {
+const rendererBase = devServerUrl?.replace(/\/+$/, '') ?? APP_ORIGIN;
+
+function createMainWindow(hidden: boolean): void {
   const win = new BrowserWindow(createMainWindowOptions(path.join(__dirname, 'preload.js')));
-  win.once('ready-to-show', () => win.show());
-  void win.loadURL(devServerUrl ?? `${APP_ORIGIN}/`);
+  lifecycle.attach(win);
+  // Started at sign-in: stay in the tray until the user opens the window.
+  if (hidden) appLog.info('Started at sign-in; staying in the tray');
+  else win.once('ready-to-show', () => win.show());
+  void win.loadURL(`${rendererBase}/`);
+}
+
+function createTray(): void {
+  const iconDir = path.join(app.getAppPath(), 'assets', 'tray');
+  tray = new TrayController({
+    // No GUID yet: on Windows an unsigned exe that moves can't reuse it (add with VAI-108b).
+    createTray: (icon) => {
+      const image = nativeImage.createFromPath(icon);
+      if (image.isEmpty())
+        logger.scope('tray').warn('Tray icon missing', { file: path.basename(icon) });
+      return new Tray(image);
+    },
+    buildMenu: (template) => Menu.buildFromTemplate(template),
+    iconPath: (state) => path.join(iconDir, `${state}.png`),
+    status: dictationStatus,
+    platform: process.platform,
+    dictationAvailable: () => false, // VAI-301 adds the hotkey
+    showWindow: () => lifecycle.show(),
+    openSettings: () => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (win) void win.loadURL(`${rendererBase}/settings`);
+      lifecycle.show();
+    },
+    quit: () => app.quit(),
+    logger: logger.scope('tray'),
+  });
+  tray.create();
+}
+
+/** e2e only (dev build + AIW_E2E=1): lets Playwright read and drive the tray from the main process. */
+function exposeTestHooks(): void {
+  if (app.isPackaged || process.env['AIW_E2E'] !== '1') return;
+  (globalThis as Record<string, unknown>)['__aiwTest'] = {
+    tray: () => tray?.describe(),
+    clickTray: (label: string) => tray?.click(label),
+    setDictationState: (state: Parameters<DictationStatus['set']>[0]) => dictationStatus.set(state),
+  };
 }

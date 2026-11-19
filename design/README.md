@@ -14,6 +14,8 @@ Screenshots of the target UI. They still say "Voice AI"; the product name is **A
 
 Notes on what's built:
 
+- **Tray (VAI-205):** placeholder icons drawn in code from the logo's waveform bars (grey idle,
+  green listening, green + red dot recording). The app still has no app icon (Electron default).
 - **Settings (VAI-204):** sidebar and Dictation page match the design, with two differences.
   An "AI servers" section sits after Transcription (D-009), and the status card says "Not active
   yet" until the hotkey exists (VAI-301). Dictation's Microphone and Startup sections arrive with
@@ -41,6 +43,7 @@ they're in.
 | Name speakers                      | VAI-503          | S6     |
 | Other Settings pages (AI cleanup, vocabulary, style per app, about & diagnostics) | VAI-204, VAI-307–309 | S1–S2 |
 | Agent roster and permissions       | VAI-809          | S10    |
+| Tray icon (idle, listening, recording) and app icon | VAI-205, VAI-108 | S1 |
 
 ## Tokens
 

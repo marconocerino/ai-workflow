@@ -15,8 +15,14 @@ const stored: Settings = {
   },
 };
 
-async function render(update = vi.fn().mockResolvedValue(stored)) {
-  const bridge = { settings: { get: vi.fn().mockResolvedValue(stored), update } };
+async function render(
+  update = vi.fn().mockResolvedValue(stored),
+  startup = {
+    get: vi.fn().mockResolvedValue({ available: false, openAtLogin: false }),
+    set: vi.fn(),
+  },
+) {
+  const bridge = { settings: { get: vi.fn().mockResolvedValue(stored), update }, startup };
   TestBed.configureTestingModule({
     imports: [DictationSettings],
     providers: [
@@ -32,7 +38,7 @@ async function render(update = vi.fn().mockResolvedValue(stored)) {
     await new Promise((r) => setTimeout(r));
     await fixture.whenStable();
   };
-  return { fixture, el, update, settle, status: TestBed.inject(SaveStatus) };
+  return { fixture, el, update, settle, startup, status: TestBed.inject(SaveStatus) };
 }
 
 describe('DictationSettings', () => {
@@ -67,5 +73,57 @@ describe('DictationSettings', () => {
     await settle();
     expect(status.state()).toBe('error');
     expect(el.querySelector('[data-testid="dictation-error"]')!.textContent).toContain('EACCES');
+  });
+
+  it('start at sign-in: disabled with a note when running from source', async () => {
+    const { el, settle } = await render();
+    await settle();
+    const toggle = el.querySelector('[data-testid="open-at-login"] button[role="switch"]')!;
+    expect(toggle.hasAttribute('disabled')).toBe(true);
+    expect(el.querySelector('[data-testid="open-at-login-note"]')!.textContent).toContain(
+      'Available in the installed app, not when running from source.',
+    );
+  });
+
+  it('start at sign-in: installed app turns it on and confirms the save', async () => {
+    const startup = {
+      get: vi.fn().mockResolvedValue({ available: true, openAtLogin: false }),
+      set: vi.fn().mockResolvedValue({ available: true, openAtLogin: true }),
+    };
+    const { el, settle, status } = await render(undefined, startup);
+    await settle();
+    el.querySelector<HTMLButtonElement>(
+      '[data-testid="open-at-login"] button[role="switch"]',
+    )!.click();
+    await settle();
+    expect(startup.set).toHaveBeenCalledWith(true);
+    expect(status.state()).toBe('saved');
+    expect(
+      el
+        .querySelector('[data-testid="open-at-login"] button[role="switch"]')!
+        .getAttribute('aria-checked'),
+    ).toBe('true');
+  });
+
+  it('start at sign-in: a failure shows the error and the real state', async () => {
+    const startup = {
+      get: vi.fn().mockResolvedValue({ available: true, openAtLogin: false }),
+      set: vi.fn().mockRejectedValue(new Error('Access denied')),
+    };
+    const { el, settle, status } = await render(undefined, startup);
+    await settle();
+    el.querySelector<HTMLButtonElement>(
+      '[data-testid="open-at-login"] button[role="switch"]',
+    )!.click();
+    await settle();
+    expect(status.state()).toBe('error');
+    expect(el.querySelector('[data-testid="startup-error"]')!.textContent).toContain(
+      'Access denied',
+    );
+    expect(
+      el
+        .querySelector('[data-testid="open-at-login"] button[role="switch"]')!
+        .getAttribute('aria-checked'),
+    ).toBe('false');
   });
 });

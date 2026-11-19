@@ -40,6 +40,12 @@ export interface RendererErrorReport {
 /** Result of Settings → Diagnostics → Export. `fileName` only (no folder path). */
 export type DiagnosticsExportResult = { saved: true; fileName: string } | { saved: false };
 
+/** Start at sign-in (VAI-205). `available` is false when running from source. */
+export interface StartupState {
+  available: boolean;
+  openAtLogin: boolean;
+}
+
 /** channel → request payload and response type. */
 export interface IpcContract {
   'app:get-info': { request: void; response: AppInfo };
@@ -54,6 +60,9 @@ export interface IpcContract {
   'secrets:clear': { request: SecretName; response: void };
   /** Calls GET {baseUrl}/models on the saved server with the saved key. */
   'ai:test-connection': { request: AiService; response: ConnectionResult };
+  'startup:get': { request: void; response: StartupState };
+  /** Turns the OS login entry on or off; rejects when running from source. */
+  'startup:set': { request: boolean; response: StartupState };
   /** Log an unexpected renderer error. The renderer can't write anything else to the log. */
   'log:renderer-error': { request: RendererErrorReport; response: void };
   /** Asks where to save, writes the diagnostics zip, shows it in the file manager. */
@@ -88,6 +97,10 @@ export interface AiWorkflowApi {
   };
   ai: {
     testConnection(service: AiService): Promise<ConnectionResult>;
+  };
+  startup: {
+    get(): Promise<StartupState>;
+    set(openAtLogin: boolean): Promise<StartupState>;
   };
   log: {
     rendererError(report: RendererErrorReport): Promise<void>;

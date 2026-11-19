@@ -1,5 +1,5 @@
-// Starts a packaged build with a throwaway profile and waits for the log line that says the app
-// started and its encrypted database opened (VAI-108). Playwright can't drive packaged builds
+// Starts a packaged build with a throwaway profile and waits for the log lines that say the app
+// started, its encrypted database opened (VAI-108) and the tray icon loaded (VAI-205). Playwright can't drive packaged builds
 // (the Electron fuses block --inspect), so this reads our own log instead.
 // Chromium switches: --user-data-dir keeps the real profile untouched; --use-mock-keychain
 // avoids the macOS Keychain prompt for unsigned dev builds (Windows DPAPI never prompts).
@@ -51,7 +51,10 @@ function finish(code, message) {
 const timer = setInterval(() => {
   const text = existsSync(logFile) ? readFileSync(logFile, 'utf8') : '';
   const opened = text.match(/\[db\] Database opened status=(\w+) schema=(\d+)/);
-  if (opened?.[1] === 'ok') return finish(0, `ok: started, database status=ok schema=${opened[2]}`);
+  if (text.includes('Tray icon missing')) return finish(1, `tray icon missing\n${text}`);
+  if (opened?.[1] === 'ok' && text.includes('[tray] Tray created')) {
+    return finish(0, `ok: started, database status=ok schema=${opened[2]}, tray created`);
+  }
   if (opened) return finish(1, `database status=${opened[1]}\n${text}`);
   if (child.exitCode !== null) return finish(1, `app exited (code ${child.exitCode})\n${text}`);
   if (Date.now() > deadline) return finish(1, `app did not start within 30 s\n${text}`);

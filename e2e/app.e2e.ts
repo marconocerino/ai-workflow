@@ -38,7 +38,7 @@ test('renderer has no Node access', async () => {
     process: 'undefined',
     module: 'undefined',
     Buffer: 'undefined',
-    bridgeKeys: ['app', 'features', 'settings', 'secrets', 'ai', 'log', 'diagnostics'],
+    bridgeKeys: ['app', 'features', 'settings', 'secrets', 'ai', 'startup', 'log', 'diagnostics'],
   });
 });
 

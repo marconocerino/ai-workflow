@@ -59,7 +59,7 @@ VAI-204,E2 Design system & shell,Settings screen redesign,"As a user, I want Set
 • Existing settings carry over unchanged",5,Must,S1,ui,Done
 VAI-205,E2 Design system & shell,Tray icon and window behaviour,"As a user, I want Voice AI in the system tray with its status, so it runs quietly in the background.","• Tray icon shows idle, listening and recording states
 • Closing the window keeps the app running in the tray
-• Option to start at sign-in",3,Should,S1,"ui, platform",To do
+• Option to start at sign-in",3,Should,S1,"ui, platform",Done
 VAI-206,E2 Design system & shell,Home dashboard,"As a user, I want a Home screen with my next meeting, things waiting for my OK, today's meetings, agent activity and recent dictations, so I see my day at a glance.","• Each section shows real data when available and a helpful empty state when not
 • Up next card links to the meeting
 • Recent dictations come from history",5,Should,S2,ui,To do
