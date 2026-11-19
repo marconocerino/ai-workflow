@@ -18,7 +18,7 @@ test.afterEach(async () => {
 });
 
 async function openSettings(page: Page) {
-  await page.getByTestId('open-settings').click();
+  await page.getByTestId('nav-settings').click();
   await expect(page.getByRole('heading', { name: 'AI servers' })).toBeVisible();
   expect(page.url()).toBe('app://renderer/settings/ai-servers');
 }

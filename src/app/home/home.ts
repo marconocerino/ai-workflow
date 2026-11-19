@@ -3,7 +3,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import type { AppInfo } from '../../../shared/ipc-contract';
 import { ElectronApi } from '../core/electron-api';
-import { FeatureFlags } from '../core/feature-flags';
 import { Chip } from '../ui';
 
 /** Placeholder start page (VAI-101): proves Material and the typed IPC round trip work. */
@@ -16,7 +15,6 @@ import { Chip } from '../ui';
 })
 export class Home {
   private readonly api = inject(ElectronApi);
-  protected readonly features = inject(FeatureFlags);
 
   protected readonly info = signal<AppInfo | null>(null);
   protected readonly error = signal<string | null>(null);

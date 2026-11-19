@@ -12,6 +12,13 @@ Screenshots of the target UI. They still say "Voice AI"; the product name is **A
 | `Meeting notes@1x.png`          | Meeting page: summary, action items, transcript, ask the meeting | VAI-409, VAI-504, VAI-505, VAI-507, VAI-806     |
 | `Agent chat@1x.png`             | Agent chat threads, thread view, approval cards, composer        | VAI-801, VAI-802, VAI-803, VAI-804              |
 
+Notes on what's built:
+
+- **Sidebar (VAI-203):** matches the design. Meetings, Agent chats and the "Your agents" roster
+  appear only when their feature flags are on (VAI-109). Agent status is "Idle" for every agent
+  and the unread badge is hidden until the agent runtime exists (VAI-801+). The Ctrl hint is shown
+  before the hotkey works (VAI-301). Meetings, Agent chats and Dictations are placeholder pages.
+
 ## Screens still missing
 
 Stories that need a design before they can be matched. Ask design for these before the sprint

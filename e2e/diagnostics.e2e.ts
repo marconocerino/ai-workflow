@@ -30,7 +30,7 @@ test('logs have levels and timestamps, never keys; export makes a zip of logs an
   });
 
   // Use the key: save it and send it to the server in a request header.
-  await page.getByTestId('open-settings').click();
+  await page.getByTestId('nav-settings').click();
   await page.getByTestId('llm-base-url').fill(server.baseUrl);
   await page.getByTestId('llm-base-url').blur();
   await page.getByTestId('llm-model').fill('qwen3-32b');

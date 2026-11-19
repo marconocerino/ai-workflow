@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import type { AiWorkflowApi, AppInfo } from '../../../shared/ipc-contract';
 import { AI_WORKFLOW_BRIDGE } from '../core/electron-api';
-import { FeatureFlags } from '../core/feature-flags';
 import { Home } from './home';
 
 const info: AppInfo = {
@@ -14,14 +13,11 @@ const info: AppInfo = {
   database: { status: 'ok', schemaVersion: 1, encrypted: true },
 };
 
-async function render(
-  bridge: Pick<AiWorkflowApi, 'app'> | Pick<AiWorkflowApi, 'app' | 'features'> | null,
-) {
+async function render(bridge: Pick<AiWorkflowApi, 'app'> | null) {
   TestBed.configureTestingModule({
     imports: [Home],
     providers: [provideRouter([]), { provide: AI_WORKFLOW_BRIDGE, useValue: bridge }],
   });
-  if (bridge && 'features' in bridge) await TestBed.inject(FeatureFlags).load();
   const fixture = TestBed.createComponent(Home);
   await fixture.whenStable();
   return fixture.nativeElement as HTMLElement;
@@ -48,23 +44,5 @@ describe('Home', () => {
   it('shows an error when the IPC call fails', async () => {
     const el = await render({ app: { getInfo: () => Promise.reject(new Error('boom')) } });
     expect(el.querySelector('[role="alert"]')?.textContent).toContain('boom');
-  });
-
-  it('links to flagged features only when they are on', async () => {
-    const off = await render({ app: { getInfo: () => Promise.resolve(info) } });
-    expect(off.textContent).not.toMatch(/Meetings|Agents/);
-    TestBed.resetTestingModule();
-    const on = await render({
-      app: { getInfo: () => Promise.resolve(info) },
-      features: {
-        get: () =>
-          Promise.resolve({
-            flags: { meetings: true, agents: false, voiceprints: false },
-            sources: ['registry'],
-          }),
-      },
-    });
-    expect(on.querySelector('[data-testid="open-meetings"]')).not.toBeNull();
-    expect(on.querySelector('[data-testid="open-agents"]')).toBeNull();
   });
 });
