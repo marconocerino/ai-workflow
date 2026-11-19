@@ -20,9 +20,12 @@ beforeEach(() => {
   const settings = new SettingsStore(dir, { logger: { warn: () => undefined } });
   settings.load();
   const secrets = new SecretStore(dir, {
-    isEncryptionAvailable: () => true,
-    encryptString: (t) => Buffer.from(t).reverse(),
-    decryptString: (b) => Buffer.from(b).reverse().toString(),
+    isEncryptionAvailable: async () => true,
+    encryptString: async (t) => Buffer.from(t).reverse(),
+    decryptString: async (b) => ({
+      value: Buffer.from(b).reverse().toString(),
+      shouldReEncrypt: false,
+    }),
   });
   registerSettingsIpc(handle, settings, secrets);
   const event = { senderFrame: { url: 'app://renderer/' } } as unknown as IpcMainInvokeEvent;
@@ -45,16 +48,16 @@ describe('settings IPC', () => {
     expect(() => call('settings:update', 'not an object')).toThrow();
   });
 
-  it('sets, checks and clears secrets but never returns the value', () => {
-    expect(call('secrets:set', { name: 'ai.llm.apiKey', value: 'k-123' })).toBeUndefined();
+  it('sets, checks and clears secrets but never returns the value', async () => {
+    expect(await call('secrets:set', { name: 'ai.llm.apiKey', value: 'k-123' })).toBeUndefined();
     expect(call('secrets:has', 'ai.llm.apiKey')).toBe(true);
     expect(call('secrets:clear', 'ai.llm.apiKey')).toBeUndefined();
     expect(call('secrets:has', 'ai.llm.apiKey')).toBe(false);
   });
 
-  it('rejects malformed secret payloads', () => {
-    expect(() => call('secrets:set', null)).toThrow();
-    expect(() => call('secrets:set', { name: 'other', value: 'x' })).toThrow();
+  it('rejects malformed secret payloads', async () => {
+    await expect(async () => call('secrets:set', null)).rejects.toThrow();
+    await expect(async () => call('secrets:set', { name: 'other', value: 'x' })).rejects.toThrow();
     expect(() => call('secrets:has', { toString: () => 'ai.llm.apiKey' })).toThrow();
   });
 

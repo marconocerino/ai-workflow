@@ -40,6 +40,22 @@ export default tseslint.config(
     },
   },
   {
+    // Main process: every promise must be awaited or handled (an unawaited secret save once
+    // reported success before the key was stored). Type-aware, so electron/ only.
+    files: ['electron/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: './electron/tsconfig.spec.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+    },
+  },
+  {
     files: ['**/*.spec.ts'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },

@@ -83,7 +83,8 @@ scripts/dev.mjs    `npm start` runner
 - Settings: `<userData>/settings.json`, versioned (`{ "version": 1, "data": { … } }`) and migrated
   on load (`electron/settings/migrations.ts`). Corrupt files are moved aside and defaults are used.
 - Secrets (API keys): `<userData>/secrets.json`, each value encrypted with Electron `safeStorage`
-  (DPAPI on Windows, Keychain on macOS). The renderer can set, check and clear them, never read them.
+  (DPAPI on Windows, Keychain on macOS; async API). The renderer can set, check and clear them, never
+  read them. Main process: `await secrets.get(name)` — lint fails on an unawaited promise.
 - `<userData>` is `%APPDATA%\AI Workflow` on Windows and `~/Library/Application Support/AI Workflow`
   on macOS.
 - To change the settings shape: bump `SETTINGS_VERSION` in `electron/settings/schema.ts`, add a

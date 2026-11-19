@@ -113,7 +113,7 @@ if (!app.requestSingleInstanceLock()) {
     contents.on('will-attach-webview', (event) => event.preventDefault());
   });
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     configureSession();
     registerAppProtocol();
     const settingsDir = app.getPath('userData');
@@ -126,7 +126,7 @@ if (!app.requestSingleInstanceLock()) {
     const database = new AppDatabase(path.join(settingsDir, 'data'), secrets, {
       logger: logger.scope('db'),
     });
-    const db = database.open();
+    const db = await database.open();
     logger.scope('db').info('Database opened', { status: db.status, schema: db.schemaVersion });
     app.on('will-quit', () => {
       database.close();
@@ -175,11 +175,14 @@ function registerAppProtocol(): void {
  */
 function osEncryptor(): Encryptor {
   return {
-    isEncryptionAvailable: () =>
-      safeStorage.isEncryptionAvailable() &&
+    isEncryptionAvailable: async () =>
+      (await safeStorage.isAsyncEncryptionAvailable()) &&
       !(process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text'),
-    encryptString: (text) => safeStorage.encryptString(text),
-    decryptString: (data) => safeStorage.decryptString(data),
+    encryptString: (text) => safeStorage.encryptStringAsync(text),
+    decryptString: async (data) => {
+      const { result, shouldReEncrypt } = await safeStorage.decryptStringAsync(data);
+      return { value: result, shouldReEncrypt };
+    },
   };
 }
 

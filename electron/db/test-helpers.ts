@@ -18,14 +18,14 @@ export function memoryKeys(
   return {
     values,
     available,
-    isAvailable() {
+    async isAvailable() {
       return this.available;
     },
     has: (name: AnySecretName) => values.has(name),
-    get(name: AnySecretName) {
+    async get(name: AnySecretName) {
       return this.available ? (values.get(name) ?? null) : null;
     },
-    set(name: AnySecretName, value: string) {
+    async set(name: AnySecretName, value: string) {
       if (!this.available) throw new Error('unavailable');
       values.set(name, value);
     },
