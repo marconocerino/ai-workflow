@@ -1,4 +1,4 @@
-import type { CleanupLevel, Settings } from '../../shared/settings';
+import { type CleanupLevel, type Settings, type StyleName, styleFor } from '../../shared/settings';
 import type { ScopedLogger } from '../logging/logger';
 import { type AiHttpClient, AiNotConfiguredError, HostNotAllowedError } from './ai-http';
 
@@ -45,9 +45,33 @@ const LEVEL_RULES: Record<Exclude<CleanupLevel, 'off'>, string> = {
 - Otherwise keep the speaker's wording: do not rephrase, shorten or summarise.`,
 };
 
-/** The prompt for a level (exported for tests and review). */
-export function cleanupPrompt(level: Exclude<CleanupLevel, 'off'>): string {
-  return `${RULES}\n\n${LEVEL_RULES[level]}`;
+/**
+ * Style per app (VAI-308): only the form changes. The rules above still apply, so a style never
+ * adds content (no greetings, sign-offs or filler), and the word check still runs.
+ */
+const STYLE_RULES: Record<Exclude<StyleName, 'neutral'>, string> = {
+  professional: `Style: professional (email, documents).
+- Use careful punctuation and capitalisation.
+- Write out slang and casual contractions ("gonna" becomes "going to", "wanna" becomes "want to").
+- Do not add subjects or other words just to make full sentences.
+- Do not add greetings, sign-offs or polite phrases that were not said.`,
+  casual: `Style: casual (chat).
+- Keep contractions and the speaker's relaxed tone.
+- Use light punctuation; leave out the full stop after a single short sentence.`,
+  code: `Style: code (code editor, terminal).
+- Keep technical words, names and identifiers exactly.
+- Write spoken file names, commands and identifiers as code: "package dot json" becomes "package.json", "use state" becomes "useState", "dash dash help" becomes "--help".
+- Do not add explanations or extra prose.`,
+};
+
+/** The prompt for a level and style (exported for tests and review). */
+export function cleanupPrompt(
+  level: Exclude<CleanupLevel, 'off'>,
+  style: StyleName = 'neutral',
+): string {
+  const parts = [RULES, LEVEL_RULES[level]];
+  if (style !== 'neutral') parts.push(STYLE_RULES[style]);
+  return parts.join('\n\n');
 }
 
 /** Words of a text, for comparing what was said with what came back. */
@@ -62,18 +86,34 @@ function words(text: string): string[] {
 }
 
 /**
+ * Small English grammar words that carry no facts. Writing out "gonna" as "going to" or adding
+ * a missing "I am" (Professional style, VAI-308) mustn't count as adding content; names,
+ * numbers, places and other content words still do.
+ */
+const GRAMMAR_WORDS = new Set(
+  (
+    'a an the i me my we us our you your he him his she her it its they them their ' +
+    'am is are was were be been being do does did have has had will would shall should ' +
+    'can could may might must to of in on for with and or but so that this these those ' +
+    "going want got gotta let not no yes it's i'm we're you're they're that's don't can't won't"
+  ).split(' '),
+);
+
+/**
  * "Never adds facts" (VAI-307), checked in code, not only asked of the model. Cleanup only
  * removes words and adds punctuation, so the result must be about as long as what was said and
- * made of the same words (a couple of new ones are allowed, e.g. "5" for "five"). An answer to a
- * question, a followed instruction, a translation or an invented detail fails this.
+ * made of the same words (one new content word is allowed, e.g. "5" for "five"; grammar words
+ * don't count). An answer to a question, a followed instruction, a translation or an invented
+ * detail fails this.
  */
 export function checkFidelity(spoken: string, cleaned: string): CleanupSkip | null {
   if (!cleaned.trim()) return 'empty';
   if (cleaned.length > spoken.length * 1.1 + 20) return 'too-long';
   const said = new Set(words(spoken));
   const out = words(cleaned);
-  const added = out.filter((w) => !said.has(w)).length;
-  return added > Math.max(2, Math.ceil(out.length * 0.1)) ? 'added-words' : null;
+  const added = out.filter((w) => !said.has(w) && !GRAMMAR_WORDS.has(w)).length;
+  // One rewritten word ("5" for "five", "useState"); a little more in long dictations.
+  return added > Math.max(1, Math.floor(out.length * 0.05)) ? 'added-words' : null;
 }
 
 /** The model's answer without reasoning blocks, echoed tags or wrapping quotes. */
@@ -105,13 +145,15 @@ export class Cleaner {
     this.now = d.now ?? (() => performance.now());
   }
 
-  async clean(spoken: string): Promise<CleanupResult> {
+  /** `app`: where the text goes (e.g. "Outlook"), for its style; null → Neutral. */
+  async clean(spoken: string, app: string | null = null): Promise<CleanupResult> {
     const started = this.now();
     const level = this.d.settings().dictation.cleanup;
+    const style = styleFor(this.d.settings().dictation.styles, app);
     const { baseUrl, model } = this.d.settings().ai.llm;
     const raw = (reason: CleanupSkip): CleanupResult => {
       const ms = Math.round(this.now() - started);
-      if (reason !== 'off') this.d.logger?.info('Cleanup skipped', { level, reason, ms });
+      if (reason !== 'off') this.d.logger?.info('Cleanup skipped', { level, style, reason, ms });
       return { cleaned: false, text: spoken, reason, ms };
     };
     if (level === 'off') return raw('off');
@@ -123,14 +165,17 @@ export class Cleaner {
       timer = setTimeout(() => resolve('timeout'), timeoutMs);
     });
     try {
-      const answer = await Promise.race([this.ask(level, model, spoken, timeoutMs), deadline]);
+      const answer = await Promise.race([
+        this.ask(level, style, model, spoken, timeoutMs),
+        deadline,
+      ]);
       if (answer === 'timeout') return raw('timeout');
       if (typeof answer !== 'string') return raw(answer.skip);
       const cleaned = tidyAnswer(answer, spoken);
       const problem = checkFidelity(spoken, cleaned);
       if (problem) return raw(problem);
       const ms = Math.round(this.now() - started);
-      this.d.logger?.info('Cleaned up', { level, ms });
+      this.d.logger?.info('Cleaned up', { level, style, ms });
       return { cleaned: true, text: cleaned, ms };
     } finally {
       clearTimeout(timer);
@@ -140,6 +185,7 @@ export class Cleaner {
   /** One chat completion: the model's answer, or why there is none. */
   private async ask(
     level: Exclude<CleanupLevel, 'off'>,
+    style: StyleName,
     model: string,
     spoken: string,
     timeoutMs: number,
@@ -152,7 +198,7 @@ export class Cleaner {
       max_tokens: Math.max(MIN_MAX_TOKENS, Math.ceil(spoken.length / 2) + 64),
       stream: false,
       messages: [
-        { role: 'system', content: cleanupPrompt(level) },
+        { role: 'system', content: cleanupPrompt(level, style) },
         { role: 'user', content: `<transcript>\n${spoken}\n</transcript>` },
       ],
     });

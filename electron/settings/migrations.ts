@@ -19,6 +19,9 @@ export const migrations: Record<number, (data: unknown) => unknown> = {
   // v3 → v4 (VAI-307): adds dictation.cleanup (default "light" from validation); everything else
   // unchanged.
   3: (data) => data,
+  // v4 → v5 (VAI-308): adds dictation.styles (default rules from validation); everything else
+  // unchanged.
+  4: (data) => data,
 };
 
 export class SettingsMigrationError extends Error {

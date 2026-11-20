@@ -1,0 +1,106 @@
+<div class="page">
+  <app-settings-header
+    heading="Style per app"
+    lead="A different writing style for each app you dictate into."
+  />
+
+  @if (error(); as message) {
+    <p class="aiw-card banner" role="alert">{{ message }}</p>
+  }
+
+  @if (loaded()) {
+    @if (cleanupOff()) {
+      <p class="aiw-card banner" data-testid="cleanup-off">
+        AI cleanup is off, so styles aren't used. Turn it on in
+        <a routerLink="/settings/ai-cleanup">AI cleanup</a>.
+      </p>
+    }
+
+    <h2 class="aiw-section-label" id="apps-heading">Apps</h2>
+    <section class="aiw-card" aria-labelledby="apps-heading">
+      <ul class="rules" aria-label="Style for each app">
+        @for (rule of rules(); track rule.app; let i = $index) {
+          <li class="rule" data-testid="style-rule">
+            <span class="app">{{ rule.app }}</span>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="pick">
+              <mat-select
+                [value]="rule.style"
+                (valueChange)="setStyle(i, $event)"
+                [aria-label]="'Style for ' + rule.app"
+              >
+                @for (s of styles; track s) {
+                  <mat-option [value]="s">{{ labels[s] }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button
+              mat-icon-button
+              type="button"
+              (click)="remove(i)"
+              [attr.aria-label]="'Remove ' + rule.app"
+            >
+              <aiw-icon name="trash" />
+            </button>
+          </li>
+        } @empty {
+          <li class="empty aiw-muted">No app rules: every app uses Neutral.</li>
+        }
+      </ul>
+
+      <form class="add" (submit)="$event.preventDefault(); add()">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="name">
+          <mat-label>App</mat-label>
+          <input
+            matInput
+            [formControl]="newApp"
+            list="known-apps"
+            [maxlength]="maxName"
+            placeholder="e.g. Notion"
+            data-testid="new-app"
+          />
+        </mat-form-field>
+        <datalist id="known-apps">
+          @for (name of knownApps; track name) {
+            <option [value]="name"></option>
+          }
+        </datalist>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="pick">
+          <mat-label>Style</mat-label>
+          <mat-select [formControl]="newStyle" data-testid="new-style">
+            @for (s of styles; track s) {
+              <mat-option [value]="s">{{ labels[s] }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <button mat-stroked-button type="submit" data-testid="add-rule">Add</button>
+      </form>
+      @if (addError(); as message) {
+        <p class="add-error" role="alert">{{ message }}</p>
+      }
+
+      <div class="foot">
+        <p class="aiw-muted">
+          Apps without a rule use Neutral. Names match what the dictation bar shows.
+        </p>
+        <button mat-button type="button" (click)="restoreDefaults()" data-testid="restore-styles">
+          Restore defaults
+        </button>
+      </div>
+    </section>
+
+    <h2 class="aiw-section-label" id="styles-heading">Styles</h2>
+    <section class="aiw-card" aria-labelledby="styles-heading">
+      <dl class="styles">
+        @for (s of styles; track s) {
+          <div>
+            <dt>{{ labels[s] }}</dt>
+            <dd class="aiw-muted">{{ help[s] }}</dd>
+          </div>
+        }
+      </dl>
+      <p class="aiw-muted note">
+        Styles change only the form. Cleanup still never adds anything you didn't say.
+      </p>
+    </section>
+  }
+</div>

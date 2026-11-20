@@ -30,6 +30,7 @@ import { AppDatabase } from './db/app-database';
 import { buildDiagnosticsZip, diagnosticsFileName } from './diagnostics/export';
 import { clipboardOutput } from './dictation/clipboard-output';
 import { DictationPipeline, type DictationOutput } from './dictation/dictation-pipeline';
+import { TargetApp } from './dictation/target-app';
 import { pasteOutput, runPasteHelper } from './dictation/paste-output';
 import { registerAiIpc } from './ipc/ai';
 import { DictationHotkey } from './hotkey/dictation-hotkey';
@@ -67,7 +68,7 @@ import {
   OVERLAY_STATE_CHANNEL,
   type PasteStatus,
 } from '../shared/ipc-contract';
-import { SECRET_NAMES, type SecretName } from '../shared/settings';
+import { SECRET_NAMES, STYLE_LABELS, type SecretName, styleFor } from '../shared/settings';
 
 // Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
 // so e2e tests never touch the real profile or pop up a Keychain prompt.
@@ -140,6 +141,7 @@ let mainWindow: BrowserWindow | null = null;
 let audioWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let overlay: OverlayController | null = null;
+let targetApp: TargetApp | null = null;
 let lastRecordingForTests: { durationMs: number; peak: number } | null = null;
 let lastNotificationForTests: { title: string; body: string } | null = null;
 let pipeline: DictationPipeline | null = null;
@@ -195,13 +197,16 @@ if (!app.requestSingleInstanceLock()) {
       source: features.sources.join(','),
     });
     const aiClient = createAiClient(settings, secrets);
+    // Before the overlay: it must see this recording's lookup when the status changes.
+    targetApp = createTargetApp();
     pipeline = createPipeline(settings, aiClient);
     audio = createAudio(settings);
     hotkey = createHotkey(settings);
-    overlay = createOverlay();
+    overlay = createOverlay(settings);
     app.on('will-quit', () => {
       hotkey?.dispose();
       overlay?.dispose();
+      targetApp?.dispose();
       audio?.dispose();
       tray?.destroy();
       database.close();
@@ -367,7 +372,8 @@ function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): Dictat
   const cleaner = new Cleaner({ client: aiClient, settings: () => settings.get(), logger: log });
   return new DictationPipeline({
     transcribe: (recording) => transcriber.transcribe(recording),
-    refine: async (text) => (await cleaner.clean(text)).text,
+    refine: async (text, app) => (await cleaner.clean(text, app)).text,
+    targetApp: () => targetApp?.current() ?? Promise.resolve(null),
     output: createOutput(log),
     status: dictationStatus,
     micReady: () => audio?.status().state === 'ready',
@@ -511,9 +517,17 @@ function createMainWindow(hidden: boolean): void {
   void win.loadURL(`${rendererBase}/`);
 }
 
-/** The floating dictation bar (VAI-305): follows DictationStatus; shows without focus. */
-function createOverlay(): OverlayController {
+/** Which app a dictation goes to, asked once per recording (VAI-305/308). */
+function createTargetApp(): TargetApp {
   const pasteHelper = helperSpawner('aiw-paste', 'AIW_PASTE_HELPER_SCRIPT');
+  return new TargetApp(
+    dictationStatus,
+    pasteHelper ? () => runFrontApp(() => pasteHelper(['--front-app'])) : null,
+  );
+}
+
+/** The floating dictation bar (VAI-305): follows DictationStatus; shows without focus. */
+function createOverlay(settings: SettingsStore): OverlayController {
   return new OverlayController({
     window: {
       show: (bounds) => {
@@ -534,7 +548,12 @@ function createOverlay(): OverlayController {
     status: dictationStatus,
     workArea: () => screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea,
     source: () => hotkey?.recordingSource ?? null,
-    frontApp: pasteHelper ? () => runFrontApp(() => pasteHelper(['--front-app'])) : undefined,
+    frontApp: () => targetApp?.current() ?? Promise.resolve(null),
+    styleLabel: (app) => {
+      const { cleanup, styles } = settings.get().dictation;
+      const style = styleFor(styles, app);
+      return cleanup === 'off' || style === 'neutral' ? null : STYLE_LABELS[style];
+    },
     logger: logger.scope('overlay'),
   });
 }

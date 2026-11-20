@@ -15,7 +15,13 @@ import { DictationBar } from '../ui';
   template: `
     @if (state(); as s) {
       @if (s.phase !== 'hidden') {
-        <aiw-dictation-bar [phase]="s.phase" [level]="s.level" [app]="s.app" [hint]="s.hint" />
+        <aiw-dictation-bar
+          [phase]="s.phase"
+          [level]="s.level"
+          [app]="s.app"
+          [appStyle]="s.style"
+          [hint]="s.hint"
+        />
       }
     }
   `,

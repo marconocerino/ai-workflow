@@ -189,7 +189,18 @@ Before each app: copy something of your own (e.g. a word in Notepad) so you can 
    error popup; `main.log` has `Cleanup skipped … reason=`.
 6. `main.log`: [ ] `Cleaned up level=… ms=…`; no dictated text anywhere.
 
-## 15. Custom folder
+## 15. Style per app
+
+1. Settings → Style per app: [ ] Outlook, Word = Professional; Teams, Slack = Casual; VS Code,
+   Terminal, Command Prompt = Code.
+2. Say "hey gonna send the deck tomorrow" into Outlook, then Teams. [ ] The bar shows
+   "Outlook · Professional" / "Teams · Casual"; Outlook gets "going to" and a full stop, Teams keeps
+   "gonna" and no final full stop. Neither adds a greeting or sign-off.
+3. VS Code: "open package dot json and import use state". [ ] `package.json`, `useState`.
+4. An app without a rule (e.g. Paint's text tool): [ ] the bar shows only the app name.
+5. Add a rule for that app (Casual), dictate again. [ ] Bar shows "· Casual". Restore defaults works.
+
+## 16. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

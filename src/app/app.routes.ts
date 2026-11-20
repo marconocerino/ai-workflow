@@ -79,12 +79,7 @@ export const routes: Routes = [
       {
         path: 'style',
         title: 'Style per app · Settings · AI Workflow',
-        loadComponent: comingSoon,
-        data: {
-          heading: 'Style per app',
-          lead: 'A different writing style for each app you dictate into.',
-          coming: 'Set a style per app, e.g. casual for chat and formal for email.',
-        },
+        loadComponent: () => import('./settings/style/style').then((m) => m.StyleSettings),
       },
       {
         path: 'about',

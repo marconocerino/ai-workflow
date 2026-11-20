@@ -13,6 +13,7 @@ const stored: Settings = {
     micDeviceId: '',
     keepMicReadySeconds: 10,
     cleanup: 'light',
+    styles: [],
   },
   ai: {
     asr: { baseUrl: 'https://asr.company/v1', model: 'qwen3-asr' },

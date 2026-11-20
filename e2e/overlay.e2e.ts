@@ -127,7 +127,8 @@ test('the bar appears within 100 ms without taking focus, shows level and app, t
 
   const bar = overlayPage().locator('aiw-dictation-bar');
   await expect(bar).toContainText('Listening…');
-  await expect(bar.getByTestId('target-app')).toHaveText('Outlook'); // app name, not a title
+  // App name (never a title), plus its cleanup style (VAI-308).
+  await expect(bar.getByTestId('target-app')).toHaveText('Outlook · Professional');
   // The fake mic beeps once a second (short beeps, so read the loudest level sent so far).
   await expect
     .poll(async () => (await overlay()).peakLevel, { timeout: 3000 })

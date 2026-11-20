@@ -6,11 +6,20 @@ import type {
   KeepMicReadySeconds,
   Settings,
   SettingsPatch,
+  StyleName,
+  StyleRule,
 } from '../../shared/settings';
-import { CLEANUP_LEVELS, KEEP_MIC_READY_OPTIONS } from '../../shared/settings';
+import {
+  CLEANUP_LEVELS,
+  DEFAULT_STYLE_RULES,
+  KEEP_MIC_READY_OPTIONS,
+  MAX_APP_NAME,
+  MAX_STYLE_RULES,
+  STYLES,
+} from '../../shared/settings';
 
 /** Bump when the stored shape changes, and add a migration in migrations.ts. */
-export const SETTINGS_VERSION = 4;
+export const SETTINGS_VERSION = 5;
 
 export function defaultSettings(): Settings {
   return {
@@ -20,6 +29,7 @@ export function defaultSettings(): Settings {
       micDeviceId: '',
       keepMicReadySeconds: 10,
       cleanup: 'light',
+      styles: DEFAULT_STYLE_RULES.map((r) => ({ ...r })),
     },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
@@ -216,7 +226,36 @@ function readDictation(
       issues.push({ path: 'dictation.cleanup', message: 'must be "off", "light" or "polished"' });
     }
   }
-  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds, cleanup };
+  let styles = fallback.styles.map((r) => ({ ...r }));
+  if (raw['styles'] !== undefined) {
+    const read = readStyleRules(raw['styles']);
+    if (read) styles = read;
+    else {
+      issues.push({
+        path: 'dictation.styles',
+        message: `must be up to ${MAX_STYLE_RULES} rules, each an app name (1–${MAX_APP_NAME} characters, no duplicates) and a style`,
+      });
+    }
+  }
+  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds, cleanup, styles };
+}
+
+/** Valid style rules (trimmed), or null. App names: printable, unique (case-insensitive). */
+function readStyleRules(raw: unknown): StyleRule[] | null {
+  if (!Array.isArray(raw) || raw.length > MAX_STYLE_RULES) return null;
+  const seen = new Set<string>();
+  const rules: StyleRule[] = [];
+  for (const item of raw) {
+    if (!isObject(item) || typeof item['app'] !== 'string') return null;
+    const app = item['app'].trim();
+    // eslint-disable-next-line no-control-regex
+    if (!app || app.length > MAX_APP_NAME || /[\u0000-\u001f\u007f]/.test(app)) return null;
+    if (!(STYLES as readonly unknown[]).includes(item['style'])) return null;
+    if (seen.has(app.toLowerCase())) return null;
+    seen.add(app.toLowerCase());
+    rules.push({ app, style: item['style'] as StyleName });
+  }
+  return rules;
 }
 
 /**

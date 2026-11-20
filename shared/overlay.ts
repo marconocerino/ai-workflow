@@ -7,8 +7,16 @@ export interface OverlayState {
   level: number;
   /** Where the text will go, e.g. "Outlook" — app name only, never a window title. */
   app: string | null;
+  /** Cleanup style for that app, e.g. "Professional"; null when Neutral or cleanup is off (VAI-308). */
+  style: string | null;
   /** Small hint, e.g. "Esc to cancel" (toggle mode). */
   hint: string | null;
 }
 
-export const HIDDEN_OVERLAY: OverlayState = { phase: 'hidden', level: 0, app: null, hint: null };
+export const HIDDEN_OVERLAY: OverlayState = {
+  phase: 'hidden',
+  level: 0,
+  app: null,
+  style: null,
+  hint: null,
+};
