@@ -66,6 +66,11 @@ describe('packaged files', () => {
     }
   });
 
+  it('Windows AppUserModelID in main.ts matches appId (else no notifications)', () => {
+    const main = readFileSync(path.join(root, 'electron', 'main.ts'), 'utf8');
+    expect(main).toContain(`app.isPackaged ? '${config.appId}' : process.execPath`);
+  });
+
   it('ships the third-party licence notices', () => {
     expect(config.files).toContain('THIRD_PARTY_NOTICES.md');
   });

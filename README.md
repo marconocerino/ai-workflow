@@ -162,6 +162,21 @@ scripts/dev.mjs    `npm start` runner
 - macOS dev builds: no Hold Ctrl; the toggle shortcut works.
 - Tests use a fake helper: `AIW_KEY_LISTENER_SCRIPT=e2e/fake-key-listener.mjs` (dev only).
 
+## Speech-to-text
+
+- A finished recording goes to `POST {baseUrl}/audio/transcriptions` (OpenAI-compatible; multipart
+  `file` = in-memory 16 kHz WAV, `model`, `response_format=json`) on the speech-to-text server from
+  **Settings → AI servers** (`electron/ai/transcribe.ts`, through `AiHttpClient`). The tray shows
+  "Transcribing" meanwhile.
+- Not sent: recordings under 0.3 s (accidental press) and silence (peak below −40 dBFS; "Nothing was
+  heard"). Retries (`ai.retries`) only after network errors, HTTP 429 and 5xx — never after a
+  timeout or another 4xx. Every failure has a short message (timeout, unreachable, key rejected, …).
+- Until VAI-304 (paste at cursor) the text goes on the **clipboard** with a notification "Text
+  copied"; failures are a "Dictation failed" notification. Notifications never contain the text.
+- The log has duration, bytes, latency, attempts and error codes — never the text, audio or key.
+- Dev setup until the company Qwen3-ASR server is available (D-021): any OpenAI-compatible server,
+  e.g. URL `https://api.groq.com/openai/v1`, model `whisper-large-v3-turbo`, your own key. Dev only.
+
 ## Microphone
 
 - A hidden **audio window** (`/audio-engine`, no UI) owns the microphone: getUserMedia →

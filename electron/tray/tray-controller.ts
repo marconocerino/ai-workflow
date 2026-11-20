@@ -31,6 +31,7 @@ export const STATE_LABEL: Record<DictationState, string> = {
   idle: 'Idle',
   listening: 'Listening',
   recording: 'Recording',
+  transcribing: 'Transcribing',
 };
 
 /**

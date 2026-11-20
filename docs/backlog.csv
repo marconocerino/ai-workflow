@@ -81,7 +81,7 @@ VAI-302,E3 Dictation,Microphone capture and device choice,"As a user, I want to 
 • Warm audio stays in memory and is discarded if unused",3,Must,S1,"dictation, audio",Done
 VAI-303,E3 Dictation,Transcription with Qwen3-ASR,"As a user, I want my speech turned into text by our company's speech model, so dictation is accurate and private.","• Audio sent only to the configured company endpoint
 • Typical 10-second clip returns text in under 2 seconds
-• Clear message on timeout or server error",3,Must,S1,"dictation, ai",To do
+• Clear message on timeout or server error",3,Must,S1,"dictation, ai",Done
 VAI-304,E3 Dictation,Paste at cursor,"As a user, I want the text to appear where my cursor is in any app, so I don't copy and paste by hand.","• Works in Outlook, Teams, browsers and VS Code
 • My clipboard is restored afterwards
 • If pasting fails, the text stays on the clipboard with a notice",3,Must,S1,dictation,To do

@@ -1,8 +1,10 @@
 import {
   BrowserWindow,
   Menu,
+  Notification,
   Tray,
   app,
+  clipboard,
   dialog,
   globalShortcut,
   ipcMain,
@@ -18,10 +20,13 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { AiHttpClient } from './ai/ai-http';
+import { Transcriber } from './ai/transcribe';
 import { AudioController } from './audio/audio-controller';
 import { allowPermissionCheck, allowPermissionRequest } from './audio/permissions';
 import { AppDatabase } from './db/app-database';
 import { buildDiagnosticsZip, diagnosticsFileName } from './diagnostics/export';
+import { clipboardOutput } from './dictation/clipboard-output';
+import { DictationPipeline } from './dictation/dictation-pipeline';
 import { registerAiIpc } from './ipc/ai';
 import { DictationHotkey } from './hotkey/dictation-hotkey';
 import { KeyListener } from './hotkey/key-listener';
@@ -108,6 +113,12 @@ protocol.registerSchemesAsPrivileged([
 
 app.enableSandbox();
 
+// Windows shows notifications only for an app with an AppUserModelID. Packaged: the appId that
+// electron-builder gives the Start-menu shortcut; from source: the Electron binary (Electron docs).
+if (process.platform === 'win32') {
+  app.setAppUserModelId(app.isPackaged ? 'com.aiworkflow.desktop' : process.execPath);
+}
+
 // Tray and window behaviour (VAI-205): closing the window hides it; real quits go through.
 const lifecycle = new WindowLifecycle(logger.scope('window'));
 const dictationStatus = new DictationStatus();
@@ -118,6 +129,9 @@ let audio: AudioController | null = null;
 let mainWindow: BrowserWindow | null = null;
 let audioWindow: BrowserWindow | null = null;
 let lastRecordingForTests: { durationMs: number; peak: number } | null = null;
+let lastNotificationForTests: { title: string; body: string } | null = null;
+let pipeline: DictationPipeline | null = null;
+const quietNotifications = !app.isPackaged && process.env['AIW_E2E'] === '1';
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -167,6 +181,8 @@ if (!app.requestSingleInstanceLock()) {
       ...Object.fromEntries(Object.entries(features.flags).map(([k, v]) => [k, v ? 'on' : 'off'])),
       source: features.sources.join(','),
     });
+    const aiClient = createAiClient(settings, secrets);
+    pipeline = createPipeline(settings, aiClient);
     audio = createAudio(settings);
     hotkey = createHotkey(settings);
     app.on('will-quit', () => {
@@ -176,7 +192,7 @@ if (!app.requestSingleInstanceLock()) {
       database.close();
       appLog.info('Quit');
     });
-    registerIpc(settings, secrets, database, features);
+    registerIpc(settings, secrets, database, features, aiClient);
     hotkey.apply();
     createTray();
     createMainWindow(startup.openedAtLogin(process.argv));
@@ -259,6 +275,7 @@ function registerIpc(
   secrets: SecretStore,
   database: AppDatabase,
   features: FeatureState,
+  aiClient: AiHttpClient,
 ): void {
   const handle = createIpcRegistrar(ipcMain, (event) =>
     isTrustedUrl(event.senderFrame?.url, trustedOrigins),
@@ -301,14 +318,47 @@ function registerIpc(
   });
   if (hotkey) registerHotkeyIpc(handle, hotkey, settings);
   registerDiagnosticsIpc(handle, diagnosticsDeps(settings, secrets, appInfo, features));
+  registerAiIpc(handle, aiClient, settings, secrets, logger.scope('ai'));
+}
 
+/** The only client for AI servers (D-009): requests go only to the configured hosts. */
+function createAiClient(settings: SettingsStore, secrets: SecretStore): AiHttpClient {
   // Electron's net.fetch uses Chromium's network stack: system proxy and company certificates work.
-  const aiClient = new AiHttpClient(
+  return new AiHttpClient(
     () => settings.get(),
     secrets,
     (url, init) => net.fetch(url, init),
   );
-  registerAiIpc(handle, aiClient, settings, secrets, logger.scope('ai'));
+}
+
+/** Recording → speech-to-text → clipboard (VAI-303; VAI-304 pastes at the cursor instead). */
+function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): DictationPipeline {
+  const log = logger.scope('dictation');
+  const transcriber = new Transcriber({
+    client: aiClient,
+    settings: () => settings.get(),
+    logger: log,
+  });
+  return new DictationPipeline({
+    transcribe: (recording) => transcriber.transcribe(recording),
+    output: clipboardOutput({
+      writeClipboard: (text) => clipboard.writeText(text),
+      notify: (title, body) => {
+        lastNotificationForTests = { title, body };
+        // e2e reads it through the test hook instead of popping up on the developer's screen.
+        if (quietNotifications || !Notification.isSupported()) return;
+        const note = new Notification({ title, body, silent: true });
+        note.on('failed', (_e, error) =>
+          logger.scope('dictation').warn('Notification could not be shown', { error }),
+        );
+        note.show();
+      },
+      platform: process.platform,
+    }),
+    status: dictationStatus,
+    micReady: () => audio?.status().state === 'ready',
+    logger: log,
+  });
 }
 
 /** Dev/test only: save diagnostics into this folder without a dialog (for e2e). */
@@ -474,10 +524,10 @@ function createAudio(settings: SettingsStore): AudioController {
     config: () => settings.get().dictation,
     status: dictationStatus,
     logger: logger.scope('audio'),
-    // VAI-303 sends the recording to speech-to-text; until then it's dropped after logging.
-    // Tests may read its length and level (never the audio).
+    // Speech-to-text (VAI-303). Tests may read the length and level (never the audio).
     onRecording: (r) => {
       lastRecordingForTests = { durationMs: r.durationMs, peak: r.peak };
+      void pipeline?.onRecording(r);
     },
   });
 }
@@ -541,5 +591,6 @@ function exposeTestHooks(): void {
     hotkey: () => hotkey?.status(),
     audio: () => audio?.status(),
     lastRecording: () => lastRecordingForTests,
+    lastNotification: () => lastNotificationForTests,
   };
 }

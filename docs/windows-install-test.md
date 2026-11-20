@@ -132,7 +132,18 @@ Open Notepad and Word (or any editor). Watch the tray icon tooltip / Settings st
    microphone". Dictate. [ ] Tray menu: "Dictation: microphone blocked"; Settings explains how to fix
    it. Turn it back on: [ ] dictation works again.
 
-## 11. Custom folder
+## 11. Speech-to-text
+
+1. Settings → AI servers → Speech-to-text: URL, model and API key of the speech server (dev: see
+   README "Speech-to-text"). [ ] "Test connection" says Connected.
+2. Hold Ctrl, say a sentence (~10 s), release. [ ] Tray shows "Transcribing", then a notification
+   "Dictation ready — Text copied". [ ] Ctrl+V in Notepad pastes what you said. [ ] It took under
+   2 s (`main.log`: `Transcribed … latencyMs=…`, below 2000). The text is not in `main.log`.
+3. Hold Ctrl without speaking for 2 s. [ ] Notification "Nothing was heard"; nothing is sent.
+4. Disconnect the network (or enter a wrong URL), dictate. [ ] "Dictation failed" with a message
+   about reaching the server; the clipboard is unchanged. Wrong API key: [ ] "rejected the API key".
+
+## 12. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

@@ -1,7 +1,15 @@
-/** What dictation is doing (VAI-205). Set by the hotkey and recorder (VAI-301/302). */
-export type DictationState = 'idle' | 'listening' | 'recording';
+/**
+ * What dictation is doing (VAI-205). Set by the hotkey and recorder (VAI-301/302) and by
+ * speech-to-text (VAI-303: "transcribing" while text is on its way).
+ */
+export type DictationState = 'idle' | 'listening' | 'recording' | 'transcribing';
 
-export const DICTATION_STATES: readonly DictationState[] = ['idle', 'listening', 'recording'];
+export const DICTATION_STATES: readonly DictationState[] = [
+  'idle',
+  'listening',
+  'recording',
+  'transcribing',
+];
 
 /** Tiny observable for the main process; the tray (and later the overlay) follow it. */
 export class DictationStatus {
