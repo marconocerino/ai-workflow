@@ -1,6 +1,6 @@
 // Tray icons (VAI-205), drawn in code: no image library, no design file yet.
 // The logo's five waveform bars on a 24-unit grid; state by colour and, for recording, a red dot.
-//   node scripts/tray-icons.mjs   → writes assets/tray/{idle,listening,recording}{,@2x}.png
+//   node scripts/tray-icons.mjs   → writes assets/tray/{idle,listening,recording,transcribing}{,@2x}.png
 // A test checks the committed files still match (pixels, not bytes: zlib output can differ).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -9,7 +9,7 @@ import { crc32, deflateSync, inflateSync } from 'node:zlib';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const OUT_DIR = path.join(root, 'assets', 'tray');
-export const STATES = ['idle', 'listening', 'recording'];
+export const STATES = ['idle', 'listening', 'recording', 'transcribing'];
 export const SIZES = { '': 16, '@2x': 32 };
 
 // Mid-tone colours that read on both light and dark Windows taskbars.
@@ -17,6 +17,7 @@ const COLORS = {
   idle: [0x8a, 0x97, 0x8a],
   listening: [0x3f, 0xa0, 0x6a],
   recording: [0x3f, 0xa0, 0x6a],
+  transcribing: [0x4a, 0x8f, 0xd9],
   dot: [0xe5, 0x48, 0x4d],
 };
 

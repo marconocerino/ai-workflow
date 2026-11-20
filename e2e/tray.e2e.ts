@@ -46,7 +46,7 @@ const windowVisible = () =>
       .map((w) => w.isVisible()),
   );
 
-test('tray shows idle, listening and recording', async () => {
+test('tray shows idle, listening, recording and transcribing', async () => {
   expect(await tray()).toEqual({
     state: 'idle',
     tooltip: 'AI Workflow — Idle',
@@ -63,6 +63,8 @@ test('tray shows idle, listening and recording', async () => {
   expect((await tray()).tooltip).toBe('AI Workflow — Listening');
   await setState('recording');
   expect((await tray()).tooltip).toBe('AI Workflow — Recording');
+  await setState('transcribing');
+  expect((await tray()).tooltip).toBe('AI Workflow — Transcribing');
   await setState('idle');
   expect((await tray()).tooltip).toBe('AI Workflow — Idle');
 });
