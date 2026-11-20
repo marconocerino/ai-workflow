@@ -59,10 +59,39 @@ const STYLE_RULES: Record<Exclude<StyleName, 'neutral'>, string> = {
 - Keep contractions and the speaker's relaxed tone.
 - Use light punctuation; leave out the full stop after a single short sentence.`,
   code: `Style: code (code editor, terminal).
-- Keep technical words, names and identifiers exactly.
-- Write spoken file names, commands and identifiers as code: "package dot json" becomes "package.json", "use state" becomes "useState", "dash dash help" becomes "--help".
-- Do not add explanations or extra prose.`,
+- The text is typed into code or a command line: write it exactly as it would be typed.
+- No full stop or other punctuation at the end, and no capital letter at the start unless the word itself has one.
+- Write spoken commands and options as typed: "ls dash la" becomes "ls -la", "make dir" or "m k dir" becomes "mkdir", "cd tilde slash projects" becomes "cd ~/projects", "git commit dash m fix login" becomes "git commit -m 'fix login'".
+- Spoken symbols become symbols: dot ".", slash "/", backslash "\\", dash "-", dash dash "--", underscore "_", pipe "|", tilde "~", star "*", equals "=", colon ":".
+- Write file names and identifiers as code: "package dot json" becomes "package.json", "use state" becomes "useState".
+- Only write what was said. Never turn a description into a command ("list the files" stays as words), and never add commands, options or explanations.`,
 };
+
+/**
+ * Commands that start a line in a terminal and aren't ordinary English words; a capitalised one
+ * ("Ls", "Mkdir", "Git") is written lowercase. Words like "open", "find" or "make" are left to
+ * the prompt, so prose in a code editor isn't changed.
+ */
+const COMMANDS = new Set(
+  (
+    'ls cd mkdir rmdir rm cp mv pwd grep git npm npx node python python3 pip docker kubectl ' +
+    'curl wget ssh scp sudo yarn pnpm brew winget choco dir cls chmod chown tar cargo dotnet ' +
+    'az aws gcloud terraform ps htop'
+  ).split(' '),
+);
+
+/**
+ * Code style safety net (VAI-308), whatever the model did: a single line is typed as-is — no
+ * full stop at the end, and a known command at the start isn't capitalised ("Ls -la." → "ls -la").
+ */
+export function tidyCode(text: string): string {
+  if (/[\r\n]/.test(text)) return text;
+  let line = text.replace(/\.+$/, '');
+  const first = /^([A-Z][a-z0-9]*)\b/.exec(line)?.[1];
+  if (first && COMMANDS.has(first.toLowerCase()))
+    line = first.toLowerCase() + line.slice(first.length);
+  return line;
+}
 
 /** The prompt for a level and style (exported for tests and review). */
 export function cleanupPrompt(
@@ -171,7 +200,8 @@ export class Cleaner {
       ]);
       if (answer === 'timeout') return raw('timeout');
       if (typeof answer !== 'string') return raw(answer.skip);
-      const cleaned = tidyAnswer(answer, spoken);
+      const tidied = tidyAnswer(answer, spoken);
+      const cleaned = style === 'code' ? tidyCode(tidied) : tidied;
       const problem = checkFidelity(spoken, cleaned);
       if (problem) return raw(problem);
       const ms = Math.round(this.now() - started);

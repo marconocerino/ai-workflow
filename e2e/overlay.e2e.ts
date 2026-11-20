@@ -147,7 +147,9 @@ test('the bar appears within 100 ms without taking focus, shows level and app, t
   await expect.poll(pasted).toEqual([{ text: SPOKEN, args: 0 }]);
   await expect.poll(async () => (await overlay()).visible).toBe(false);
   expect((await overlay()).phase).toBe('hidden');
-  expect(await hook((h) => h.focusedWindowId())).toBe(focusedBefore);
+  // The overlay never took focus. (Not "focus unchanged" here: on a machine in use another app
+  // may take focus during the ~3 s; the check right after showing the bar covers that.)
+  expect((await overlay()).focused).toBe(false);
 });
 
 test('a Ctrl shortcut after recording started cancels: the bar hides at once', async () => {

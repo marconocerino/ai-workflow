@@ -197,6 +197,9 @@ scripts/dev.mjs    `npm start` runner
 
 - Settings → Style per app: a style per app — **Professional** (Outlook, Word), **Casual** (Teams,
   Slack), **Code** (VS Code, terminals) by default; any other app uses **Neutral** (D-025).
+- **Code** writes what you say as typed: "make dir projects" → `mkdir projects`, "ls dash la" →
+  `ls -la`, no full stop. It never turns a description into a command, and nothing is ever run:
+  the app pastes, it doesn't press Enter.
 - The app is the short name in the dictation bar ("Outlook"), looked up once per recording, never a
   window title. The bar shows "Outlook · Professional". Styles need AI cleanup on (Light/Polished).
 

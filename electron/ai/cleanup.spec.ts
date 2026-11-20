@@ -3,7 +3,7 @@ import type { CleanupLevel, SecretName, Settings } from '../../shared/settings';
 import type { LogFields } from '../logging/redact';
 import { defaultSettings } from '../settings/schema';
 import { AiHttpClient, type FetchFn } from './ai-http';
-import { Cleaner, checkFidelity, cleanupPrompt, tidyAnswer } from './cleanup';
+import { Cleaner, checkFidelity, cleanupPrompt, tidyAnswer, tidyCode } from './cleanup';
 
 const SAID = 'um so can we uh move the call to friday';
 const CLEAN = 'So can we move the call to Friday?';
@@ -200,6 +200,47 @@ describe('style per app (VAI-308)', () => {
     );
     expect(await cleaner.clean('can we move the call to friday', 'Outlook')).toMatchObject({
       cleaned: false,
+    });
+  });
+});
+
+describe('Code style for terminals and editors', () => {
+  it.each([
+    ['Ls -la.', 'ls -la'],
+    ['Mkdir projects/app.', 'mkdir projects/app'],
+    ['Git commit -m "fix login".', 'git commit -m "fix login"'],
+    ['cd ~/projects', 'cd ~/projects'],
+    ['npm run build...', 'npm run build'],
+    ['Open package.json and import useState', 'Open package.json and import useState'], // a word
+    ['Find the bug in main.ts', 'Find the bug in main.ts'], // prose in an editor stays as it is
+    ['const x = 1;\nconst y = 2.', 'const x = 1;\nconst y = 2.'], // several lines: left alone
+  ])('%j → %j', (input, output) => expect(tidyCode(input)).toBe(output));
+
+  it('the prompt asks for no trailing full stop, typed commands, and never invented ones', () => {
+    const p = cleanupPrompt('light', 'code');
+    expect(p).toMatch(/No full stop/);
+    expect(p).toMatch(/"make dir" or "m k dir" becomes "mkdir"/);
+    expect(p).toMatch(/Never turn a description into a command/);
+  });
+
+  it('the Code style result is tidied: a terminal gets "ls -la", not "Ls -la."', async () => {
+    const { cleaner } = setup(() => answer('Ls -la.'));
+    expect(await cleaner.clean('ls dash la', 'Terminal')).toMatchObject({
+      cleaned: true,
+      text: 'ls -la',
+    });
+  });
+
+  it('other styles keep their full stop', async () => {
+    const { cleaner } = setup(() => answer('Ls -la.'));
+    expect(await cleaner.clean('ls dash la', 'Outlook')).toMatchObject({ text: 'Ls -la.' });
+  });
+
+  it('a description turned into a dangerous command is rejected (raw text pasted)', async () => {
+    const { cleaner } = setup(() => answer('rm -rf ~/projects'));
+    expect(await cleaner.clean('delete my projects folder', 'Terminal')).toMatchObject({
+      cleaned: false,
+      text: 'delete my projects folder',
     });
   });
 });
