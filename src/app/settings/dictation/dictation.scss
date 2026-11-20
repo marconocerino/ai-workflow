@@ -125,3 +125,20 @@
   width: 220px;
   flex: none;
 }
+
+// macOS permission help (VAI-312)
+.permission {
+  margin-top: var(--aiw-space-3);
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--aiw-space-2);
+    margin-top: var(--aiw-space-3);
+  }
+}

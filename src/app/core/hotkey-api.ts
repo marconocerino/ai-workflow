@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import type { HotkeyStatus } from '../../../shared/ipc-contract';
+import type { HotkeyStatus, PermissionPane } from '../../../shared/ipc-contract';
 import { AI_WORKFLOW_BRIDGE, DesktopBridgeUnavailableError } from './electron-api';
 
 /** Keyboard control of dictation (VAI-301). The shortcuts themselves live in the main process. */
@@ -21,6 +21,19 @@ export class HotkeyApi {
 
   suspend(on: boolean): Promise<void> {
     return this.bridge ? this.bridge.hotkey.suspend(on) : Promise.resolve();
+  }
+
+  /** macOS (VAI-312): start the helpers again after a permission was granted. */
+  recheck(): Promise<HotkeyStatus> {
+    return this.bridge
+      ? this.bridge.hotkey.recheck()
+      : Promise.reject(new DesktopBridgeUnavailableError());
+  }
+
+  openPermissionSettings(pane: PermissionPane): Promise<void> {
+    return this.bridge
+      ? this.bridge.hotkey.openPermissionSettings(pane)
+      : Promise.reject(new DesktopBridgeUnavailableError());
   }
 }
 

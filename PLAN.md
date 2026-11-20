@@ -20,8 +20,8 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | S8 | 0 / 5 | 0 / 24 |
 | S9 | 0 / 9 | 0 / 35 |
 | S10 | 0 / 7 | 0 / 23 |
-| Backlog | 0 / 3 | 0 / 15 |
-| **Total** | **18 / 88** | **59 / 333** |
+| Backlog | 1 / 3 | 5 / 15 |
+| **Total** | **19 / 88** | **64 / 333** |
 
 ## E1 Foundation
 
@@ -65,7 +65,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 - [ ] VAI-309 Custom vocabulary — S2 · 2 pts · Should
 - [ ] VAI-310 Dictation history — S2 · 3 pts · Must
 - [ ] VAI-311 Offline and error handling — S2 · 2 pts · Must
-- [ ] VAI-312 Paste at cursor and hold-to-talk on macOS (from source) — Backlog · 5 pts · Could
+- [x] VAI-312 Paste at cursor and hold-to-talk on macOS (from source) — Backlog · 5 pts · Could
 
 ## E4 Meeting capture
 

@@ -2,6 +2,7 @@
 // Cross-platform, no extra dependencies. Ctrl+C or closing the window stops everything.
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { buildMacHelpers } from './build-mac-helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const PORT = 4200;
@@ -27,6 +28,17 @@ const stopAll = (code = 0) => {
 };
 process.on('SIGINT', () => stopAll(0));
 process.on('SIGTERM', () => stopAll(0));
+
+// 0. macOS: build the Hold-Ctrl and paste helpers if missing or changed (VAI-312). Without them
+//    dictation still works with the toggle shortcut and the clipboard.
+if (process.platform === 'darwin') {
+  try {
+    buildMacHelpers();
+  } catch (e) {
+    console.warn(`[dev] macOS helpers not built: ${e.message}`);
+    console.warn('[dev] Hold Ctrl and paste at cursor are off; the toggle shortcut works.');
+  }
+}
 
 // 1. Compile main + preload once, then keep watching. (Restart `npm start` after main changes.)
 const first = spawnSync(process.execPath, [tscBin, '-p', 'electron/tsconfig.json'], {

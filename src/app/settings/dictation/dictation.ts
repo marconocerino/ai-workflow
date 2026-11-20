@@ -16,7 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { type MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
-import type { HotkeyStatus, StartupState } from '../../../../shared/ipc-contract';
+import type { HotkeyStatus, PermissionPane, StartupState } from '../../../../shared/ipc-contract';
 import type { MicStatus } from '../../../../shared/audio';
 import {
   type DictationMode,
@@ -66,6 +66,7 @@ export class DictationSettings {
   protected readonly error = signal<string | null>(null);
   private readonly hotkeyApi = inject(HotkeyApi);
   protected readonly hotkey = signal<HotkeyStatus | null>(null);
+  protected readonly permissionError = signal<string | null>(null);
   /** Recording a new toggle shortcut: null = not recording; otherwise a hint or error. */
   protected readonly capturing = signal<string | null>(null);
   protected readonly shortcutError = signal<string | null>(null);
@@ -163,6 +164,26 @@ export class DictationSettings {
 
   protected keepReadyLabel(seconds: number): string {
     return seconds === 0 ? 'Off' : `${seconds} seconds`;
+  }
+
+  /** macOS (VAI-312): open the Privacy & Security page for a missing permission. */
+  protected async openPane(pane: PermissionPane): Promise<void> {
+    this.permissionError.set(null);
+    try {
+      await this.hotkeyApi.openPermissionSettings(pane);
+    } catch (e) {
+      this.permissionError.set(ipcErrorMessage(e));
+    }
+  }
+
+  /** After granting a permission: start the helpers again and show the new state. */
+  protected async recheck(): Promise<void> {
+    this.permissionError.set(null);
+    try {
+      this.hotkey.set(await this.hotkeyApi.recheck());
+    } catch (e) {
+      this.permissionError.set(ipcErrorMessage(e));
+    }
   }
 
   private async refreshHotkey(): Promise<void> {

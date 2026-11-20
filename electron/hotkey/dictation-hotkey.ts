@@ -1,4 +1,4 @@
-import type { HotkeyStatus } from '../../shared/ipc-contract';
+import type { HotkeyStatus, PasteStatus } from '../../shared/ipc-contract';
 import type { DictationMode } from '../../shared/settings';
 import type { ScopedLogger } from '../logging/logger';
 import type { DictationStatus } from '../tray/dictation-status';
@@ -24,8 +24,10 @@ export interface DictationEvents {
 
 export interface DictationHotkeyDeps {
   shortcuts: ShortcutApi;
-  /** null where Hold-Ctrl isn't supported (macOS dev builds). */
+  /** null where there's no Ctrl watcher (helper not built, Linux). */
   listener: KeyListener | null;
+  /** How text gets out, for the status (VAI-304/312). Default: clipboard only. */
+  paste?(): PasteStatus;
   status: DictationStatus;
   events?: DictationEvents;
   config(): { mode: DictationMode; toggleShortcut: string[] };
@@ -112,11 +114,24 @@ export class DictationHotkey {
     const { mode, toggleShortcut } = this.d.config();
     return {
       mode,
-      holdCtrl: !this.d.listener ? 'unsupported' : this.holdAvailable ? 'ready' : 'unavailable',
+      holdCtrl: !this.d.listener
+        ? 'unsupported'
+        : this.holdAvailable
+          ? 'ready'
+          : this.d.listener.needsPermission
+            ? 'no-permission'
+            : 'unavailable',
+      paste: this.d.paste?.() ?? 'clipboard-only',
       toggleShortcut,
       toggleActive: this.registered !== null,
       ...(this.toggleError ? { toggleError: this.toggleError } : {}),
     };
+  }
+
+  /** "Check again" after granting a permission (macOS): restart the watcher in hold mode. */
+  recheck(): void {
+    if (this.d.config().mode === 'hold') this.d.listener?.recheck();
+    this.apply();
   }
 
   dispose(): void {

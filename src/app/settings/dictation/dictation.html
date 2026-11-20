@@ -31,6 +31,22 @@
     </div>
   </section>
 
+  @if (hotkey()?.paste === 'no-permission') {
+    <section class="aiw-card permission" data-testid="permission-accessibility">
+      <p>
+        To paste at the cursor, macOS needs <strong>Accessibility</strong> permission for the app
+        that runs <code>npm start</code> (Terminal or VS Code). Until then, the text is copied and
+        you press ⌘V.
+      </p>
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="openPane('accessibility')">
+          Open Accessibility settings
+        </button>
+        <button mat-stroked-button type="button" (click)="recheck()">Check again</button>
+      </div>
+    </section>
+  }
+
   <h2 class="aiw-section-label" id="shortcut-heading">Shortcut</h2>
   <section class="aiw-card shortcut" aria-labelledby="shortcut-heading">
     @if (loaded()) {
@@ -55,7 +71,21 @@
       </mat-radio-group>
 
       @if (hotkey(); as h) {
-        @if (current() === 'hold' && h.holdCtrl !== 'ready') {
+        @if (current() === 'hold' && h.holdCtrl === 'no-permission') {
+          <div class="permission" data-testid="permission-input-monitoring">
+            <p>
+              Hold Ctrl needs <strong>Input Monitoring</strong> permission for the app that runs
+              <code>npm start</code> (Terminal or VS Code). Allow it, then quit and reopen that app.
+              Until then, the toggle shortcut below works.
+            </p>
+            <div class="actions">
+              <button mat-stroked-button type="button" (click)="openPane('input-monitoring')">
+                Open Input Monitoring settings
+              </button>
+              <button mat-stroked-button type="button" (click)="recheck()">Check again</button>
+            </div>
+          </div>
+        } @else if (current() === 'hold' && h.holdCtrl !== 'ready') {
           <p class="note" data-testid="hold-unavailable">
             {{
               h.holdCtrl === 'unsupported'
@@ -63,6 +93,9 @@
                 : 'Hold Ctrl isn’t working right now, so the toggle shortcut below is used instead.'
             }}
           </p>
+        }
+        @if (permissionError(); as message) {
+          <p class="note" role="alert">{{ message }}</p>
         }
       }
 

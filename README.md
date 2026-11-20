@@ -13,6 +13,9 @@ decisions and `docs/backlog.csv` for the backlog.
 - To build the Windows app (`dist:win`, `release:win`): a Windows C compiler for the Hold-Ctrl
   helper — macOS `brew install mingw-w64`, Windows MinGW-w64 (`gcc` on PATH). Not needed for
   `npm start` or the tests.
+- macOS: Xcode command-line tools (`xcode-select --install`) so `npm start` can build the Swift
+  helpers for Hold Ctrl and paste (VAI-312). Without them, dictation uses the toggle shortcut and
+  the clipboard.
 
 ## Run
 
@@ -160,7 +163,9 @@ scripts/dev.mjs    `npm start` runner
 - **Toggle shortcut** (default Ctrl+Shift+Space; Settings → Dictation → Change): used in Toggle
   mode, and automatically when Hold Ctrl can't run (helper missing, blocked or crashing). Esc
   cancels a toggle recording.
-- macOS dev builds: no Hold Ctrl; the toggle shortcut works.
+- macOS (from source, VAI-312): Hold Ctrl through `resources/mac/aiw-key-listener` (Swift, built by
+  `npm start`). Needs **Input Monitoring** for the app running `npm start` (Terminal or VS Code);
+  Settings → Dictation explains it. Without it, the toggle shortcut works.
 - Tests use a fake helper: `AIW_KEY_LISTENER_SCRIPT=e2e/fake-key-listener.mjs` (dev only).
 
 ## Speech-to-text
@@ -189,8 +194,12 @@ scripts/dev.mjs    `npm start` runner
 - It doesn't paste into admin (elevated) windows — Windows blocks that silently — or when no window
   has focus. Then, or if the helper fails, the text stays on the clipboard and a notification says
   "Couldn't paste … press Ctrl+V". No notification when pasting worked.
-- macOS (dev only) and Windows without the helper built: text on the clipboard + "Text copied"
-  notification. Tests use `e2e/fake-paste-helper.mjs` (`AIW_PASTE_HELPER_SCRIPT`).
+- macOS (from source, VAI-312): `resources/mac/aiw-paste` (Swift) does the same with ⌘V. Needs
+  **Accessibility** for the app running `npm start`; without it, text copied + notice. The text is
+  kept off Universal Clipboard and marked transient/concealed for clipboard managers.
+- Without a helper (not built, Linux): text on the clipboard + "Text copied" notification.
+- Tests use `e2e/fake-paste-helper.mjs` (`AIW_PASTE_HELPER_SCRIPT`); e2e never runs the real helpers.
+  Mac checklist: `docs/mac-dev-test.md`.
 
 ## Microphone
 

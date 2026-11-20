@@ -110,7 +110,7 @@ VAI-312,E3 Dictation,Paste at cursor and hold-to-talk on macOS (from source),"As
 • Hold a key (Ctrl alone, or Fn/Globe) to dictate, release to stop; same shortcut rules as Windows (Ctrl+C etc. never start dictation)
 • Text is pasted at the cursor with ⌘V; my clipboard (all types) is restored afterwards; dictated text marked transient for clipboard managers
 • Without Accessibility or Input Monitoring permission: Settings explains how to grant it, and the toggle shortcut and clipboard fallback keep working
-• Swift helpers built with Xcode command-line tools; reuses the Windows logic (CtrlHold, paste output, fallbacks)",5,Could,Backlog,"dictation, macos",To do
+• Swift helpers built with Xcode command-line tools; reuses the Windows logic (CtrlHold, paste output, fallbacks)",5,Could,Backlog,"dictation, macos",Done
 VAI-401,E4 Meeting capture,Spike: Windows system audio capture,"As the team, we want to prove we can capture what the PC plays (other participants) without a meeting bot, so we de-risk meetings early.","• Prototype captures a Teams and a Zoom call via WASAPI process loopback (excluding our own app)
 • Mic and system audio saved as separate tracks
 • Short write-up of limits and next steps",3,Must,S0,"spike, audio",To do

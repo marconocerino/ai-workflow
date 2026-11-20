@@ -103,10 +103,12 @@ export class CtrlHold {
 }
 
 /** Parse one line from the watcher; anything unexpected is ignored. */
-export function parseKeyEvent(line: string): KeyEvent | 'READY' | null {
+export function parseKeyEvent(line: string): KeyEvent | 'READY' | 'NO_PERMISSION' | null {
   switch (line.trim()) {
     case 'READY':
       return 'READY';
+    case 'NO_PERMISSION':
+      return 'NO_PERMISSION';
     case 'CTRL_DOWN clean':
       return 'CTRL_DOWN_CLEAN';
     case 'CTRL_DOWN dirty':

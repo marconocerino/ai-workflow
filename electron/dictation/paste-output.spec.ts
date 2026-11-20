@@ -11,6 +11,7 @@ describe('parsePasteLine', () => {
     ['PASTED kept\r', { ok: true, clipboard: 'kept' }],
     ['PASTED not-saved', { ok: true, clipboard: 'not-saved' }],
     ['FAILED elevated', { ok: false, reason: 'elevated' }],
+    ['FAILED no-permission', { ok: false, reason: 'no-permission' }],
     ['FAILED no-window', { ok: false, reason: 'no-window' }],
     ['FAILED keys-held', { ok: false, reason: 'keys-held' }],
     ['FAILED clipboard', { ok: false, reason: 'clipboard' }],
@@ -68,7 +69,10 @@ describe('runPasteHelper', () => {
   });
 });
 
-function setup(outcome: PasteOutcome, opts: { clipboardFails?: boolean } = {}) {
+function setup(
+  outcome: PasteOutcome,
+  opts: { clipboardFails?: boolean; platform?: NodeJS.Platform } = {},
+) {
   const events: string[] = [];
   const lines: string[] = [];
   const log = (level: string) => (message: string, fields?: LogFields) =>
@@ -83,6 +87,7 @@ function setup(outcome: PasteOutcome, opts: { clipboardFails?: boolean } = {}) {
       events.push(`clip:${text}`);
     },
     notify: (title, body) => events.push(`note:${title}|${body}`),
+    platform: opts.platform ?? 'win32',
     logger: { debug: log('debug'), info: log('info'), warn: log('warn'), error: log('error') },
     now: () => 0,
   });
@@ -145,5 +150,23 @@ describe('pasteOutput', () => {
     const { output, events } = setup({ ok: true, clipboard: 'restored' });
     output.problem('Nothing was heard.');
     expect(events).toEqual(['note:Dictation failed|Nothing was heard.']);
+  });
+
+  it('macOS without Accessibility: helper left the text copied; says how to fix, with ⌘V', async () => {
+    const { output, events } = setup(
+      { ok: false, reason: 'no-permission' },
+      { platform: 'darwin' },
+    );
+    await output.text(SECRET_TEXT);
+    expect(events).toEqual([
+      `paste:${SECRET_TEXT}`,
+      "note:Couldn't paste|To paste automatically, allow Accessibility in System Settings (see Settings → Dictation). Text copied — press ⌘V.",
+    ]);
+  });
+
+  it('macOS fallback after a crash says ⌘V', async () => {
+    const { output, events } = setup({ ok: false, reason: 'crashed' }, { platform: 'darwin' });
+    await output.text(SECRET_TEXT);
+    expect(events.at(-1)).toBe("note:Couldn't paste|Couldn't paste here. Text copied — press ⌘V.");
   });
 });

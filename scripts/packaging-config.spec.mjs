@@ -78,6 +78,14 @@ describe('packaged files', () => {
     }
   });
 
+  it('never packs the macOS helpers (from source only, unsigned)', () => {
+    expect(config.files.some((f) => f.includes('resources/mac'))).toBe(false);
+    for (const platform of ['mac', 'linux']) {
+      expect(config[platform].files).toContain('!resources/mac/**');
+    }
+    expect(config.win.files.some((f) => f.includes('resources/mac'))).toBe(false);
+  });
+
   it('ships the third-party licence notices', () => {
     expect(config.files).toContain('THIRD_PARTY_NOTICES.md');
   });

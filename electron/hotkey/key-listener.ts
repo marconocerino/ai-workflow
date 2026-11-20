@@ -27,16 +27,25 @@ export class KeyListener {
   private stopped = true;
   private failures: number[] = [];
   private available = false;
+  private permissionMissing = false;
   private buffer = '';
   private restartTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly o: KeyListenerOptions) {}
 
   start(): void {
-    if (!this.stopped) return;
+    // Without permission nothing changes until the user grants it and asks to check again.
+    if (!this.stopped || this.permissionMissing) return;
     this.stopped = false;
     this.failures = [];
     this.launch();
+  }
+
+  /** "Check again" after granting permission (or after giving up): a fresh start. */
+  recheck(): void {
+    this.stop();
+    this.permissionMissing = false;
+    this.start();
   }
 
   stop(): void {
@@ -54,6 +63,11 @@ export class KeyListener {
 
   get isAvailable(): boolean {
     return this.available;
+  }
+
+  /** macOS: the watcher reported it has no Input Monitoring permission (VAI-312). */
+  get needsPermission(): boolean {
+    return this.permissionMissing;
   }
 
   private launch(): void {
@@ -87,6 +101,15 @@ export class KeyListener {
       if (event === 'READY') {
         this.o.logger?.info('Hold-Ctrl watcher ready');
         this.setAvailable(true);
+      } else if (event === 'NO_PERMISSION') {
+        // Not a failure to retry: nothing changes until the user grants it (then start() again).
+        this.o.logger?.warn('Hold-Ctrl watcher needs Input Monitoring permission');
+        this.permissionMissing = true;
+        this.stopped = true;
+        this.child = null;
+        if (this.available) this.setAvailable(false);
+        else this.o.onAvailability(false); // status changed (needsPermission) even if not availability
+        return;
       } else if (event) {
         this.o.onEvent(event);
       }
