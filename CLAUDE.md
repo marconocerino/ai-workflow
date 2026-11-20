@@ -101,6 +101,8 @@ Rules for using it:
 - Never break dictation; run the full check (`npm run lint && npm test && npm run e2e`) before every commit.
 - Don't start the next story without my OK.
 - If a story is too big or unclear, say so and propose a split instead of guessing.
+- Microphone: only the hidden audio window may use it, audio only (D-020). Audio stays in memory —
+  never write it to disk or log it. Tests: `--use-fake-device-for-media-stream`, never fake-ui.
 - Closing the window hides it to the tray (D-018); quit via the tray menu. Main-process state that
   the tray shows (dictation idle/listening/recording) goes through `DictationStatus`.
 - Feature flags (meetings, agents, voiceprints): off unless IT policy turns them on. A flagged

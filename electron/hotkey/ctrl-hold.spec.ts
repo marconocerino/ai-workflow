@@ -34,6 +34,8 @@ function setup() {
       start: () => log.push('start'),
       stop: () => log.push('stop'),
       cancel: () => log.push('cancel'),
+      prepare: () => log.push('prepare'),
+      abandon: () => log.push('abandon'),
     },
     timers,
   );
@@ -46,11 +48,11 @@ describe('CtrlHold', () => {
     const { log, run, send } = setup();
     send('CTRL_DOWN_CLEAN');
     run(HOLD_MS - 1);
-    expect(log).toEqual([]);
+    expect(log).toEqual(['prepare']);
     run(1);
-    expect(log).toEqual(['start']);
+    expect(log).toEqual(['prepare', 'start']);
     send('CTRL_UP');
-    expect(log).toEqual(['start', 'stop']);
+    expect(log).toEqual(['prepare', 'start', 'stop']);
   });
 
   it('a quick Ctrl tap does nothing', () => {
@@ -59,7 +61,7 @@ describe('CtrlHold', () => {
     run(80);
     send('CTRL_UP');
     run(500);
-    expect(log).toEqual([]);
+    expect(log).toEqual(['prepare', 'abandon']); // mic opened early, closed again
   });
 
   it('Ctrl+C (other key within 120 ms) is never treated as dictation', () => {
@@ -69,7 +71,7 @@ describe('CtrlHold', () => {
     send('OTHER'); // C
     run(1000); // still holding Ctrl
     send('OTHER', 'CTRL_UP');
-    expect(log).toEqual([]);
+    expect(log).toEqual(['prepare', 'abandon']);
     expect(hold.current).toBe('idle');
   });
 
@@ -80,7 +82,7 @@ describe('CtrlHold', () => {
     send('OTHER'); // wheel
     run(300);
     send('CTRL_UP');
-    expect(log).toEqual([]);
+    expect(log).toEqual(['prepare', 'abandon']);
   });
 
   it('a slow shortcut (other key after 120 ms) cancels the recording', () => {
@@ -89,7 +91,7 @@ describe('CtrlHold', () => {
     run(400);
     send('OTHER');
     send('CTRL_UP');
-    expect(log).toEqual(['start', 'cancel']);
+    expect(log).toEqual(['prepare', 'start', 'cancel']);
   });
 
   it('Ctrl pressed while another key is held (e.g. Shift+Ctrl) never starts', () => {
@@ -105,7 +107,7 @@ describe('CtrlHold', () => {
     send('CTRL_DOWN_CLEAN', 'OTHER', 'CTRL_UP', 'CTRL_DOWN_CLEAN');
     run(HOLD_MS);
     send('CTRL_UP');
-    expect(log).toEqual(['start', 'stop']);
+    expect(log).toEqual(['prepare', 'abandon', 'prepare', 'start', 'stop']);
   });
 
   it('reset() (watcher stopped) cancels a recording in progress', () => {
@@ -113,7 +115,7 @@ describe('CtrlHold', () => {
     send('CTRL_DOWN_CLEAN');
     run(HOLD_MS);
     hold.reset();
-    expect(log).toEqual(['start', 'cancel']);
+    expect(log).toEqual(['prepare', 'start', 'cancel']);
     expect(hold.current).toBe('idle');
   });
 

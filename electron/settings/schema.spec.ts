@@ -79,18 +79,32 @@ describe('sanitizeSettings', () => {
 });
 
 describe('dictation settings (v2)', () => {
-  it('defaults: hold Ctrl, toggle shortcut Ctrl+Shift+Space', () => {
+  it('defaults: hold Ctrl, Ctrl+Shift+Space, system default mic, mic ready for 10 s', () => {
     expect(defaultSettings().dictation).toEqual({
       mode: 'hold',
       toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+      micDeviceId: '',
+      keepMicReadySeconds: 10,
     });
+  });
+
+  it('accepts a device id and the keep-ready options', () => {
+    for (const seconds of [0, 5, 10, 30] as const) {
+      const next = applyPatch(defaultSettings(), {
+        dictation: { micDeviceId: 'a1B2c3d4e5f6+/=', keepMicReadySeconds: seconds },
+      });
+      expect(next.dictation).toMatchObject({
+        micDeviceId: 'a1B2c3d4e5f6+/=',
+        keepMicReadySeconds: seconds,
+      });
+    }
   });
 
   it('accepts toggle mode and a valid shortcut', () => {
     const next = applyPatch(defaultSettings(), {
       dictation: { mode: 'toggle', toggleShortcut: ['Ctrl', 'Alt', 'F9'] },
     });
-    expect(next.dictation).toEqual({ mode: 'toggle', toggleShortcut: ['Ctrl', 'Alt', 'F9'] });
+    expect(next.dictation).toMatchObject({ mode: 'toggle', toggleShortcut: ['Ctrl', 'Alt', 'F9'] });
     expect(next.ai).toEqual(defaultSettings().ai);
   });
 
@@ -104,6 +118,9 @@ describe('dictation settings (v2)', () => {
     [{ toggleShortcut: ['Space', 'Ctrl'] }, 'dictation.toggleShortcut'],
     [{ toggleShortcut: 'Ctrl+Space' }, 'dictation.toggleShortcut'],
     ['hold', 'dictation'],
+    [{ keepMicReadySeconds: 7 }, 'dictation.keepMicReadySeconds'],
+    [{ keepMicReadySeconds: '10' }, 'dictation.keepMicReadySeconds'],
+    [{ micDeviceId: '"><script>' }, 'dictation.micDeviceId'],
   ])('rejects %j', (dictation, path) => {
     expect(() => applyPatch(defaultSettings(), { dictation })).toThrow(path);
   });

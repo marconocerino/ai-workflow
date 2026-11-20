@@ -16,7 +16,14 @@ export interface DictationSettings {
   mode: DictationMode;
   /** Keys of the toggle shortcut, e.g. ['Ctrl', 'Shift', 'Space']. Changeable from VAI-301. */
   toggleShortcut: string[];
+  /** Microphone device id from the OS; '' = System default (VAI-302). */
+  micDeviceId: string;
+  /** Keep the mic open this long after dictating (0 = off). */
+  keepMicReadySeconds: KeepMicReadySeconds;
 }
+
+export const KEEP_MIC_READY_OPTIONS = [0, 5, 10, 30] as const;
+export type KeepMicReadySeconds = (typeof KEEP_MIC_READY_OPTIONS)[number];
 
 export interface Settings {
   dictation: DictationSettings;

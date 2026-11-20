@@ -13,6 +13,9 @@ export const migrations: Record<number, (data: unknown) => unknown> = {
   // v1 → v2 (VAI-204): adds `dictation` (mode, toggle shortcut). Everything in v1 is kept as-is;
   // the new section gets its defaults from validation.
   1: (data) => data,
+  // v2 → v3 (VAI-302): adds dictation.micDeviceId and keepMicReadySeconds (defaults filled in
+  // by validation); everything else unchanged.
+  2: (data) => data,
 };
 
 export class SettingsMigrationError extends Error {

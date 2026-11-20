@@ -65,6 +65,13 @@ describe('TrayController', () => {
     expect(calls.image.at(-1)).toBe('/icons/idle.png');
   });
 
+  it('shows a mic problem instead of the state', () => {
+    const { tray, deps } = setup('win32', true);
+    (deps as { problem?: () => string | null }).problem = () => 'microphone blocked';
+    tray.refresh();
+    expect(tray.describe().menu[0]).toBe('Dictation: microphone blocked');
+  });
+
   it('menu items call the app; the status line is not clickable', () => {
     const { tray, deps } = setup();
     tray.click('Open AI Workflow');

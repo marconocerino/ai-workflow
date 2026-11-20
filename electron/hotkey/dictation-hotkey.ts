@@ -16,6 +16,10 @@ export interface DictationEvents {
   start(source: 'hold' | 'toggle'): void;
   stop(): void;
   cancel(): void;
+  /** Ctrl went down cleanly — dictation may start in 120 ms (open the mic early). */
+  prepare?(): void;
+  /** It was a shortcut after all. */
+  abandon?(): void;
 }
 
 export interface DictationHotkeyDeps {
@@ -56,6 +60,8 @@ export class DictationHotkey {
         start: () => this.begin('hold'),
         stop: () => this.end('stop'),
         cancel: () => this.end('cancel'),
+        prepare: () => this.d.events?.prepare?.(),
+        abandon: () => this.d.events?.abandon?.(),
       },
       d.timers,
     );

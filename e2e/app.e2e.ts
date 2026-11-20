@@ -45,6 +45,8 @@ test('renderer has no Node access', async () => {
       'secrets',
       'ai',
       'hotkey',
+      'audio',
+      'audioEngine',
       'startup',
       'log',
       'diagnostics',
@@ -52,22 +54,27 @@ test('renderer has no Node access', async () => {
   });
 });
 
-test('main window runs with the secure webPreferences', async () => {
-  const prefs = await app.evaluate(({ BrowserWindow }) => {
-    const p = BrowserWindow.getAllWindows()[0]!.webContents.getLastWebPreferences()!;
-    return {
-      contextIsolation: p.contextIsolation,
-      nodeIntegration: p.nodeIntegration,
-      sandbox: p.sandbox,
-      webSecurity: p.webSecurity,
-    };
-  });
-  expect(prefs).toEqual({
-    contextIsolation: true,
-    nodeIntegration: false,
-    sandbox: true,
-    webSecurity: true,
-  });
+test('every window (main and hidden audio) runs with the secure webPreferences', async () => {
+  const prefs = await app.evaluate(({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows().map((w) => {
+      const p = w.webContents.getLastWebPreferences()!;
+      return {
+        contextIsolation: p.contextIsolation,
+        nodeIntegration: p.nodeIntegration,
+        sandbox: p.sandbox,
+        webSecurity: p.webSecurity,
+      };
+    }),
+  );
+  expect(prefs).toHaveLength(2);
+  for (const p of prefs) {
+    expect(p).toEqual({
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+    });
+  }
 });
 
 test('typed IPC round trip: app:get-info shows the real app version', async () => {
@@ -80,7 +87,13 @@ test('typed IPC round trip: app:get-info shows the real app version', async () =
 test('blocks new windows and navigation away from the app', async () => {
   const opened = await page.evaluate(() => window.open('https://example.com') === null);
   expect(opened).toBe(true);
-  expect(app.windows()).toHaveLength(1);
+  // Only our two windows: the main window and the hidden audio window.
+  expect(
+    app
+      .windows()
+      .map((w) => w.url().replace(/^app:\/\/renderer/, ''))
+      .sort(),
+  ).toEqual(['/', '/audio-engine']);
 
   await page.evaluate(() => {
     window.location.href = 'https://example.com/';

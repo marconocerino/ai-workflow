@@ -55,6 +55,22 @@ describe('Windows installer (VAI-108)', () => {
   });
 });
 
+describe('packaged files', () => {
+  it('every platform files list has an include pattern (else electron-builder packs the repo)', () => {
+    for (const platform of ['win', 'mac', 'linux']) {
+      const files = config[platform].files ?? [];
+      expect(
+        files.some((f) => !f.startsWith('!')),
+        platform,
+      ).toBe(true);
+    }
+  });
+
+  it('ships the third-party licence notices', () => {
+    expect(config.files).toContain('THIRD_PARTY_NOTICES.md');
+  });
+});
+
 describe('Electron fuses', () => {
   it('hardening fuses are set', () => {
     expect(config.electronFuses).toMatchObject({

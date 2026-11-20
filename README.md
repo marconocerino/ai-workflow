@@ -162,6 +162,21 @@ scripts/dev.mjs    `npm start` runner
 - macOS dev builds: no Hold Ctrl; the toggle shortcut works.
 - Tests use a fake helper: `AIW_KEY_LISTENER_SCRIPT=e2e/fake-key-listener.mjs` (dev only).
 
+## Microphone
+
+- A hidden **audio window** (`/audio-engine`, no UI) owns the microphone: getUserMedia →
+  AudioWorklet (`public/audio-capture-worklet.js`) → 16 kHz mono 16-bit PCM. The hotkey drives it
+  through the main process (`electron/audio/audio-controller.ts`).
+- Permissions: only the audio window may use the mic, audio only; everything else (camera, screen,
+  notifications…) is denied. Settings may list device names.
+- The mic opens as soon as Ctrl goes down cleanly (~50 ms), so the first word isn't clipped. With
+  **Keep mic ready** (Off/5/10/30 s) it stays open after dictating and keeps only the last 0.5 s in
+  a rolling buffer; unused, it closes and the buffer is cleared. The tray shows "Listening" then.
+- Audio is **never written to disk or logged** — the log has only length and level. Recordings are
+  handed to speech-to-text (VAI-303) in memory.
+- Tests use Chromium's fake microphone (`--use-fake-device-for-media-stream`; beeps). Don't add
+  `--use-fake-ui-for-media-stream`: it bypasses the app's permission handler.
+
 ## Tray and start at sign-in
 
 - The app lives in the system tray. **Closing the window hides it**; quit from the tray menu

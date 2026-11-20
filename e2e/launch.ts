@@ -17,6 +17,7 @@ export function tempProfile(): string {
 export async function launchApp(
   userDataDir: string,
   extraEnv: Record<string, string> = {},
+  extraArgs: string[] = [],
 ): Promise<{ app: ElectronApplication; page: Page }> {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) if (v !== undefined) env[k] = v;
@@ -27,8 +28,21 @@ export async function launchApp(
   env['AIW_E2E'] = '1'; // test hooks in the main process (dev builds only)
   Object.assign(env, extraEnv);
 
-  const app = await electron.launch({ args: [ROOT], cwd: ROOT, env });
-  const page = await app.firstWindow();
+  const app = await electron.launch({ args: [ROOT, ...extraArgs], cwd: ROOT, env });
+  const page = await mainWindow(app);
   await page.waitForLoadState('domcontentloaded');
   return { app, page };
+}
+
+/** The visible main window — not the hidden audio window (/audio-engine), whichever opens first. */
+export async function mainWindow(app: ElectronApplication): Promise<Page> {
+  const deadline = Date.now() + 20_000;
+  for (;;) {
+    const found = app
+      .windows()
+      .find((p) => /^(app|http):/.test(p.url()) && !p.url().endsWith('/audio-engine'));
+    if (found) return found;
+    if (Date.now() > deadline) throw new Error('The main window did not open.');
+    await new Promise((r) => setTimeout(r, 50));
+  }
 }

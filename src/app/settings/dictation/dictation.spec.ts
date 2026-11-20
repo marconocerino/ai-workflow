@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import type { MicStatus } from '../../../../shared/audio';
 import type { AiWorkflowApi, HotkeyStatus } from '../../../../shared/ipc-contract';
 import type { Settings } from '../../../../shared/settings';
 import { AI_WORKFLOW_BRIDGE } from '../../core/electron-api';
@@ -6,7 +7,12 @@ import { SaveStatus } from '../shared/save-status';
 import { DictationSettings } from './dictation';
 
 const stored: Settings = {
-  dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Alt', 'F9'] },
+  dictation: {
+    mode: 'hold',
+    toggleShortcut: ['Ctrl', 'Alt', 'F9'],
+    micDeviceId: '',
+    keepMicReadySeconds: 10,
+  },
   ai: {
     asr: { baseUrl: '', model: 'qwen3-asr' },
     llm: { baseUrl: '', model: '' },
@@ -39,11 +45,13 @@ async function render(
     set: vi.fn(),
   },
   hotkey = fakeHotkey(),
+  micStatus: MicStatus = { state: 'closed', usingDefaultInstead: false },
 ) {
   const bridge = {
     settings: { get: vi.fn().mockResolvedValue(stored), update },
     startup,
     hotkey,
+    audio: { status: vi.fn().mockResolvedValue(micStatus) },
   };
   TestBed.configureTestingModule({
     imports: [DictationSettings],
@@ -214,5 +222,95 @@ describe('DictationSettings', () => {
     expect(el.querySelector('[data-testid="hold-unavailable"]')!.textContent).toContain(
       'Hold Ctrl works in the Windows app',
     );
+  });
+
+  describe('Microphone', () => {
+    const devices = [
+      { kind: 'audioinput', deviceId: 'default', label: 'Default - Headset' },
+      { kind: 'audioinput', deviceId: 'mic-a', label: 'Laptop microphone' },
+      { kind: 'audioinput', deviceId: 'mic-b', label: '' },
+      { kind: 'audiooutput', deviceId: 'spk', label: 'Speakers' },
+    ];
+    beforeEach(() => {
+      Object.defineProperty(navigator, 'mediaDevices', {
+        configurable: true,
+        value: {
+          enumerateDevices: vi.fn().mockResolvedValue(devices),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        },
+      });
+    });
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, 'mediaDevices');
+    });
+
+    const openSelect = async (el: HTMLElement, id: string, settle: () => Promise<void>) => {
+      el.querySelector<HTMLElement>(`[data-testid="${id}"] .mat-mdc-select-trigger`)!.click();
+      await settle();
+      const panels = document.querySelectorAll<HTMLElement>('.mat-mdc-select-panel');
+      return [...panels[panels.length - 1]!.querySelectorAll<HTMLElement>('mat-option')];
+    };
+
+    it('lists System default and real microphones (no pseudo devices, no speakers)', async () => {
+      const { el, settle } = await render();
+      await settle();
+      const options = await openSelect(el, 'mic-device', settle);
+      expect(options.map((o) => o.textContent!.trim())).toEqual([
+        'System default',
+        'Laptop microphone',
+        'Microphone 2',
+      ]);
+      options[1]!.click();
+      await settle();
+    });
+
+    it('saves the chosen device and keep-ready time', async () => {
+      const { el, settle, update, status } = await render();
+      await settle();
+      (await openSelect(el, 'mic-device', settle))[1]!.click();
+      await settle();
+      expect(update).toHaveBeenCalledWith({ dictation: { micDeviceId: 'mic-a' } });
+      const keep = await openSelect(el, 'keep-mic-ready', settle);
+      expect(keep.map((o) => o.textContent!.trim())).toEqual([
+        'Off',
+        '5 seconds',
+        '10 seconds',
+        '30 seconds',
+      ]);
+      keep[0]!.click();
+      await settle();
+      expect(update).toHaveBeenCalledWith({ dictation: { keepMicReadySeconds: 0 } });
+      expect(status.state()).toBe('saved');
+    });
+
+    it('says when the saved microphone is not connected', async () => {
+      const { el, settle } = await render(vi.fn(), undefined, undefined);
+      await settle();
+      expect(el.querySelector('[data-testid="mic-missing"]')).toBeNull();
+      TestBed.resetTestingModule();
+      stored.dictation.micDeviceId = 'unplugged';
+      try {
+        const again = await render();
+        await again.settle();
+        expect(again.el.querySelector('[data-testid="mic-missing"]')!.textContent).toContain(
+          "isn't connected",
+        );
+      } finally {
+        stored.dictation.micDeviceId = '';
+      }
+    });
+
+    it('explains a blocked microphone in plain words', async () => {
+      const { el, settle } = await render(undefined, undefined, undefined, {
+        state: 'closed',
+        usingDefaultInstead: false,
+        problem: 'blocked',
+      });
+      await settle();
+      expect(el.querySelector('[data-testid="mic-problem"]')!.textContent).toContain(
+        'Let desktop apps access your microphone',
+      );
+    });
   });
 });

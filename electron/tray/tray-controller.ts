@@ -19,6 +19,8 @@ export interface TrayDeps {
   platform: NodeJS.Platform;
   /** Whether the hotkey exists yet (VAI-301). Until then the menu says "not active yet". */
   dictationAvailable: () => boolean;
+  /** A problem to show instead of the state, e.g. "microphone blocked" (VAI-302). */
+  problem?: () => string | null;
   showWindow(): void;
   openSettings(): void;
   quit(): void;
@@ -87,9 +89,12 @@ export class TrayController {
 
   private menuTemplate(state: DictationState): MenuItemConstructorOptions[] {
     const { deps } = this;
-    const statusLine = deps.dictationAvailable()
-      ? `Dictation: ${STATE_LABEL[state]}`
-      : 'Dictation: not active yet';
+    const problem = deps.problem?.() ?? null;
+    const statusLine = problem
+      ? `Dictation: ${problem}`
+      : deps.dictationAvailable()
+        ? `Dictation: ${STATE_LABEL[state]}`
+        : 'Dictation: not active yet';
     return [
       { label: statusLine, enabled: false },
       { type: 'separator' },

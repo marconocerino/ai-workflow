@@ -14,7 +14,12 @@ files:
   - dist/renderer/**/*
   - assets/tray/**/*
   - package.json
+  # Licences of bundled fonts, icons and libraries (MIT/OFL/ISC require shipping the notices).
+  - THIRD_PARTY_NOTICES.md
   # Encrypted SQLite (libsql): each platform below ships only its own prebuilt binary package.
+  # NOTE: every platform `files` list below must contain at least one include pattern. If a list
+  # has only exclusions, electron-builder adds "**/*" and packs the whole repository (a test and
+  # smoke:packaged check this).
 asar: true
 asarUnpack:
   - '**/*.node'
@@ -35,6 +40,7 @@ electronFuses:
   resetAdHocDarwinSignature: true
 linux:
   files:
+    - package.json # include anchor (see note above)
     - '!node_modules/@libsql/{darwin,win32}-*/**'
     - '!resources/win/**'
 win:
@@ -69,6 +75,7 @@ nsis:
   uninstallDisplayName: AI Workflow
 mac:
   files:
+    - package.json # include anchor (see note above)
     - '!node_modules/@libsql/{win32,linux}-*/**'
     - '!resources/win/**'
   target: dir

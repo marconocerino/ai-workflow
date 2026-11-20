@@ -78,7 +78,7 @@ VAI-301,E3 Dictation,Hold-Ctrl global hotkey,"As a user, I want to hold Ctrl any
 • Fallback toggle shortcut works if the keyboard hook fails",3,Must,S1,dictation,Done
 VAI-302,E3 Dictation,Microphone capture and device choice,"As a user, I want to choose my microphone and optionally keep it warm, so my first word is never cut off.","• Device list with System default
 • Keep-mic-ready option (off, 5, 10, 30 s)
-• Warm audio stays in memory and is discarded if unused",3,Must,S1,"dictation, audio",To do
+• Warm audio stays in memory and is discarded if unused",3,Must,S1,"dictation, audio",Done
 VAI-303,E3 Dictation,Transcription with Qwen3-ASR,"As a user, I want my speech turned into text by our company's speech model, so dictation is accurate and private.","• Audio sent only to the configured company endpoint
 • Typical 10-second clip returns text in under 2 seconds
 • Clear message on timeout or server error",3,Must,S1,"dictation, ai",To do

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  computed,
   ElementRef,
   Injector,
   afterNextRender,
@@ -11,12 +12,20 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { type MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import type { HotkeyStatus, StartupState } from '../../../../shared/ipc-contract';
-import type { DictationMode } from '../../../../shared/settings';
+import type { MicStatus } from '../../../../shared/audio';
+import {
+  type DictationMode,
+  KEEP_MIC_READY_OPTIONS,
+  type KeepMicReadySeconds,
+} from '../../../../shared/settings';
 import { ipcErrorMessage } from '../../core/ipc-errors';
 import { HotkeyApi, shortcutFromEvent, shortcutLabel } from '../../core/hotkey-api';
+import { MicDevices, micProblemText } from '../../core/mic-devices';
 import { SettingsApi } from '../../core/settings-api';
 import { StartupApi } from '../../core/startup-api';
 import { Icon } from '../../ui/icon/icon';
@@ -26,7 +35,7 @@ import { SettingsHeader } from '../shared/settings-header';
 
 /**
  * Settings → Dictation (VAI-204, design: Settings@1x.png). How-it-works card and the shortcut
- * mode; Startup (VAI-205). The Microphone section (VAI-302) is added by its story.
+ * mode; Microphone (VAI-302); Startup (VAI-205).
  */
 @Component({
   selector: 'app-dictation-settings',
@@ -34,6 +43,8 @@ import { SettingsHeader } from '../shared/settings-header';
     ReactiveFormsModule,
     MatButtonModule,
     MatRadioModule,
+    MatFormFieldModule,
+    MatSelectModule,
     MatSlideToggleModule,
     SettingsHeader,
     Keys,
@@ -60,6 +71,18 @@ export class DictationSettings {
   protected readonly shortcutError = signal<string | null>(null);
   private readonly captureBox = viewChild<ElementRef<HTMLElement>>('captureBox');
   protected readonly shortcutLabel = shortcutLabel;
+  protected readonly mic = inject(MicDevices);
+  protected readonly micDevice = new FormControl('', { nonNullable: true });
+  protected readonly keepReady = new FormControl<KeepMicReadySeconds>(10, { nonNullable: true });
+  protected readonly keepReadyOptions = KEEP_MIC_READY_OPTIONS;
+  protected readonly micStatus = signal<MicStatus | null>(null);
+  protected readonly micProblem = computed(() => micProblemText(this.micStatus()));
+  /** The saved device isn't plugged in (System default is used instead). */
+  protected readonly savedDeviceMissing = computed(
+    () => this.savedDevice() !== '' && !this.mic.devices().some((d) => d.id === this.savedDevice()),
+  );
+  private readonly savedDevice = signal('');
+  protected readonly micError = signal<string | null>(null);
   private readonly startupApi = inject(StartupApi);
   private readonly injector = inject(Injector);
   protected readonly startup = signal<StartupState | null>(null);
@@ -69,6 +92,8 @@ export class DictationSettings {
     this.status.reset();
     void this.load();
     void this.refreshHotkey();
+    this.mic.watch(inject(DestroyRef));
+    void this.mic.status().then((s) => this.micStatus.set(s));
     // Never leave global shortcuts paused when leaving the page mid-capture.
     inject(DestroyRef).onDestroy(() => {
       if (this.capturing() !== null) void this.hotkeyApi.suspend(false);
@@ -96,6 +121,11 @@ export class DictationSettings {
     try {
       const settings = await this.api.get();
       this.mode.setValue(settings.dictation.mode, { emitEvent: false });
+      this.micDevice.setValue(settings.dictation.micDeviceId, { emitEvent: false });
+      this.savedDevice.set(settings.dictation.micDeviceId);
+      this.keepReady.setValue(settings.dictation.keepMicReadySeconds, { emitEvent: false });
+      this.micDevice.valueChanges.subscribe((id) => void this.saveMic({ micDeviceId: id }));
+      this.keepReady.valueChanges.subscribe((s) => void this.saveMic({ keepMicReadySeconds: s }));
       this.current.set(settings.dictation.mode);
       this.toggleShortcut.set(settings.dictation.toggleShortcut);
       this.loaded.set(true);
@@ -116,6 +146,23 @@ export class DictationSettings {
       this.error.set(ipcErrorMessage(e));
     }
     await this.refreshHotkey();
+  }
+
+  private async saveMic(patch: {
+    micDeviceId?: string;
+    keepMicReadySeconds?: KeepMicReadySeconds;
+  }): Promise<void> {
+    this.micError.set(null);
+    try {
+      const saved = await this.status.track(this.api.update({ dictation: patch }));
+      this.savedDevice.set(saved.dictation.micDeviceId);
+    } catch (e) {
+      this.micError.set(ipcErrorMessage(e));
+    }
+  }
+
+  protected keepReadyLabel(seconds: number): string {
+    return seconds === 0 ? 'Off' : `${seconds} seconds`;
   }
 
   private async refreshHotkey(): Promise<void> {

@@ -14,7 +14,12 @@ afterEach(() => {
 });
 
 const settings: Settings = {
-  dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
+  dictation: {
+    mode: 'hold',
+    toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+    micDeviceId: '',
+    keepMicReadySeconds: 10,
+  },
   ai: {
     asr: { baseUrl: 'https://asr.company.internal/v1', model: 'qwen3-asr' },
     llm: { baseUrl: 'https://llm.company.internal/v1', model: 'qwen3-32b' },

@@ -104,5 +104,11 @@ export const routes: Routes = [
     title: 'Component gallery · AI Workflow',
     loadComponent: () => import('./gallery/gallery').then((m) => m.Gallery),
   },
+  {
+    // The hidden audio window's page (VAI-302); no UI.
+    path: 'audio-engine',
+    title: 'AI Workflow audio',
+    loadComponent: () => import('./audio-engine/audio-engine').then((m) => m.AudioEngineHost),
+  },
   { path: '**', redirectTo: '' },
 ];
