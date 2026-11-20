@@ -153,7 +153,8 @@ scripts/dev.mjs    `npm start` runner
   Ctrl+scroll, Ctrl+click etc. never start it (and if another key comes after 120 ms, the
   recording is cancelled). Keys are only observed, never blocked.
 - It runs as a small helper, `resources/win/aiw-key-listener.exe`, built from
-  `native/win-key-listener/main.c` by `node scripts/build-win-helper.mjs` (done by `dist:win`).
+  `native/win-key-listener/main.c` by `node scripts/build-win-helper.mjs` (done by `dist:win`;
+  it also builds the paste helper).
   The helper only reports "Ctrl down/up" and "some other key" — never which key — and exits when
   the app does. It's signed together with the app.
 - **Toggle shortcut** (default Ctrl+Shift+Space; Settings → Dictation → Change): used in Toggle
@@ -171,11 +172,25 @@ scripts/dev.mjs    `npm start` runner
 - Not sent: recordings under 0.3 s (accidental press) and silence (peak below −40 dBFS; "Nothing was
   heard"). Retries (`ai.retries`) only after network errors, HTTP 429 and 5xx — never after a
   timeout or another 4xx. Every failure has a short message (timeout, unreachable, key rejected, …).
-- Until VAI-304 (paste at cursor) the text goes on the **clipboard** with a notification "Text
-  copied"; failures are a "Dictation failed" notification. Notifications never contain the text.
+- The text is then pasted at the cursor (below). Failures are a "Dictation failed" notification.
+  Notifications never contain the text.
 - The log has duration, bytes, latency, attempts and error codes — never the text, audio or key.
 - Dev setup until the company Qwen3-ASR server is available (D-021): any OpenAI-compatible server,
   e.g. URL `https://api.groq.com/openai/v1`, model `whisper-large-v3-turbo`, your own key. Dev only.
+
+## Paste at cursor
+
+- Windows: `resources/win/aiw-paste.exe` (`native/win-paste/main.c`, built with the Ctrl watcher by
+  `node scripts/build-win-helper.mjs`) runs once per dictation (D-022). The text goes in on stdin.
+  It saves the clipboard (all formats), puts the text there — marked so Win+V history, cloud
+  clipboard and clipboard managers skip it — sends Ctrl+V (Ctrl+Shift+V in terminals), and ~0.5 s
+  later puts your clipboard back if nothing new was copied. It answers one line
+  (`PASTED restored|kept|not-saved` or `FAILED <reason>`), never the text.
+- It doesn't paste into admin (elevated) windows — Windows blocks that silently — or when no window
+  has focus. Then, or if the helper fails, the text stays on the clipboard and a notification says
+  "Couldn't paste … press Ctrl+V". No notification when pasting worked.
+- macOS (dev only) and Windows without the helper built: text on the clipboard + "Text copied"
+  notification. Tests use `e2e/fake-paste-helper.mjs` (`AIW_PASTE_HELPER_SCRIPT`).
 
 ## Microphone
 

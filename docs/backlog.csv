@@ -84,7 +84,7 @@ VAI-303,E3 Dictation,Transcription with Qwen3-ASR,"As a user, I want my speech t
 • Clear message on timeout or server error",3,Must,S1,"dictation, ai",Done
 VAI-304,E3 Dictation,Paste at cursor,"As a user, I want the text to appear where my cursor is in any app, so I don't copy and paste by hand.","• Works in Outlook, Teams, browsers and VS Code
 • My clipboard is restored afterwards
-• If pasting fails, the text stays on the clipboard with a notice",3,Must,S1,dictation,To do
+• If pasting fails, the text stays on the clipboard with a notice",3,Must,S1,dictation,Done
 VAI-305,E3 Dictation,Recording overlay,"As a user, I want a small floating bar while I dictate, so I know it's listening.","• Appears within 100 ms of starting
 • Shows a level meter and the target app
 • Never steals focus from the app I'm typing in",3,Must,S1,"dictation, ui",To do

@@ -47,10 +47,12 @@ export function defaultFiles(rootDir = root) {
   return [
     path.join(rootDir, 'release', `AI-Workflow-Setup-${pkg.version}.exe`),
     path.join(rootDir, 'release', 'win-unpacked', `${pkg.productName}.exe`),
-    path.join(
-      rootDir,
-      ...['release', 'win-unpacked', 'resources', 'app.asar.unpacked', 'resources', 'win'],
-      'aiw-key-listener.exe',
+    ...['aiw-key-listener.exe', 'aiw-paste.exe'].map((helper) =>
+      path.join(
+        rootDir,
+        ...['release', 'win-unpacked', 'resources', 'app.asar.unpacked', 'resources', 'win'],
+        helper,
+      ),
     ),
   ];
 }

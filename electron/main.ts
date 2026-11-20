@@ -26,7 +26,8 @@ import { allowPermissionCheck, allowPermissionRequest } from './audio/permission
 import { AppDatabase } from './db/app-database';
 import { buildDiagnosticsZip, diagnosticsFileName } from './diagnostics/export';
 import { clipboardOutput } from './dictation/clipboard-output';
-import { DictationPipeline } from './dictation/dictation-pipeline';
+import { DictationPipeline, type DictationOutput } from './dictation/dictation-pipeline';
+import { pasteOutput, runPasteHelper } from './dictation/paste-output';
 import { registerAiIpc } from './ipc/ai';
 import { DictationHotkey } from './hotkey/dictation-hotkey';
 import { KeyListener } from './hotkey/key-listener';
@@ -38,7 +39,7 @@ import { registerSettingsIpc } from './ipc/settings';
 import { Logger, RotatingFile, parseLogLevel } from './logging';
 import { loadFeaturePolicy } from './policy/policy';
 import { windowsRegQuery } from './policy/registry';
-import { terminalEcho } from './logging/logger';
+import { type ScopedLogger, terminalEcho } from './logging/logger';
 import {
   APP_ORIGIN,
   APP_SCHEME,
@@ -331,7 +332,7 @@ function createAiClient(settings: SettingsStore, secrets: SecretStore): AiHttpCl
   );
 }
 
-/** Recording → speech-to-text → clipboard (VAI-303; VAI-304 pastes at the cursor instead). */
+/** Recording → speech-to-text (VAI-303) → paste at the cursor (VAI-304). */
 function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): DictationPipeline {
   const log = logger.scope('dictation');
   const transcriber = new Transcriber({
@@ -341,24 +342,57 @@ function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): Dictat
   });
   return new DictationPipeline({
     transcribe: (recording) => transcriber.transcribe(recording),
-    output: clipboardOutput({
-      writeClipboard: (text) => clipboard.writeText(text),
-      notify: (title, body) => {
-        lastNotificationForTests = { title, body };
-        // e2e reads it through the test hook instead of popping up on the developer's screen.
-        if (quietNotifications || !Notification.isSupported()) return;
-        const note = new Notification({ title, body, silent: true });
-        note.on('failed', (_e, error) =>
-          logger.scope('dictation').warn('Notification could not be shown', { error }),
-        );
-        note.show();
-      },
-      platform: process.platform,
-    }),
+    output: createOutput(log),
     status: dictationStatus,
     micReady: () => audio?.status().state === 'ready',
     logger: log,
   });
+}
+
+/**
+ * Windows: paste at the cursor through aiw-paste.exe (D-022). Elsewhere (macOS dev), or if the
+ * helper isn't built: text on the clipboard + a notification. Dev/test: AIW_PASTE_HELPER_SCRIPT
+ * runs a fake helper script instead.
+ */
+function createOutput(log: ScopedLogger): DictationOutput {
+  const notify = (title: string, body: string) => {
+    lastNotificationForTests = { title, body };
+    // e2e reads it through the test hook instead of popping up on the developer's screen.
+    if (quietNotifications || !Notification.isSupported()) return;
+    const note = new Notification({ title, body, silent: true });
+    note.on('failed', (_e, error) => log.warn('Notification could not be shown', { error }));
+    note.show();
+  };
+  const writeClipboard = (text: string) => clipboard.writeText(text);
+
+  const fakeScript = !app.isPackaged ? process.env['AIW_PASTE_HELPER_SCRIPT'] : undefined;
+  const exe = winHelperPath('aiw-paste.exe');
+  const spawnHelper = fakeScript
+    ? () =>
+        spawn(process.execPath, [fakeScript], {
+          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+          stdio: ['pipe', 'pipe', 'ignore'],
+        })
+    : process.platform === 'win32' && fs.existsSync(exe)
+      ? () => spawn(exe, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] })
+      : null;
+  if (!spawnHelper) {
+    if (process.platform === 'win32') log.warn('Paste helper missing; using the clipboard only');
+    return clipboardOutput({ writeClipboard, notify, platform: process.platform });
+  }
+  return pasteOutput({
+    paste: (text) => runPasteHelper(spawnHelper, text),
+    writeClipboard,
+    notify,
+    logger: log,
+  });
+}
+
+/** A Windows helper exe: unpacked from the asar when packaged (so it can run and be signed). */
+function winHelperPath(name: string): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'win', name)
+    : path.join(app.getAppPath(), 'resources', 'win', name);
 }
 
 /** Dev/test only: save diagnostics into this folder without a dialog (for e2e). */
@@ -539,15 +573,7 @@ function createAudio(settings: SettingsStore): AudioController {
  */
 function createHotkey(settings: SettingsStore): DictationHotkey {
   const fakeScript = !app.isPackaged ? process.env['AIW_KEY_LISTENER_SCRIPT'] : undefined;
-  const exe = app.isPackaged
-    ? path.join(
-        process.resourcesPath,
-        'app.asar.unpacked',
-        'resources',
-        'win',
-        'aiw-key-listener.exe',
-      )
-    : path.join(app.getAppPath(), 'resources', 'win', 'aiw-key-listener.exe');
+  const exe = winHelperPath('aiw-key-listener.exe');
   const spawnWatcher = fakeScript
     ? () =>
         spawn(process.execPath, [fakeScript], {
