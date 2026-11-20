@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AUDIO_COMMAND_CHANNEL } from '../../shared/ipc-contract';
+import { AUDIO_COMMAND_CHANNEL, OVERLAY_STATE_CHANNEL } from '../../shared/ipc-contract';
 import { allowPermissionCheck, allowPermissionRequest } from './permissions';
 
 const req = {
@@ -47,12 +47,14 @@ describe('permission requests', () => {
   });
 });
 
-describe('audio command channel', () => {
-  it('the preload listens on the same channel main sends to', () => {
+describe('main → renderer channels', () => {
+  it('the preload listens on the same channels main sends to (audio, overlay)', () => {
     const preload = fs.readFileSync(path.resolve(__dirname, '..', 'preload.ts'), 'utf8');
     expect(preload).toContain(`ipcRenderer.on('${AUDIO_COMMAND_CHANNEL}'`);
-    // The only ipcRenderer.on in the preload; it passes the payload, never the event.
-    expect(preload.match(/ipcRenderer\.on\(/g)).toHaveLength(1);
+    expect(preload).toContain(`ipcRenderer.on('${OVERLAY_STATE_CHANNEL}'`);
+    // The only two ipcRenderer.on in the preload; they pass the payload, never the event.
+    expect(preload.match(/ipcRenderer\.on\(/g)).toHaveLength(2);
     expect(preload).toMatch(/\(_event, command[^)]*\) =>\s*listener\(command\)/);
+    expect(preload).toMatch(/\(_event, state[^)]*\) =>\s*listener\(state\)/);
   });
 });

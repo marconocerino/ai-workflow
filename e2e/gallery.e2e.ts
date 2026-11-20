@@ -104,6 +104,7 @@ test.describe('gallery', () => {
       'Cards',
       'Chips',
       'Key caps, agent avatars, badge',
+      'Dictation bar',
       'Icons (Lucide)',
       'Section label',
     ]) {
@@ -112,6 +113,7 @@ test.describe('gallery', () => {
     for (const id of INTERACTIVE)
       await expect(page.locator(`[data-interactive="${id}"]`)).toHaveCount(1);
     await expect(page.locator('aiw-agent-avatar')).toHaveCount(12);
+    await expect(page.locator('aiw-dictation-bar')).toHaveCount(3);
     await expect(page.locator('aiw-icon[role="img"], .icons aiw-icon')).not.toHaveCount(0);
   });
 

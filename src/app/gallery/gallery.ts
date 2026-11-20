@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RouterLink } from '@angular/router';
 import { AGENTS } from '../../../shared/agents';
-import { AgentAvatar, Badge, Card, Chip, Icon, type IconName, Keys } from '../ui';
+import { AgentAvatar, Badge, Card, Chip, DictationBar, Icon, type IconName, Keys } from '../ui';
 import { ICONS } from '../ui/icon/icons';
 
 /** Every core component in every state (VAI-202). Reachable at /gallery. */
@@ -31,6 +31,7 @@ import { ICONS } from '../ui/icon/icons';
     Chip,
     Icon,
     Keys,
+    DictationBar,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './gallery.html',
@@ -79,5 +80,7 @@ export class Gallery {
     badge: '<aiw-badge [count]="2" label="unread" />',
     icons: '<aiw-icon name="mic" />  <aiw-icon name="lock" label="Encrypted" />',
     labels: '<h3 class="aiw-section-label">Shortcut</h3>',
+    dictationBar:
+      '<aiw-dictation-bar phase="recording" [level]="0.6" app="Outlook" hint="Esc to cancel" />  <aiw-dictation-bar phase="transcribing" app="Outlook" />',
   };
 }

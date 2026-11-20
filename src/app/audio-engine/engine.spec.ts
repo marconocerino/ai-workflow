@@ -40,6 +40,26 @@ describe('AudioEngine', () => {
     expect(recordings[0]!.peak).toBeCloseTo(0.5, 2);
   });
 
+  it('reports a loudness level 20 times a second while recording, never before', async () => {
+    const { engine, events, feed, flush } = setup();
+    engine.handle(OPEN);
+    await flush();
+    feed(500, 0.5); // pre-roll: no levels
+    expect(events.filter((e) => e.type === 'level')).toEqual([]);
+    engine.handle({ type: 'start' });
+    feed(500, 0.5);
+    const loud = events.filter((e) => e.type === 'level');
+    expect(loud).toHaveLength(10);
+    // 0.5 full scale ≈ −6 dBFS → 0.9 on the −60…0 dB meter
+    for (const e of loud) expect(e.level).toBeCloseTo(0.9, 1);
+    feed(100, 0); // silence
+    expect(events.at(-1)).toEqual({ type: 'level', level: 0 });
+    engine.handle({ type: 'stop' });
+    const count = events.length;
+    feed(500, 0.5);
+    expect(events).toHaveLength(count); // no levels after stopping
+  });
+
   it('cancel delivers nothing', async () => {
     const { engine, recordings, feed, flush } = setup();
     engine.handle(OPEN);

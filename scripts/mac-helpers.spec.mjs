@@ -61,7 +61,12 @@ describe('macOS paste helper (native/mac-paste/main.swift)', () => {
 
   it('text from stdin only, kept off other devices and out of clipboard managers', () => {
     expect(paste).toContain('FileHandle.standardInput.readDataToEndOfFile()');
-    expect(paste).not.toMatch(/CommandLine|ProcessInfo\.processInfo\.arguments/);
+    // Only argument: the front-app query (VAI-305), which prints the app name and exits.
+    expect(paste).not.toMatch(/ProcessInfo\.processInfo\.arguments/);
+    expect(paste.match(/CommandLine\.arguments\[\d\]/g)).toEqual(['CommandLine.arguments[1]']);
+    expect(paste).toContain('CommandLine.arguments[1] == "--front-app"');
+    expect(paste).toContain('frontmostApplication?.localizedName');
+    expect(paste).not.toMatch(/kCGWindowName|CGWindowListCopyWindowInfo/); // never window titles
     expect(paste).toContain('.currentHostOnly');
     expect(paste).toContain('org.nspasteboard.TransientType');
     expect(paste).toContain('org.nspasteboard.ConcealedType');

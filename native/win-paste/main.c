@@ -21,6 +21,9 @@
  *   PASTED not-saved     pasted; the old clipboard couldn't be saved (too big / busy)
  *   FAILED <reason>      bad-input | no-window | elevated | keys-held | clipboard | send
  *
+ * `aiw-paste --front-app` (VAI-305) only prints `APP <program>` for the focused window, e.g.
+ * `APP OUTLOOK.EXE` (program file name, never the window title), or `APP ?`, and exits.
+ *
  * Privacy: it never prints, logs or stores the text; no files, registry or network.
  * Ideas (terminal list, waiting for modifiers, restore-if-unchanged) from OpenWhispr's
  * resources/windows-fast-paste.c and src/helpers/clipboard.js (MIT); this file is our own code.
@@ -293,6 +296,32 @@ static BOOL send_paste(BOOL terminal) {
     return SendInput(n, in, sizeof(INPUT)) == n;
 }
 
+/* ---- front app (VAI-305) --------------------------------------------------------------- */
+
+/* "APP <file name of the focused window's program>" — the program, never the window title. */
+static int print_front_app(void) {
+    char name[MAX_PATH * 3] = "?";
+    HWND hwnd = GetForegroundWindow();
+    HANDLE proc = hwnd ? open_window_process(hwnd) : NULL;
+    if (proc) {
+        wchar_t path[MAX_PATH];
+        DWORD len = MAX_PATH;
+        if (QueryFullProcessImageNameW(proc, 0, path, &len)) {
+            const wchar_t *base = wcsrchr(path, L'\\');
+            base = base ? base + 1 : path;
+            if (!WideCharToMultiByte(CP_UTF8, 0, base, -1, name, (int)sizeof name, NULL, NULL)) {
+                strcpy(name, "?");
+            }
+        }
+        CloseHandle(proc);
+    }
+    fputs("APP ", stdout);
+    fputs(name, stdout);
+    fputc('\n', stdout);
+    fflush(stdout);
+    return 0;
+}
+
 /* ---- main ---------------------------------------------------------------------------- */
 
 static int finish(const char *line, wchar_t *text, SavedClipboard *saved) {
@@ -305,7 +334,9 @@ static int finish(const char *line, wchar_t *text, SavedClipboard *saved) {
     return 0;
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+    /* The only argument: the front-app query. The text itself only ever comes on stdin. */
+    if (argc == 2 && strcmp(argv[1], "--front-app") == 0) return print_front_app();
     wchar_t *text = read_text();
     if (!text || !text[0]) return finish("FAILED bad-input", text, NULL);
 

@@ -183,6 +183,16 @@ scripts/dev.mjs    `npm start` runner
 - Dev setup until the company Qwen3-ASR server is available (D-021): any OpenAI-compatible server,
   e.g. URL `https://api.groq.com/openai/v1`, model `whisper-large-v3-turbo`, your own key. Dev only.
 
+## Dictation overlay
+
+- While recording and transcribing, a small bar floats at the bottom-centre of the screen under the
+  mouse pointer (`/overlay` window, `electron/overlay/`, D-023): mic, level meter, "Listening…" or
+  "Transcribing…", and the target app ("Outlook"). Toggle mode adds "Esc to cancel".
+- The window is created hidden at startup and never takes focus or clicks, so typing continues in
+  your app. It gets only a loudness number from the audio window, never audio.
+- The app name comes from `aiw-paste --front-app` (program name, never the window title); without
+  a paste helper the chip is left out. Component: `aiw-dictation-bar` (see /gallery).
+
 ## Paste at cursor
 
 - Windows: `resources/win/aiw-paste.exe` (`native/win-paste/main.c`, built with the Ctrl watcher by

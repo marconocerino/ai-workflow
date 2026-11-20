@@ -110,5 +110,11 @@ export const routes: Routes = [
     title: 'AI Workflow audio',
     loadComponent: () => import('./audio-engine/audio-engine').then((m) => m.AudioEngineHost),
   },
+  {
+    // The floating dictation bar's window (VAI-305): transparent, never focused.
+    path: 'overlay',
+    title: 'AI Workflow dictation',
+    loadComponent: () => import('./overlay/overlay-page').then((m) => m.OverlayPage),
+  },
   { path: '**', redirectTo: '' },
 ];

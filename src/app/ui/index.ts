@@ -6,3 +6,4 @@ export { Chip, type ChipTone } from './chip/chip';
 export { Icon } from './icon/icon';
 export type { IconName } from './icon/icons';
 export { Keys } from './keys/keys';
+export { DictationBar } from './dictation-bar/dictation-bar';

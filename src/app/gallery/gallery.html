@@ -273,6 +273,19 @@
       </aiw-card>
     </section>
 
+    <!-- Dictation bar (VAI-305) -->
+    <section aria-labelledby="g-dictation-bar">
+      <h2 class="aiw-section-label" id="g-dictation-bar">Dictation bar</h2>
+      <aiw-card>
+        <div class="stack" data-gallery="dictation-bar">
+          <aiw-dictation-bar phase="recording" [level]="0.6" app="Outlook" hint="Esc to cancel" />
+          <aiw-dictation-bar phase="recording" [level]="0.1" />
+          <aiw-dictation-bar phase="transcribing" app="Outlook" />
+        </div>
+        <code>{{ code.dictationBar }}</code>
+      </aiw-card>
+    </section>
+
     <!-- Icons -->
     <section aria-labelledby="g-icons">
       <h2 class="aiw-section-label" id="g-icons">Icons (Lucide)</h2>

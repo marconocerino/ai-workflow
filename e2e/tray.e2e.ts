@@ -38,11 +38,11 @@ const setState = (state: string) =>
     (_e, s) => (globalThis as unknown as { __aiwTest: Hooks }).__aiwTest.setDictationState(s),
     state,
   );
-/** Visibility of the main window (the hidden audio window is left out). */
+/** Visibility of the main window (the audio and overlay windows are left out). */
 const windowVisible = () =>
   app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
-      .filter((w) => !w.webContents.getURL().endsWith('/audio-engine'))
+      .filter((w) => !/\/(audio-engine|overlay)$/.test(w.webContents.getURL()))
       .map((w) => w.isVisible()),
   );
 
@@ -75,7 +75,7 @@ test('closing the window keeps the app running in the tray', async () => {
 
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()
-      .find((w) => !w.webContents.getURL().endsWith('/audio-engine'))!
+      .find((w) => !/\/(audio-engine|overlay)$/.test(w.webContents.getURL()))!
       .close(),
   );
   await expect.poll(windowVisible).toEqual([false]); // hidden, not destroyed

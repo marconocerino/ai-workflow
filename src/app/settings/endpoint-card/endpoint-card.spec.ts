@@ -55,6 +55,7 @@ function fakeBridge() {
       openPermissionSettings: vi.fn(),
     },
     audio: { status: vi.fn() },
+    overlay: { getState: vi.fn(), onState: vi.fn() },
     audioEngine: { onCommand: vi.fn(), event: vi.fn(), recording: vi.fn() },
     startup: { get: vi.fn(), set: vi.fn() },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },

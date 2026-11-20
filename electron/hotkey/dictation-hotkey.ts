@@ -69,6 +69,11 @@ export class DictationHotkey {
     );
   }
 
+  /** How the current recording was started, or null (the overlay's "Esc to cancel"). */
+  get recordingSource(): 'hold' | 'toggle' | null {
+    return this.recording;
+  }
+
   /** Called by the watcher for each key event (hold mode only). */
   keyEvent(event: Parameters<CtrlHold['handle']>[0]): void {
     if (this.d.config().mode !== 'hold' || this.suspended) return;

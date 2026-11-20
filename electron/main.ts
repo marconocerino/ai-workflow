@@ -12,6 +12,7 @@ import {
   net,
   protocol,
   safeStorage,
+  screen,
   session,
   shell,
   systemPreferences,
@@ -54,11 +55,17 @@ import { SettingsStore } from './settings/settings-store';
 import { Startup } from './startup';
 import { DictationStatus } from './tray/dictation-status';
 import { TrayController } from './tray/tray-controller';
+import { runFrontApp } from './overlay/front-app';
+import { OVERLAY_SIZE, OverlayController } from './overlay/overlay-controller';
 import { APP_TITLE, createMainWindowOptions } from './window';
 import { WindowLifecycle } from './window-lifecycle';
 import type { AudioCommand } from '../shared/audio';
 import type { FeatureState } from '../shared/features';
-import { AUDIO_COMMAND_CHANNEL, type PasteStatus } from '../shared/ipc-contract';
+import {
+  AUDIO_COMMAND_CHANNEL,
+  OVERLAY_STATE_CHANNEL,
+  type PasteStatus,
+} from '../shared/ipc-contract';
 import { SECRET_NAMES, type SecretName } from '../shared/settings';
 
 // Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
@@ -130,6 +137,8 @@ let hotkey: DictationHotkey | null = null;
 let audio: AudioController | null = null;
 let mainWindow: BrowserWindow | null = null;
 let audioWindow: BrowserWindow | null = null;
+let overlayWindow: BrowserWindow | null = null;
+let overlay: OverlayController | null = null;
 let lastRecordingForTests: { durationMs: number; peak: number } | null = null;
 let lastNotificationForTests: { title: string; body: string } | null = null;
 let pipeline: DictationPipeline | null = null;
@@ -188,8 +197,10 @@ if (!app.requestSingleInstanceLock()) {
     pipeline = createPipeline(settings, aiClient);
     audio = createAudio(settings);
     hotkey = createHotkey(settings);
+    overlay = createOverlay();
     app.on('will-quit', () => {
       hotkey?.dispose();
+      overlay?.dispose();
       audio?.dispose();
       tray?.destroy();
       database.close();
@@ -200,6 +211,7 @@ if (!app.requestSingleInstanceLock()) {
     createTray();
     createMainWindow(startup.openedAtLogin(process.argv));
     createAudioWindow();
+    createOverlayWindow();
     exposeTestHooks();
 
     app.on('activate', () => {
@@ -300,6 +312,7 @@ function registerIpc(
   //   const registerIf = featureGate(features.flags, logger.scope('policy'));
   //   registerIf('meetings', () => registerMeetingsIpc(handle, …));
   handle('audio:status', () => audio!.status());
+  handle('overlay:get-state', () => overlay!.current());
   // Only the hidden audio window may report mic events and deliver recordings.
   const fromAudioWindow = (event: Electron.IpcMainInvokeEvent) => {
     if (!audioWindow || event.sender.id !== audioWindow.webContents.id) {
@@ -384,7 +397,7 @@ function createOutput(log: ScopedLogger): DictationOutput {
     return clipboardOutput({ writeClipboard, notify, platform: process.platform });
   }
   return pasteOutput({
-    paste: (text) => runPasteHelper(spawnHelper, text),
+    paste: (text) => runPasteHelper(() => spawnHelper(), text),
     writeClipboard,
     notify,
     platform: process.platform,
@@ -398,11 +411,11 @@ function createOutput(log: ScopedLogger): DictationOutput {
  * - macOS: resources/mac/<name>, from source only (built by `npm start`; VAI-312).
  * - Dev/test: the fake script in `fakeEnv` instead. e2e never runs the real helpers.
  */
-function helperSpawner(name: string, fakeEnv: string): (() => ChildProcess) | null {
+function helperSpawner(name: string, fakeEnv: string): ((args?: string[]) => ChildProcess) | null {
   const fakeScript = !app.isPackaged ? process.env[fakeEnv] : undefined;
   if (fakeScript) {
-    return () =>
-      spawn(process.execPath, [fakeScript], {
+    return (args = []) =>
+      spawn(process.execPath, [fakeScript, ...args], {
         env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
         stdio: ['pipe', 'pipe', 'ignore'],
       });
@@ -417,7 +430,7 @@ function helperSpawner(name: string, fakeEnv: string): (() => ChildProcess) | nu
         ? path.join(app.getAppPath(), 'resources', 'mac', name)
         : null;
   if (!file || !fs.existsSync(file)) return null;
-  return () => spawn(file, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
+  return (args = []) => spawn(file, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
 }
 
 /** Can text be pasted at the cursor? (Settings, VAI-304/312) */
@@ -493,6 +506,73 @@ function createMainWindow(hidden: boolean): void {
   if (hidden) appLog.info('Started at sign-in; staying in the tray');
   else win.once('ready-to-show', () => win.show());
   void win.loadURL(`${rendererBase}/`);
+}
+
+/** The floating dictation bar (VAI-305): follows DictationStatus; shows without focus. */
+function createOverlay(): OverlayController {
+  const pasteHelper = helperSpawner('aiw-paste', 'AIW_PASTE_HELPER_SCRIPT');
+  return new OverlayController({
+    window: {
+      show: (bounds) => {
+        const win = overlayWindow;
+        if (!win || win.isDestroyed()) return;
+        win.setBounds(bounds);
+        win.showInactive(); // never takes focus from the app being dictated into
+      },
+      hide: () => {
+        if (overlayWindow && !overlayWindow.isDestroyed()) overlayWindow.hide();
+      },
+      send: (state) => {
+        if (overlayWindow && !overlayWindow.isDestroyed()) {
+          overlayWindow.webContents.send(OVERLAY_STATE_CHANNEL, state);
+        }
+      },
+    },
+    status: dictationStatus,
+    workArea: () => screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea,
+    source: () => hotkey?.recordingSource ?? null,
+    frontApp: pasteHelper ? () => runFrontApp(() => pasteHelper(['--front-app'])) : undefined,
+    logger: logger.scope('overlay'),
+  });
+}
+
+/**
+ * The overlay window (VAI-305, D-023): created hidden at startup with its page loaded, so showing
+ * it is instant. Transparent, frameless, always on top, can't be focused or clicked (clicks go to
+ * the app below), not in the taskbar. Same security settings as the other windows.
+ */
+function createOverlayWindow(): void {
+  const options = createMainWindowOptions(path.join(__dirname, 'preload.js'));
+  const win = new BrowserWindow({
+    ...options,
+    title: 'AI Workflow dictation',
+    ...OVERLAY_SIZE,
+    minWidth: undefined,
+    minHeight: undefined,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: false,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    focusable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    ...(process.platform === 'darwin' ? { type: 'panel' } : {}),
+    webPreferences: { ...options.webPreferences, backgroundThrottling: false },
+  });
+  overlayWindow = win;
+  win.setAlwaysOnTop(true, 'screen-saver');
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  win.setIgnoreMouseEvents(true);
+  win.webContents.on('render-process-gone', (_e, details) =>
+    logger.scope('overlay').error('Overlay window stopped', { reason: details.reason }),
+  );
+  void win.loadURL(`${rendererBase}/overlay`);
 }
 
 function createTray(): void {
@@ -578,6 +658,11 @@ const audioBridge = (() => {
         pending.forEach((c) => this.send(c));
         return;
       }
+      if (e?.type === 'level') {
+        // 20 per second while recording: only for the overlay meter (VAI-305).
+        overlay?.level((event as { level?: unknown }).level);
+        return;
+      }
       audio?.onEvent(event as Parameters<AudioController['onEvent']>[0]);
       tray?.refresh();
     },
@@ -626,7 +711,22 @@ function createHotkey(settings: SettingsStore): DictationHotkey {
     shortcuts: globalShortcut,
     listener,
     status: dictationStatus,
-    events: audio ?? undefined,
+    // The overlay hears "stop"/"cancel" before the recorder, so it switches without flicker.
+    events: audio
+      ? {
+          start: () => audio!.start(),
+          stop: () => {
+            overlay?.ended('stop');
+            audio!.stop();
+          },
+          cancel: () => {
+            overlay?.ended('cancel');
+            audio!.cancel();
+          },
+          prepare: () => audio!.prepare(),
+          abandon: () => audio!.abandon(),
+        }
+      : undefined,
     config: () => settings.get().dictation,
     paste: pasteStatus,
     logger: logger.scope('hotkey'),
@@ -645,5 +745,12 @@ function exposeTestHooks(): void {
     audio: () => audio?.status(),
     lastRecording: () => lastRecordingForTests,
     lastNotification: () => lastNotificationForTests,
+    overlay: () => ({
+      ...overlay?.describe(),
+      visible: !!overlayWindow && overlayWindow.isVisible(),
+      focusable: !!overlayWindow && overlayWindow.isFocusable(),
+      focused: !!overlayWindow && overlayWindow.isFocused(),
+    }),
+    focusedWindowId: () => BrowserWindow.getFocusedWindow()?.id ?? null,
   };
 }

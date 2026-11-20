@@ -275,3 +275,10 @@ kbd,
     animation-duration: 0.01ms !important;
   }
 }
+
+// The overlay window (VAI-305) is transparent around the dictation bar.
+html.aiw-overlay,
+html.aiw-overlay body {
+  background: transparent;
+  overflow: hidden;
+}
