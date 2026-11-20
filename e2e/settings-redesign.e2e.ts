@@ -63,8 +63,16 @@ test('existing settings from an earlier build carry over unchanged', async () =>
 
   // The file was upgraded with every old value intact; new options got defaults.
   expect(settingsFile()).toEqual({
-    version: 2,
-    data: { dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] }, ai: v1 },
+    version: 3,
+    data: {
+      dictation: {
+        mode: 'hold',
+        toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+        micDeviceId: '',
+        keepMicReadySeconds: 10,
+      },
+      ai: v1,
+    },
   });
 });
 

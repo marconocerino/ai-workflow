@@ -14,6 +14,8 @@ Screenshots of the target UI. They still say "Voice AI"; the product name is **A
 
 Notes on what's built:
 
+- **Settings → Dictation → Microphone (VAI-302):** input device and "Keep mic ready" per the design
+  (light selects instead of the design's black fields, as elsewhere).
 - **Tray (VAI-205):** placeholder icons drawn in code from the logo's waveform bars (grey idle,
   green listening, green + red dot recording). The app still has no app icon (Electron default).
 - **Settings (VAI-204):** sidebar and Dictation page match the design, with two differences.

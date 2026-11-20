@@ -44,12 +44,13 @@ test('hold Ctrl alone starts dictation, release stops; Ctrl shortcuts do not', a
   await expect.poll(trayState).toBe('recording');
   expect(await hooks((h) => h.tray().menu[0])).toBe('Dictation: Recording');
   send('CTRL_UP');
-  await expect.poll(trayState).toBe('idle');
+  // The mic stays ready for 10 s by default (VAI-302): "Listening", not Idle.
+  await expect.poll(trayState).toBe('listening');
 
   // Ctrl+C: another key within 120 ms → never starts, however long Ctrl stays down.
   send('CTRL_DOWN clean', 'OTHER');
   await page.waitForTimeout(400);
-  expect(await trayState()).toBe('idle');
+  expect(await trayState()).not.toBe('recording'); // still "Listening" from before, never recording
   send('CTRL_UP');
 
   // Settings shows it's ready.

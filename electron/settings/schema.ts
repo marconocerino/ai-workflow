@@ -2,16 +2,23 @@ import type {
   AiEndpointSettings,
   DictationMode,
   DictationSettings,
+  KeepMicReadySeconds,
   Settings,
   SettingsPatch,
 } from '../../shared/settings';
+import { KEEP_MIC_READY_OPTIONS } from '../../shared/settings';
 
 /** Bump when the stored shape changes, and add a migration in migrations.ts. */
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 export function defaultSettings(): Settings {
   return {
-    dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
+    dictation: {
+      mode: 'hold',
+      toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+      micDeviceId: '',
+      keepMicReadySeconds: 10,
+    },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
       llm: { baseUrl: '', model: '' },
@@ -181,7 +188,25 @@ function readDictation(
       });
     }
   }
-  return { mode, toggleShortcut };
+  let micDeviceId = fallback.micDeviceId;
+  const device = raw['micDeviceId'];
+  if (device !== undefined) {
+    // Chromium device ids: opaque hex/base64-ish strings.
+    if (typeof device === 'string' && /^[A-Za-z0-9+/=_.:-]{0,200}$/.test(device))
+      micDeviceId = device;
+    else issues.push({ path: 'dictation.micDeviceId', message: 'must be a device id' });
+  }
+
+  let keepMicReadySeconds = fallback.keepMicReadySeconds;
+  const keep = raw['keepMicReadySeconds'];
+  if (keep !== undefined) {
+    if ((KEEP_MIC_READY_OPTIONS as readonly unknown[]).includes(keep)) {
+      keepMicReadySeconds = keep as KeepMicReadySeconds;
+    } else {
+      issues.push({ path: 'dictation.keepMicReadySeconds', message: 'must be 0, 5, 10 or 30' });
+    }
+  }
+  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds };
 }
 
 /**

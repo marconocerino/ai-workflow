@@ -117,7 +117,22 @@ Open Notepad and Word (or any editor). Watch the tray icon tooltip / Settings st
 10. Windows Security → Protection history. [ ] Nothing about AI Workflow or aiw-key-listener.
 11. Settings → Dictation → Change → press Ctrl+Alt+K. [ ] Saved; Toggle mode + Ctrl+Alt+K works.
 
-## 10. Custom folder
+## 10. Microphone
+
+1. Settings → Dictation → Microphone: [ ] the list shows "System default" and your microphones
+   (by name). Plug in a headset: [ ] it appears without reopening Settings.
+2. Hold Ctrl and say a sentence, release. [ ] The Windows mic icon shows in the taskbar while
+   recording. `%APPDATA%\AI Workflow\logs\main.log` has `Recording finished durationMs=…`
+   with a peakDb above -50 (you were heard). No audio files appear anywhere in `%APPDATA%\AI Workflow`.
+3. Keep mic ready = 10 seconds: after releasing, [ ] tray says "Listening" and the mic icon stays
+   ~10 s, then both go away. Off: [ ] the mic icon disappears right after releasing.
+4. Choose the headset, unplug it, dictate. [ ] It still records (System default) and Settings says
+   "This microphone isn't connected".
+5. Windows Settings → Privacy & security → Microphone → turn off "Let desktop apps access your
+   microphone". Dictate. [ ] Tray menu: "Dictation: microphone blocked"; Settings explains how to fix
+   it. Turn it back on: [ ] dictation works again.
+
+## 11. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

@@ -5,6 +5,7 @@
 // avoids the macOS Keychain prompt for unsigned dev builds (Windows DPAPI never prompts).
 // Usage: node scripts/smoke-packaged.mjs [app executable]   (default: this platform's build)
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -26,6 +27,33 @@ const exe = process.argv[2] ?? defaultExecutable();
 if (!existsSync(exe)) {
   console.error(`Not found: ${exe} (build it first)`);
   process.exit(1);
+}
+
+// The app archive may only hold the built app — never sources, tests, docs or tool settings.
+const ALLOWED_TOP_LEVEL = new Set([
+  'dist',
+  'node_modules',
+  'assets',
+  'package.json',
+  'resources',
+  'THIRD_PARTY_NOTICES.md',
+]);
+const asarFile =
+  process.platform === 'darwin'
+    ? path.join(path.dirname(path.dirname(exe)), 'Resources', 'app.asar')
+    : path.join(path.dirname(exe), 'resources', 'app.asar');
+if (existsSync(asarFile)) {
+  // @electron/asar comes with electron-builder.
+  const require = createRequire(
+    createRequire(import.meta.url).resolve('app-builder-lib/package.json'),
+  );
+  const asar = require('@electron/asar');
+  const top = new Set(asar.listPackage(asarFile).map((p) => p.split(/[\\/]/)[1]));
+  const extra = [...top].filter((t) => t && !ALLOWED_TOP_LEVEL.has(t));
+  if (extra.length) {
+    console.error(`app.asar contains files that must not ship: ${extra.join(', ')}`);
+    process.exit(1);
+  }
 }
 const profile = mkdtempSync(path.join(tmpdir(), 'aiw-smoke-'));
 const logFile = path.join(profile, 'logs', 'main.log');

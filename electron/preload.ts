@@ -33,6 +33,20 @@ const api: AiWorkflowApi = {
     setToggleShortcut: (keys) => invoke('hotkey:set-toggle-shortcut', keys),
     suspend: (on) => invoke('hotkey:suspend', on),
   },
+  audio: {
+    status: () => invoke('audio:status'),
+  },
+  audioEngine: {
+    // Main sends commands only to the hidden audio window. Only the payload is passed on, never
+    // the IPC event. (Same string as AUDIO_COMMAND_CHANNEL; a test checks they match.)
+    onCommand: (listener) => {
+      ipcRenderer.on('audio:command', (_event, command: Parameters<typeof listener>[0]) =>
+        listener(command),
+      );
+    },
+    event: (event) => invoke('audio:event', event),
+    recording: (recording) => invoke('audio:recording', recording),
+  },
   startup: {
     get: () => invoke('startup:get'),
     set: (openAtLogin) => invoke('startup:set', openAtLogin),

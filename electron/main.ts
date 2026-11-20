@@ -18,6 +18,8 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { AiHttpClient } from './ai/ai-http';
+import { AudioController } from './audio/audio-controller';
+import { allowPermissionCheck, allowPermissionRequest } from './audio/permissions';
 import { AppDatabase } from './db/app-database';
 import { buildDiagnosticsZip, diagnosticsFileName } from './diagnostics/export';
 import { registerAiIpc } from './ipc/ai';
@@ -47,7 +49,9 @@ import { DictationStatus } from './tray/dictation-status';
 import { TrayController } from './tray/tray-controller';
 import { APP_TITLE, createMainWindowOptions } from './window';
 import { WindowLifecycle } from './window-lifecycle';
+import type { AudioCommand } from '../shared/audio';
 import type { FeatureState } from '../shared/features';
+import { AUDIO_COMMAND_CHANNEL } from '../shared/ipc-contract';
 import { SECRET_NAMES, type SecretName } from '../shared/settings';
 
 // Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
@@ -110,6 +114,10 @@ const dictationStatus = new DictationStatus();
 const startup = new Startup(app, process.platform, logger.scope('startup'));
 let tray: TrayController | null = null;
 let hotkey: DictationHotkey | null = null;
+let audio: AudioController | null = null;
+let mainWindow: BrowserWindow | null = null;
+let audioWindow: BrowserWindow | null = null;
+let lastRecordingForTests: { durationMs: number; peak: number } | null = null;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -159,9 +167,11 @@ if (!app.requestSingleInstanceLock()) {
       ...Object.fromEntries(Object.entries(features.flags).map(([k, v]) => [k, v ? 'on' : 'off'])),
       source: features.sources.join(','),
     });
+    audio = createAudio(settings);
     hotkey = createHotkey(settings);
     app.on('will-quit', () => {
       hotkey?.dispose();
+      audio?.dispose();
       tray?.destroy();
       database.close();
       appLog.info('Quit');
@@ -170,10 +180,11 @@ if (!app.requestSingleInstanceLock()) {
     hotkey.apply();
     createTray();
     createMainWindow(startup.openedAtLogin(process.argv));
+    createAudioWindow();
     exposeTestHooks();
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createMainWindow(false);
+      if (!mainWindow || mainWindow.isDestroyed()) createMainWindow(false);
       else lifecycle.show();
     });
   });
@@ -185,9 +196,28 @@ if (!app.requestSingleInstanceLock()) {
 
 function configureSession(): void {
   const ses = session.defaultSession;
-  // Deny every permission (camera, mic, notifications, …) until a story explicitly needs it.
-  ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
-  ses.setPermissionCheckHandler(() => false);
+  // Deny every permission except the microphone, audio only, for the hidden audio window
+  // (VAI-302, D-020). Settings may check it to list device names.
+  ses.setPermissionRequestHandler((wc, permission, callback, details) => {
+    const allowed = allowPermissionRequest({
+      permission,
+      fromAudioWindow: !!audioWindow && wc.id === audioWindow.webContents.id,
+      trustedOrigin: isTrustedUrl(details.requestingUrl, trustedOrigins),
+      mediaTypes: 'mediaTypes' in details ? (details.mediaTypes ?? []) : [],
+    });
+    if (!allowed) logger.scope('app').info('Permission denied', { permission });
+    callback(allowed);
+  });
+  ses.setPermissionCheckHandler((wc, permission, requestingOrigin, details) =>
+    allowPermissionCheck({
+      permission,
+      fromOurWindow:
+        !!wc &&
+        [mainWindow, audioWindow].some((w) => w && !w.isDestroyed() && w.webContents.id === wc.id),
+      trustedOrigin: isTrustedUrl(requestingOrigin, trustedOrigins),
+      mediaType: details.mediaType,
+    }),
+  );
   // CSP on every response (covers the dev server; app:// sets it itself too).
   ses.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -249,7 +279,23 @@ function registerIpc(
   // Feature IPC is registered through the gate, so a hidden feature has nothing to call:
   //   const registerIf = featureGate(features.flags, logger.scope('policy'));
   //   registerIf('meetings', () => registerMeetingsIpc(handle, …));
+  handle('audio:status', () => audio!.status());
+  // Only the hidden audio window may report mic events and deliver recordings.
+  const fromAudioWindow = (event: Electron.IpcMainInvokeEvent) => {
+    if (!audioWindow || event.sender.id !== audioWindow.webContents.id) {
+      throw new Error('Only the audio window may send this.');
+    }
+  };
+  handle('audio:event', (event, payload) => {
+    fromAudioWindow(event);
+    audioBridge.onEvent(payload);
+  });
+  handle('audio:recording', (event, payload) => {
+    fromAudioWindow(event);
+    audio?.onRecording(payload);
+  });
   registerSettingsIpc(handle, settings, secrets, () => {
+    audio?.configChanged();
     hotkey?.apply();
     tray?.refresh();
   });
@@ -280,7 +326,7 @@ function diagnosticsDeps(
     defaultName: () => diagnosticsFileName(new Date()),
     chooseFile: async (name) => {
       if (testDiagnosticsDir) return path.join(testDiagnosticsDir, name);
-      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+      const win = BrowserWindow.getFocusedWindow() ?? mainWindow;
       const options = {
         title: 'Export diagnostics',
         defaultPath: path.join(app.getPath('downloads'), name),
@@ -321,6 +367,7 @@ const rendererBase = devServerUrl?.replace(/\/+$/, '') ?? APP_ORIGIN;
 
 function createMainWindow(hidden: boolean): void {
   const win = new BrowserWindow(createMainWindowOptions(path.join(__dirname, 'preload.js')));
+  mainWindow = win;
   lifecycle.attach(win);
   // Started at sign-in: stay in the tray until the user opens the window.
   if (hidden) appLog.info('Started at sign-in; staying in the tray');
@@ -342,20 +389,97 @@ function createTray(): void {
     iconPath: (state) => path.join(iconDir, `${state}.png`),
     status: dictationStatus,
     platform: process.platform,
+    problem: () => {
+      const p = audio?.status().problem;
+      return p === 'blocked' ? 'microphone blocked' : p === 'no-device' ? 'no microphone' : null;
+    },
     dictationAvailable: () => {
       const s = hotkey?.status();
       return s?.holdCtrl === 'ready' || s?.toggleActive === true;
     },
     showWindow: () => lifecycle.show(),
     openSettings: () => {
-      const win = BrowserWindow.getAllWindows()[0];
-      if (win) void win.loadURL(`${rendererBase}/settings`);
+      if (mainWindow && !mainWindow.isDestroyed())
+        void mainWindow.loadURL(`${rendererBase}/settings`);
       lifecycle.show();
     },
     quit: () => app.quit(),
     logger: logger.scope('tray'),
   });
   tray.create();
+}
+
+/**
+ * Hidden window that owns the microphone (VAI-302, D-020): same security settings as the main
+ * window, never shown, not throttled in the background, audio may start without a click.
+ */
+function createAudioWindow(): void {
+  const options = createMainWindowOptions(path.join(__dirname, 'preload.js'));
+  const win = new BrowserWindow({
+    ...options,
+    title: 'AI Workflow audio',
+    show: false,
+    skipTaskbar: true,
+    webPreferences: {
+      ...options.webPreferences,
+      backgroundThrottling: false,
+      autoplayPolicy: 'no-user-gesture-required',
+    },
+  });
+  audioWindow = win;
+  win.webContents.on('render-process-gone', (_e, details) => {
+    logger.scope('audio').error('Audio window stopped', { reason: details.reason });
+    audioBridge.reset();
+    audio?.onEvent({ type: 'closed' });
+  });
+  void win.loadURL(`${rendererBase}/audio-engine`);
+}
+
+/** Commands to the audio window, held until its page says it's ready. */
+const audioBridge = (() => {
+  let ready = false;
+  let queue: AudioCommand[] = [];
+  return {
+    send(command: AudioCommand) {
+      if (!ready) {
+        queue.push(command);
+        return;
+      }
+      if (audioWindow && !audioWindow.isDestroyed()) {
+        audioWindow.webContents.send(AUDIO_COMMAND_CHANNEL, command);
+      }
+    },
+    onEvent(event: unknown) {
+      const e = event as { type?: unknown } | null;
+      if (e?.type === 'ready') {
+        ready = true;
+        const pending = queue;
+        queue = [];
+        pending.forEach((c) => this.send(c));
+        return;
+      }
+      audio?.onEvent(event as Parameters<AudioController['onEvent']>[0]);
+      tray?.refresh();
+    },
+    reset() {
+      ready = false;
+      queue = [];
+    },
+  };
+})();
+
+function createAudio(settings: SettingsStore): AudioController {
+  return new AudioController({
+    send: (command) => audioBridge.send(command),
+    config: () => settings.get().dictation,
+    status: dictationStatus,
+    logger: logger.scope('audio'),
+    // VAI-303 sends the recording to speech-to-text; until then it's dropped after logging.
+    // Tests may read its length and level (never the audio).
+    onRecording: (r) => {
+      lastRecordingForTests = { durationMs: r.durationMs, peak: r.peak };
+    },
+  });
 }
 
 /**
@@ -400,6 +524,7 @@ function createHotkey(settings: SettingsStore): DictationHotkey {
     shortcuts: globalShortcut,
     listener,
     status: dictationStatus,
+    events: audio ?? undefined,
     config: () => settings.get().dictation,
     logger: logger.scope('hotkey'),
   });
@@ -414,5 +539,7 @@ function exposeTestHooks(): void {
     clickTray: (label: string) => tray?.click(label),
     setDictationState: (state: Parameters<DictationStatus['set']>[0]) => dictationStatus.set(state),
     hotkey: () => hotkey?.status(),
+    audio: () => audio?.status(),
+    lastRecording: () => lastRecordingForTests,
   };
 }

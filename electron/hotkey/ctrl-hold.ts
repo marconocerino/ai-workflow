@@ -7,6 +7,10 @@ export interface CtrlHoldHandlers {
   start(): void;
   stop(): void;
   cancel(): void;
+  /** Ctrl down on its own: dictation may start (lets the mic open early). */
+  prepare?(): void;
+  /** That press turned out to be a shortcut or a tap. */
+  abandon?(): void;
 }
 
 export interface Timers {
@@ -45,6 +49,7 @@ export class CtrlHold {
       case 'idle':
         if (event === 'CTRL_DOWN_CLEAN') {
           this.state = 'pending';
+          this.handlers.prepare?.();
           this.timer = this.timers.set(() => this.elapsed(), this.holdMs);
         } else if (event === 'CTRL_DOWN_DIRTY') {
           this.state = 'blocked';
@@ -54,9 +59,11 @@ export class CtrlHold {
         if (event === 'OTHER') {
           this.clearTimer();
           this.state = 'blocked';
+          this.handlers.abandon?.();
         } else if (event === 'CTRL_UP') {
           this.clearTimer();
           this.state = 'idle';
+          this.handlers.abandon?.();
         }
         break;
       case 'active':
@@ -77,6 +84,7 @@ export class CtrlHold {
   /** The watcher stopped (crash/quit): drop any recording in progress. */
   reset(): void {
     this.clearTimer();
+    if (this.state === 'pending') this.handlers.abandon?.();
     if (this.state === 'active') this.handlers.cancel();
     this.state = 'idle';
   }

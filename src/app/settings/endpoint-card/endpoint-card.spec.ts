@@ -6,7 +6,12 @@ import { EndpointCard, type SaveState } from './endpoint-card';
 
 function settings(llm: Partial<Settings['ai']['llm']> = {}): Settings {
   return {
-    dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
+    dictation: {
+      mode: 'hold',
+      toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+      micDeviceId: '',
+      keepMicReadySeconds: 10,
+    },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
       llm: { baseUrl: '', model: '', ...llm },
@@ -43,6 +48,8 @@ function fakeBridge() {
     },
     features: { get: vi.fn() },
     hotkey: { status: vi.fn(), setToggleShortcut: vi.fn(), suspend: vi.fn() },
+    audio: { status: vi.fn() },
+    audioEngine: { onCommand: vi.fn(), event: vi.fn(), recording: vi.fn() },
     startup: { get: vi.fn(), set: vi.fn() },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },
     diagnostics: { export: vi.fn(), openLogs: vi.fn() },

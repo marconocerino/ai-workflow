@@ -6,6 +6,7 @@
  * or payload is a compile error on both sides.
  */
 import type { AiService, ConnectionResult } from './ai';
+import type { AudioCommand, AudioEvent, MicStatus } from './audio';
 import type { FeatureState } from './features';
 import type { SecretName, Settings, SettingsPatch } from './settings';
 
@@ -58,6 +59,9 @@ export interface HotkeyStatus {
   toggleError?: string;
 }
 
+/** The only main → renderer message: commands for the hidden audio window. */
+export const AUDIO_COMMAND_CHANNEL = 'audio:command';
+
 /** channel → request payload and response type. */
 export interface IpcContract {
   'app:get-info': { request: void; response: AppInfo };
@@ -77,6 +81,15 @@ export interface IpcContract {
   'hotkey:set-toggle-shortcut': { request: string[]; response: HotkeyStatus };
   /** Pause global shortcuts while the user records a new one in Settings. */
   'hotkey:suspend': { request: boolean; response: void };
+  /** Mic state for Settings (VAI-302). */
+  'audio:status': { request: void; response: MicStatus };
+  /** Audio window only: mic opened/closed/failed. */
+  'audio:event': { request: AudioEvent; response: void };
+  /** Audio window only: a finished recording (PCM in memory). */
+  'audio:recording': {
+    request: { pcm: ArrayBuffer; durationMs: number; peak: number };
+    response: void;
+  };
   'startup:get': { request: void; response: StartupState };
   /** Turns the OS login entry on or off; rejects when running from source. */
   'startup:set': { request: boolean; response: StartupState };
@@ -119,6 +132,15 @@ export interface AiWorkflowApi {
     status(): Promise<HotkeyStatus>;
     setToggleShortcut(keys: string[]): Promise<HotkeyStatus>;
     suspend(on: boolean): Promise<void>;
+  };
+  audio: {
+    status(): Promise<MicStatus>;
+  };
+  /** Used only by the hidden audio window (VAI-302); main ignores it from other windows. */
+  audioEngine: {
+    onCommand(listener: (command: AudioCommand) => void): void;
+    event(event: AudioEvent): Promise<void>;
+    recording(recording: { pcm: ArrayBuffer; durationMs: number; peak: number }): Promise<void>;
   };
   startup: {
     get(): Promise<StartupState>;

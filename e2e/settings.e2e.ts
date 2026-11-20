@@ -25,7 +25,7 @@ test('settings are saved as versioned JSON and survive a restart', async () => {
   await app.close();
 
   const onDisk = JSON.parse(readFileSync(join(profile, 'settings.json'), 'utf8'));
-  expect(onDisk.version).toBe(2);
+  expect(onDisk.version).toBe(3);
   expect(onDisk.data.ai.retries).toBe(4);
 
   ({ app, page } = await launchApp(profile));
@@ -92,6 +92,8 @@ test('API key is encrypted on disk and can never be read back by the renderer', 
     secrets: ['clear', 'has', 'set'],
     ai: ['testConnection'],
     hotkey: ['setToggleShortcut', 'status', 'suspend'],
+    audio: ['status'],
+    audioEngine: ['event', 'onCommand', 'recording'],
     startup: ['get', 'set'],
     log: ['rendererError'],
     diagnostics: ['export', 'openLogs'],

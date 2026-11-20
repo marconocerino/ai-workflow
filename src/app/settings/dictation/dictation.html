@@ -112,6 +112,67 @@
       <p class="error" role="alert" data-testid="dictation-error">{{ message }}</p>
     }
   </section>
+  <h2 class="aiw-section-label" id="mic-heading">Microphone</h2>
+  <section class="aiw-card mic" aria-labelledby="mic-heading">
+    @if (micProblem(); as problem) {
+      <p class="error" role="alert" data-testid="mic-problem">{{ problem }}</p>
+    }
+    <div class="row first">
+      <div>
+        <h3 id="mic-device-label">Input device</h3>
+        <p class="aiw-muted" id="mic-device-desc">
+          @if (savedDeviceMissing()) {
+            <span data-testid="mic-missing"
+              >This microphone isn't connected; System default is used for now.</span
+            >
+          } @else {
+            Uses your computer's default unless you pick one.
+          }
+        </p>
+      </div>
+      <mat-form-field appearance="outline" class="select" subscriptSizing="dynamic">
+        <mat-select
+          [formControl]="micDevice"
+          aria-labelledby="mic-device-label"
+          aria-describedby="mic-device-desc"
+          data-testid="mic-device"
+        >
+          <mat-option value="">System default</mat-option>
+          @for (device of mic.devices(); track device.id) {
+            <mat-option [value]="device.id">{{ device.label }}</mat-option>
+          }
+          @if (savedDeviceMissing()) {
+            <mat-option [value]="micDevice.value" disabled>Not connected</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="row">
+      <div>
+        <h3 id="keep-ready-label">Keep mic ready after dictating</h3>
+        <p class="aiw-muted" id="keep-ready-desc">
+          Stops your first word getting clipped when you dictate again soon. Audio stays in memory
+          and is discarded unless you start dictating.
+        </p>
+      </div>
+      <mat-form-field appearance="outline" class="select" subscriptSizing="dynamic">
+        <mat-select
+          [formControl]="keepReady"
+          aria-labelledby="keep-ready-label"
+          aria-describedby="keep-ready-desc"
+          data-testid="keep-mic-ready"
+        >
+          @for (seconds of keepReadyOptions; track seconds) {
+            <mat-option [value]="seconds">{{ keepReadyLabel(seconds) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    @if (micError(); as message) {
+      <p class="error" role="alert" data-testid="mic-error">{{ message }}</p>
+    }
+  </section>
+
   <h2 class="aiw-section-label" id="startup-heading">Startup</h2>
   <section class="aiw-card startup" aria-labelledby="startup-heading">
     @if (startup(); as s) {

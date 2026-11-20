@@ -112,3 +112,16 @@
   font-size: 14px;
   color: var(--aiw-color-ink-muted);
 }
+
+.mic {
+  padding: var(--aiw-space-4);
+
+  .row p {
+    max-width: 420px;
+  }
+}
+
+.select {
+  width: 220px;
+  flex: none;
+}

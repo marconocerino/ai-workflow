@@ -49,6 +49,27 @@ describe('SettingsStore', () => {
     expect(readJson()).toMatchObject({ version: SETTINGS_VERSION });
   });
 
+  it('v2 file (VAI-204) → v3: mode and shortcut kept, mic settings get defaults', () => {
+    write(
+      JSON.stringify({
+        version: 2,
+        data: {
+          dictation: { mode: 'toggle', toggleShortcut: ['Ctrl', 'Alt', 'K'] },
+          ai: { retries: 5 },
+        },
+      }),
+    );
+    const loaded = store().load();
+    expect(loaded.dictation).toEqual({
+      mode: 'toggle',
+      toggleShortcut: ['Ctrl', 'Alt', 'K'],
+      micDeviceId: '',
+      keepMicReadySeconds: 10,
+    });
+    expect(loaded.ai.retries).toBe(5);
+    expect(warnings).toEqual([]);
+  });
+
   it('v1 file from an earlier build (VAI-204): every value carries over unchanged', () => {
     const v1 = fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v1.json'), 'utf8');
     write(v1);

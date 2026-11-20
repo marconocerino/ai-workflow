@@ -5,7 +5,12 @@ import { AI_WORKFLOW_BRIDGE, DesktopBridgeUnavailableError } from './electron-ap
 import { SettingsApi } from './settings-api';
 
 const settings: Settings = {
-  dictation: { mode: 'hold', toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
+  dictation: {
+    mode: 'hold',
+    toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+    micDeviceId: '',
+    keepMicReadySeconds: 10,
+  },
   ai: {
     asr: { baseUrl: '', model: 'qwen3-asr' },
     llm: { baseUrl: 'https://llm.company', model: 'm' },
@@ -29,6 +34,8 @@ function fakeBridge() {
     ai: { testConnection: vi.fn() },
     features: { get: vi.fn() },
     hotkey: { status: vi.fn(), setToggleShortcut: vi.fn(), suspend: vi.fn() },
+    audio: { status: vi.fn() },
+    audioEngine: { onCommand: vi.fn(), event: vi.fn(), recording: vi.fn() },
     startup: { get: vi.fn(), set: vi.fn() },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },
     diagnostics: { export: vi.fn(), openLogs: vi.fn() },

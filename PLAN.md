@@ -10,7 +10,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | Sprint | Stories done | Points done |
 | --- | --- | --- |
 | S0 | 6 / 10 | 16 / 26 |
-| S1 | 9 / 14 | 34 / 48 |
+| S1 | 10 / 14 | 37 / 48 |
 | S2 | 0 / 12 | 0 / 39 |
 | S3 | 0 / 5 | 0 / 24 |
 | S4 | 0 / 4 | 0 / 23 |
@@ -21,7 +21,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | S9 | 0 / 9 | 0 / 35 |
 | S10 | 0 / 7 | 0 / 23 |
 | Backlog | 0 / 2 | 0 / 10 |
-| **Total** | **15 / 87** | **50 / 328** |
+| **Total** | **16 / 87** | **53 / 328** |
 
 ## E1 Foundation
 
@@ -55,7 +55,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 ## E3 Dictation
 
 - [x] VAI-301 Hold-Ctrl global hotkey — S1 · 3 pts · Must
-- [ ] VAI-302 Microphone capture and device choice — S1 · 3 pts · Must
+- [x] VAI-302 Microphone capture and device choice — S1 · 3 pts · Must
 - [ ] VAI-303 Transcription with Qwen3-ASR — S1 · 3 pts · Must
 - [ ] VAI-304 Paste at cursor — S1 · 3 pts · Must
 - [ ] VAI-305 Recording overlay — S1 · 3 pts · Must
