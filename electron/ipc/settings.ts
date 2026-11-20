@@ -13,9 +13,15 @@ export function registerSettingsIpc(
   handle: Handle,
   settings: SettingsStore,
   secrets: SecretStore,
+  /** Called after every successful settings change (e.g. the hotkey re-reads its mode). */
+  onChange: () => void = () => undefined,
 ): void {
   handle('settings:get', () => settings.get());
-  handle('settings:update', (_event, patch) => settings.update(patch));
+  handle('settings:update', (_event, patch) => {
+    const saved = settings.update(patch);
+    onChange();
+    return saved;
+  });
   // Only renderer-settable names; main-only secrets (e.g. the database key) are refused here.
   const rendererName = (name: unknown) => {
     if (!isSecretName(name)) throw new InvalidSecretError('Unknown secret name.');

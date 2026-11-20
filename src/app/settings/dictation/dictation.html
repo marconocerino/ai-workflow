@@ -54,13 +54,57 @@
         </mat-radio-button>
       </mat-radio-group>
 
+      @if (hotkey(); as h) {
+        @if (current() === 'hold' && h.holdCtrl !== 'ready') {
+          <p class="note" data-testid="hold-unavailable">
+            {{
+              h.holdCtrl === 'unsupported'
+                ? 'Hold Ctrl works in the Windows app. Here, use the toggle shortcut below.'
+                : 'Hold Ctrl isn’t working right now, so the toggle shortcut below is used instead.'
+            }}
+          </p>
+        }
+      }
+
       <div class="row">
         <div>
-          <h3>Toggle shortcut</h3>
+          <h3 id="toggle-shortcut-label">Toggle shortcut</h3>
           <p class="aiw-muted">Also used automatically if the keyboard hook can't run.</p>
         </div>
-        <aiw-keys [keys]="toggleShortcut()" data-testid="toggle-shortcut" />
+        <div class="shortcut-edit">
+          @if (capturing(); as hint) {
+            <div
+              #captureBox
+              class="capture"
+              tabindex="0"
+              role="textbox"
+              aria-labelledby="toggle-shortcut-label"
+              [attr.aria-description]="hint"
+              data-testid="shortcut-capture"
+              (keydown)="onCaptureKey($event)"
+              (blur)="endCapture()"
+            >
+              {{ hint }}
+            </div>
+          } @else {
+            <aiw-keys [keys]="toggleShortcut()" data-testid="toggle-shortcut" />
+            <button
+              mat-stroked-button
+              type="button"
+              data-testid="change-shortcut"
+              aria-describedby="toggle-shortcut-label"
+              (click)="startCapture()"
+            >
+              Change
+            </button>
+          }
+        </div>
       </div>
+      @if (shortcutError(); as message) {
+        <p class="error" role="alert" data-testid="shortcut-error">{{ message }}</p>
+      } @else if (hotkey()?.toggleError; as message) {
+        <p class="error" role="alert" data-testid="shortcut-error">{{ message }}</p>
+      }
     } @else if (!error()) {
       <p>Loading…</p>
     }

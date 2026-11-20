@@ -56,6 +56,11 @@ export class TrayController {
     this.tray = null;
   }
 
+  /** Rebuild after something the menu shows changed (e.g. the hotkey became available). */
+  refresh(): void {
+    this.render(this.deps.status.get());
+  }
+
   /** Current tooltip and menu labels, for tests. */
   describe(): { state: DictationState; tooltip: string; menu: string[] } {
     const state = this.deps.status.get();

@@ -28,6 +28,11 @@ const api: AiWorkflowApi = {
   ai: {
     testConnection: (service) => invoke('ai:test-connection', service),
   },
+  hotkey: {
+    status: () => invoke('hotkey:status'),
+    setToggleShortcut: (keys) => invoke('hotkey:set-toggle-shortcut', keys),
+    suspend: (on) => invoke('hotkey:suspend', on),
+  },
   startup: {
     get: () => invoke('startup:get'),
     set: (openAtLogin) => invoke('startup:set', openAtLogin),

@@ -99,6 +99,9 @@ describe('dictation settings (v2)', () => {
     [{ toggleShortcut: ['Ctrl'] }, 'dictation.toggleShortcut'],
     [{ toggleShortcut: ['Ctrl', 'Ctrl'] }, 'dictation.toggleShortcut'],
     [{ toggleShortcut: ['Ctrl', '<script>'] }, 'dictation.toggleShortcut'],
+    [{ toggleShortcut: ['Shift', 'A'] }, 'dictation.toggleShortcut'],
+    [{ toggleShortcut: ['Ctrl', 'Shift'] }, 'dictation.toggleShortcut'],
+    [{ toggleShortcut: ['Space', 'Ctrl'] }, 'dictation.toggleShortcut'],
     [{ toggleShortcut: 'Ctrl+Space' }, 'dictation.toggleShortcut'],
     ['hold', 'dictation'],
   ])('rejects %j', (dictation, path) => {

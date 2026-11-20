@@ -46,7 +46,7 @@ test('tray shows idle, listening and recording', async () => {
     state: 'idle',
     tooltip: 'AI Workflow — Idle',
     menu: [
-      'Dictation: not active yet',
+      'Dictation: Idle', // the toggle shortcut works here (macOS dev / no helper)
       '---',
       'Open AI Workflow',
       'Settings',

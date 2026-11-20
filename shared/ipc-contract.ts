@@ -46,6 +46,18 @@ export interface StartupState {
   openAtLogin: boolean;
 }
 
+/** Keyboard control of dictation (VAI-301). */
+export interface HotkeyStatus {
+  mode: 'hold' | 'toggle';
+  /** ready: Hold-Ctrl works · unavailable: watcher can't run (toggle shortcut used) · unsupported: not on this OS */
+  holdCtrl: 'ready' | 'unavailable' | 'unsupported';
+  toggleShortcut: string[];
+  /** The toggle shortcut is registered right now (toggle mode, or fallback). */
+  toggleActive: boolean;
+  /** e.g. "Ctrl+Shift+Space is already used by another app." */
+  toggleError?: string;
+}
+
 /** channel → request payload and response type. */
 export interface IpcContract {
   'app:get-info': { request: void; response: AppInfo };
@@ -60,6 +72,11 @@ export interface IpcContract {
   'secrets:clear': { request: SecretName; response: void };
   /** Calls GET {baseUrl}/models on the saved server with the saved key. */
   'ai:test-connection': { request: AiService; response: ConnectionResult };
+  'hotkey:status': { request: void; response: HotkeyStatus };
+  /** Saves a new toggle shortcut; rejects if it's invalid or taken by another app. */
+  'hotkey:set-toggle-shortcut': { request: string[]; response: HotkeyStatus };
+  /** Pause global shortcuts while the user records a new one in Settings. */
+  'hotkey:suspend': { request: boolean; response: void };
   'startup:get': { request: void; response: StartupState };
   /** Turns the OS login entry on or off; rejects when running from source. */
   'startup:set': { request: boolean; response: StartupState };
@@ -97,6 +114,11 @@ export interface AiWorkflowApi {
   };
   ai: {
     testConnection(service: AiService): Promise<ConnectionResult>;
+  };
+  hotkey: {
+    status(): Promise<HotkeyStatus>;
+    setToggleShortcut(keys: string[]): Promise<HotkeyStatus>;
+    suspend(on: boolean): Promise<void>;
   };
   startup: {
     get(): Promise<StartupState>;

@@ -55,7 +55,7 @@ const timer = setInterval(() => {
   if (opened?.[1] === 'ok' && text.includes('[tray] Tray created')) {
     return finish(0, `ok: started, database status=ok schema=${opened[2]}, tray created`);
   }
-  if (opened) return finish(1, `database status=${opened[1]}\n${text}`);
+  if (opened && opened[1] !== 'ok') return finish(1, `database status=${opened[1]}\n${text}`);
   if (child.exitCode !== null) return finish(1, `app exited (code ${child.exitCode})\n${text}`);
   if (Date.now() > deadline) return finish(1, `app did not start within 30 s\n${text}`);
 }, 250);
