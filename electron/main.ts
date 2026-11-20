@@ -113,6 +113,12 @@ protocol.registerSchemesAsPrivileged([
 
 app.enableSandbox();
 
+// Windows shows notifications only for an app with an AppUserModelID. Packaged: the appId that
+// electron-builder gives the Start-menu shortcut; from source: the Electron binary (Electron docs).
+if (process.platform === 'win32') {
+  app.setAppUserModelId(app.isPackaged ? 'com.aiworkflow.desktop' : process.execPath);
+}
+
 // Tray and window behaviour (VAI-205): closing the window hides it; real quits go through.
 const lifecycle = new WindowLifecycle(logger.scope('window'));
 const dictationStatus = new DictationStatus();
@@ -341,7 +347,11 @@ function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): Dictat
         lastNotificationForTests = { title, body };
         // e2e reads it through the test hook instead of popping up on the developer's screen.
         if (quietNotifications || !Notification.isSupported()) return;
-        new Notification({ title, body, silent: true }).show();
+        const note = new Notification({ title, body, silent: true });
+        note.on('failed', (_e, error) =>
+          logger.scope('dictation').warn('Notification could not be shown', { error }),
+        );
+        note.show();
       },
       platform: process.platform,
     }),
