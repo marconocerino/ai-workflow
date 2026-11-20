@@ -93,7 +93,7 @@ VAI-306,E3 Dictation,Live transcription preview,"As a user, I want to see words 
 • Falls back to post-recording transcription if streaming fails",5,Should,S2,"dictation, ai",To do
 VAI-307,E3 Dictation,AI cleanup (Light and Polished),"As a user, I want filler words removed and punctuation added, so dictated text is ready to send.","• Light: punctuation and fillers only; Polished: also false starts and paragraphs
 • Raw text is pasted if cleanup fails or takes over 3 s
-• Cleanup never adds facts that weren't spoken",3,Must,S2,"dictation, ai",To do
+• Cleanup never adds facts that weren't spoken",3,Must,S2,"dictation, ai",Done
 VAI-308,E3 Dictation,Style per app,"As a user, I want cleanup to match the app I'm in (professional in Outlook, casual in Teams, code-aware in VS Code), so tone is right automatically.","• Foreground app name detected (never window titles)
 • Rules editable with defaults
 • Apps without a rule use Neutral",3,Should,S2,"dictation, ai",To do

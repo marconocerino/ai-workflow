@@ -1,0 +1,41 @@
+<div class="page">
+  <app-settings-header heading="AI cleanup" lead="How much the AI tidies up what you said." />
+
+  @if (error(); as message) {
+    <p class="aiw-card error" role="alert">{{ message }}</p>
+  }
+
+  @if (loaded()) {
+    @if (level.value !== 'off' && !llmReady()) {
+      <p class="aiw-card note" data-testid="llm-missing">
+        Cleanup needs an LLM server. Set it up in
+        <a routerLink="/settings/ai-servers">AI servers</a>; until then the text is pasted as heard.
+      </p>
+    }
+
+    <h2 class="aiw-section-label" id="level-heading">Cleanup level</h2>
+    <section class="aiw-card" aria-labelledby="level-heading">
+      <mat-radio-group
+        class="aiw-option-cards levels"
+        [formControl]="level"
+        aria-labelledby="level-heading"
+        data-testid="cleanup-level"
+      >
+        @for (o of options; track o.value) {
+          <mat-radio-button class="aiw-option-card" [value]="o.value" [attr.data-option]="o.value">
+            <span class="aiw-option-title">{{ o.title }}</span>
+            <span class="aiw-option-desc">{{ o.desc }}</span>
+            <span class="example">
+              <span class="said"><span class="aiw-sr-only">You say: </span>“{{ o.before }}”</span>
+              <span class="pasted"><span class="aiw-sr-only">Pasted: </span>{{ o.after }}</span>
+            </span>
+          </mat-radio-button>
+        }
+      </mat-radio-group>
+      <p class="aiw-muted rules">
+        Cleanup never adds anything you didn't say. If it fails or takes longer than 3 seconds, the
+        text is pasted as heard.
+      </p>
+    </section>
+  }
+</div>

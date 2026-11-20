@@ -1,15 +1,16 @@
 import type {
   AiEndpointSettings,
+  CleanupLevel,
   DictationMode,
   DictationSettings,
   KeepMicReadySeconds,
   Settings,
   SettingsPatch,
 } from '../../shared/settings';
-import { KEEP_MIC_READY_OPTIONS } from '../../shared/settings';
+import { CLEANUP_LEVELS, KEEP_MIC_READY_OPTIONS } from '../../shared/settings';
 
 /** Bump when the stored shape changes, and add a migration in migrations.ts. */
-export const SETTINGS_VERSION = 3;
+export const SETTINGS_VERSION = 4;
 
 export function defaultSettings(): Settings {
   return {
@@ -18,6 +19,7 @@ export function defaultSettings(): Settings {
       toggleShortcut: ['Ctrl', 'Shift', 'Space'],
       micDeviceId: '',
       keepMicReadySeconds: 10,
+      cleanup: 'light',
     },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
@@ -206,7 +208,15 @@ function readDictation(
       issues.push({ path: 'dictation.keepMicReadySeconds', message: 'must be 0, 5, 10 or 30' });
     }
   }
-  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds };
+  let cleanup = fallback.cleanup;
+  if (raw['cleanup'] !== undefined) {
+    if ((CLEANUP_LEVELS as readonly unknown[]).includes(raw['cleanup'])) {
+      cleanup = raw['cleanup'] as CleanupLevel;
+    } else {
+      issues.push({ path: 'dictation.cleanup', message: 'must be "off", "light" or "polished"' });
+    }
+  }
+  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds, cleanup };
 }
 
 /**

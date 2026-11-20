@@ -10,18 +10,46 @@ export interface FakeAiServer {
   transcriptions: { model: string | null; wavBytes: number; contentType: string }[];
   /** How POST /v1/audio/transcriptions answers; change it during a test. */
   transcribe: { status: number; text: string; delayMs: number };
+  /** Chat completions received (VAI-307): the request body, parsed. */
+  chats: { model: string; messages: { role: string; content: string }[] }[];
+  /** How POST /v1/chat/completions answers; change it during a test. */
+  chat: { status: number; content: string; delayMs: number };
   close(): Promise<void>;
 }
 
 /**
- * Minimal OpenAI-compatible server, protected by one API key: GET /v1/models, and
- * POST /v1/audio/transcriptions (multipart: file + model) answering `{ text }`.
+ * Minimal OpenAI-compatible server, protected by one API key: GET /v1/models,
+ * POST /v1/audio/transcriptions (multipart: file + model) answering `{ text }`, and
+ * POST /v1/chat/completions answering `chat.content` (VAI-307).
  */
 export async function startFakeAiServer(apiKey: string, models: string[]): Promise<FakeAiServer> {
   const authHeaders: (string | undefined)[] = [];
   const transcriptions: FakeAiServer['transcriptions'] = [];
   const transcribe: FakeAiServer['transcribe'] = { status: 200, text: '', delayMs: 0 };
+  const chats: FakeAiServer['chats'] = [];
+  const chat: FakeAiServer['chat'] = { status: 200, content: '', delayMs: 0 };
   const server: Server = createServer((req, res) => {
+    if (req.method === 'POST' && req.url === '/v1/chat/completions') {
+      authHeaders.push(req.headers.authorization);
+      const chunks: Buffer[] = [];
+      req.on('data', (c: Buffer) => chunks.push(c));
+      req.on('end', () => {
+        chats.push(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+        setTimeout(() => {
+          if (res.destroyed) return;
+          const ok = req.headers.authorization === `Bearer ${apiKey}`;
+          res.writeHead(ok ? chat.status : 401, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify(
+              ok && chat.status === 200
+                ? { choices: [{ message: { role: 'assistant', content: chat.content } }] }
+                : { error: { message: 'x' } },
+            ),
+          );
+        }, chat.delayMs);
+      });
+      return;
+    }
     if (req.method === 'POST' && req.url === '/v1/audio/transcriptions') {
       authHeaders.push(req.headers.authorization);
       const chunks: Buffer[] = [];
@@ -78,6 +106,8 @@ export async function startFakeAiServer(apiKey: string, models: string[]): Promi
     authHeaders,
     transcriptions,
     transcribe,
+    chats,
+    chat,
     close: () =>
       new Promise((resolve) => {
         server.closeAllConnections();

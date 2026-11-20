@@ -183,6 +183,16 @@ scripts/dev.mjs    `npm start` runner
 - Dev setup until the company Qwen3-ASR server is available (D-021): any OpenAI-compatible server,
   e.g. URL `https://api.groq.com/openai/v1`, model `whisper-large-v3-turbo`, your own key. Dev only.
 
+## AI cleanup
+
+- Settings → AI cleanup: **Off**, **Light** (default: punctuation, capitals, fillers) or
+  **Polished** (also false starts, repeats, self-corrections, paragraphs). Uses the LLM server from
+  Settings → AI servers (`POST {baseUrl}/chat/completions`; `electron/ai/cleanup.ts`, D-024).
+- Never more than 3 s; on any problem the text is pasted as heard. A check in code rejects answers
+  that add words that weren't spoken (e.g. the model answering a question in the dictation).
+- Dev setup until the company LLM is available: URL `https://api.groq.com/openai/v1`, a fast
+  non-reasoning model from Groq's list (e.g. `qwen/qwen3.8-27b`), your own key. Dev only (D-021).
+
 ## Dictation overlay
 
 - While recording and transcribing, a small bar floats at the bottom-centre of the screen under the

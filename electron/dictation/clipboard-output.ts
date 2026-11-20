@@ -1,4 +1,5 @@
 import type { DictationOutput } from './dictation-pipeline';
+import { forPlatform } from './paste-output';
 
 export interface ClipboardOutputDeps {
   writeClipboard(text: string): void | Promise<void>;
@@ -16,7 +17,7 @@ export function clipboardOutput(d: ClipboardOutputDeps): DictationOutput {
   const paste = d.platform === 'darwin' ? '⌘V' : 'Ctrl+V';
   return {
     async text(text) {
-      await d.writeClipboard(text);
+      await d.writeClipboard(forPlatform(text, d.platform));
       d.notify('Dictation ready', `Text copied. Press ${paste} to paste it.`);
     },
     problem(message) {

@@ -10,6 +10,7 @@ const settings: Settings = {
     toggleShortcut: ['Ctrl', 'Shift', 'Space'],
     micDeviceId: '',
     keepMicReadySeconds: 10,
+    cleanup: 'light',
   },
   ai: {
     asr: { baseUrl: '', model: 'qwen3-asr' },

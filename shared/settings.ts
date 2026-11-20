@@ -20,7 +20,13 @@ export interface DictationSettings {
   micDeviceId: string;
   /** Keep the mic open this long after dictating (0 = off). */
   keepMicReadySeconds: KeepMicReadySeconds;
+  /** AI cleanup of dictated text before pasting (VAI-307). */
+  cleanup: CleanupLevel;
 }
+
+/** off: paste what was heard · light: punctuation, capitals, fillers · polished: also false starts, paragraphs */
+export const CLEANUP_LEVELS = ['off', 'light', 'polished'] as const;
+export type CleanupLevel = (typeof CLEANUP_LEVELS)[number];
 
 export const KEEP_MIC_READY_OPTIONS = [0, 5, 10, 30] as const;
 export type KeepMicReadySeconds = (typeof KEEP_MIC_READY_OPTIONS)[number];
