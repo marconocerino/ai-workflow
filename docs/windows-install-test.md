@@ -136,14 +136,34 @@ Open Notepad and Word (or any editor). Watch the tray icon tooltip / Settings st
 
 1. Settings → AI servers → Speech-to-text: URL, model and API key of the speech server (dev: see
    README "Speech-to-text"). [ ] "Test connection" says Connected.
-2. Hold Ctrl, say a sentence (~10 s), release. [ ] Tray shows "Transcribing", then a notification
-   "Dictation ready — Text copied". [ ] Ctrl+V in Notepad pastes what you said. [ ] It took under
-   2 s (`main.log`: `Transcribed … latencyMs=…`, below 2000). The text is not in `main.log`.
+2. Click into Notepad. Hold Ctrl, say a sentence (~10 s), release. [ ] Tray shows "Transcribing",
+   then the text appears in Notepad (section 12). [ ] It took under 2 s (`main.log`:
+   `Transcribed … latencyMs=…`, below 2000). The text is not in `main.log`.
 3. Hold Ctrl without speaking for 2 s. [ ] Notification "Nothing was heard"; nothing is sent.
 4. Disconnect the network (or enter a wrong URL), dictate. [ ] "Dictation failed" with a message
    about reaching the server; the clipboard is unchanged. Wrong API key: [ ] "rejected the API key".
 
-## 12. Custom folder
+## 12. Paste at cursor
+
+Before each app: copy something of your own (e.g. a word in Notepad) so you can check it comes back.
+
+1. Dictate into each, cursor in a text field. [ ] The text appears at the cursor, no notification,
+   and afterwards Ctrl+V pastes **your** copied word again (clipboard restored):
+   [ ] Outlook (new mail body) [ ] Teams (chat box) [ ] Edge or Chrome (e.g. a search box)
+   [ ] VS Code (editor) [ ] Word [ ] Notepad
+2. Windows Terminal or Command Prompt: [ ] the text appears (Ctrl+Shift+V is used there).
+3. Copy an image (or files in Explorer), dictate into Notepad, then paste in Paint (or a folder).
+   [ ] The image (or files) comes back.
+4. Win+V (clipboard history, turn it on if asked): [ ] the dictated text is **not** in the list.
+5. Start Notepad with right-click → **Run as administrator**, dictate into it. [ ] Nothing typed;
+   notification "Can't type into an app running as administrator. Text copied — press Ctrl+V";
+   [ ] Ctrl+V pastes the text.
+6. Dictate, and while it says "Transcribing" press Win+D (desktop, no window focused). [ ] Notice
+   "Couldn't paste here. Text copied"; Ctrl+V pastes it.
+7. `main.log`: [ ] `Pasted clipboard=restored ms=…` lines; no dictated text anywhere.
+8. Windows Security → Protection history: [ ] nothing about `aiw-paste.exe`.
+
+## 13. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

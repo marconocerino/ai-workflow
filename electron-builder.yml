@@ -24,6 +24,7 @@ asar: true
 asarUnpack:
   - '**/*.node'
   - '**/aiw-key-listener.exe'
+  - '**/aiw-paste.exe'
 # libsql ships prebuilt Node-API binaries per platform, so no native rebuild is needed (D-013).
 npmRebuild: false
 # Hardening: the signed app can't be turned into a Node runner or have its code swapped.
@@ -49,6 +50,8 @@ win:
     # Hold-Ctrl watcher (VAI-301), built by scripts/build-win-helper.mjs. Unpacked from the asar
     # (asarUnpack below), which is also where electron-builder looks for files to sign.
     - resources/win/aiw-key-listener.exe
+    # Paste at cursor (VAI-304), same build script, also unpacked and signed.
+    - resources/win/aiw-paste.exe
   target:
     - target: nsis
       arch: [x64]

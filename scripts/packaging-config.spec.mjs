@@ -71,6 +71,13 @@ describe('packaged files', () => {
     expect(main).toContain(`app.isPackaged ? '${config.appId}' : process.execPath`);
   });
 
+  it('Windows helpers are shipped unpacked (so they get signed)', () => {
+    for (const exe of ['aiw-key-listener.exe', 'aiw-paste.exe']) {
+      expect(config.asarUnpack).toContain(`**/${exe}`);
+      expect(config.win.files).toContain(`resources/win/${exe}`);
+    }
+  });
+
   it('ships the third-party licence notices', () => {
     expect(config.files).toContain('THIRD_PARTY_NOTICES.md');
   });

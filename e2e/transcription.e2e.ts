@@ -81,7 +81,9 @@ const clipboardText = () => app.evaluate(({ clipboard }) => clipboard.readText()
 const send = (...lines: string[]) => appendFileSync(keys, lines.map((l) => `${l}\n`).join(''));
 const log = () => readFileSync(join(profile, 'logs', 'main.log'), 'utf8');
 
+/** The fake mic beeps once a second: shorter recordings can be all silence (not sent). */
 async function dictate(ms: number) {
+  expect(ms).toBeGreaterThanOrEqual(1200);
   send('CTRL_DOWN clean');
   await expect.poll(tray).toBe('recording');
   await page.waitForTimeout(ms);
@@ -122,7 +124,7 @@ test('dictation is transcribed by the configured server and lands on the clipboa
 test('timeout: clear message, clipboard untouched, back to idle', async () => {
   await start({ timeoutMs: 1000, retries: 2 });
   server.transcribe.delayMs = 4000;
-  await dictate(600);
+  await dictate(1500);
   await expect
     .poll(notification, { timeout: 8_000 })
     .toEqual({ title: 'Dictation failed', body: expect.stringMatching(/did not answer in time/) });
@@ -135,7 +137,7 @@ test('timeout: clear message, clipboard untouched, back to idle', async () => {
 test('server error: retried, then a clear message', async () => {
   await start({ retries: 1 });
   server.transcribe.status = 500;
-  await dictate(600);
+  await dictate(1500);
   await expect
     .poll(notification, { timeout: 8_000 })
     .toEqual({ title: 'Dictation failed', body: expect.stringMatching(/had an error/) });
@@ -146,7 +148,7 @@ test('server error: retried, then a clear message', async () => {
 
 test('no server configured: nothing is sent, the user is told where to set it up', async () => {
   await start({ baseUrl: '' });
-  await dictate(600);
+  await dictate(1500);
   await expect
     .poll(notification)
     .toEqual({ title: 'Dictation failed', body: expect.stringMatching(/Settings → AI servers/) });
