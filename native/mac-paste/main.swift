@@ -16,6 +16,9 @@
 //   PASTED restored | PASTED kept | PASTED not-saved
 //   FAILED bad-input | no-window | no-permission | clipboard | send
 //
+// `aiw-paste --front-app` (VAI-305) only prints `APP <name>` of the frontmost app (never a window
+// title), or `APP ?`, and exits.
+//
 // Privacy: never prints, logs or stores the text; no files or network.
 // Ideas (transient type, current-host-only, changeCount check) from OpenWhispr's
 // resources/macos-fast-paste.swift (MIT); this file is our own code.
@@ -34,6 +37,13 @@ let KEY_V: CGKeyCode = 9  // kVK_ANSI_V
 
 func finish(_ line: String) -> Never {
   FileHandle.standardOutput.write((line + "\n").data(using: .utf8)!)
+  exit(0)
+}
+
+// The only argument: the front-app query. The text itself only ever comes on stdin.
+if CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--front-app" {
+  let name = NSWorkspace.shared.frontmostApplication?.localizedName ?? "?"
+  FileHandle.standardOutput.write(("APP " + name.replacingOccurrences(of: "\n", with: " ") + "\n").data(using: .utf8)!)
   exit(0)
 }
 

@@ -49,6 +49,16 @@ const api: AiWorkflowApi = {
     event: (event) => invoke('audio:event', event),
     recording: (recording) => invoke('audio:recording', recording),
   },
+  overlay: {
+    getState: () => invoke('overlay:get-state'),
+    // Main sends this only to the overlay window. Only the payload is passed on.
+    // (Same string as OVERLAY_STATE_CHANNEL; a test checks they match.)
+    onState: (listener) => {
+      ipcRenderer.on('overlay:state', (_event, state: Parameters<typeof listener>[0]) =>
+        listener(state),
+      );
+    },
+  },
   startup: {
     get: () => invoke('startup:get'),
     set: (openAtLogin) => invoke('startup:set', openAtLogin),

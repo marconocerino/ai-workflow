@@ -34,13 +34,13 @@ export async function launchApp(
   return { app, page };
 }
 
-/** The visible main window — not the hidden audio window (/audio-engine), whichever opens first. */
+/** The main window — not the hidden audio (/audio-engine) or overlay (/overlay) windows. */
 export async function mainWindow(app: ElectronApplication): Promise<Page> {
   const deadline = Date.now() + 20_000;
   for (;;) {
     const found = app
       .windows()
-      .find((p) => /^(app|http):/.test(p.url()) && !p.url().endsWith('/audio-engine'));
+      .find((p) => /^(app|http):/.test(p.url()) && !/\/(audio-engine|overlay)$/.test(p.url()));
     if (found) return found;
     if (Date.now() > deadline) throw new Error('The main window did not open.');
     await new Promise((r) => setTimeout(r, 50));

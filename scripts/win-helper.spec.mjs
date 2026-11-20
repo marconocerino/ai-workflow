@@ -74,8 +74,11 @@ describe('Windows paste helper (native/win-paste/main.c)', () => {
 
   it('reads the text from stdin, never the command line, and wipes it', () => {
     expect(paste).toContain('GetStdHandle(STD_INPUT_HANDLE)');
-    expect(paste).toMatch(/int main\(void\)/);
-    expect(paste).not.toMatch(/argv|GetCommandLine/);
+    // The only argument is the front-app query (VAI-305); text never comes from the command line.
+    expect(paste).toMatch(/int main\(int argc, char \*\*argv\)/);
+    expect(paste.match(/argv\[\d\]/g)).toEqual(['argv[1]']);
+    expect(paste).toContain('strcmp(argv[1], "--front-app")');
+    expect(paste).not.toMatch(/GetCommandLine/);
     expect(paste).toContain('SecureZeroMemory(text');
   });
 
@@ -100,5 +103,11 @@ describe('Windows paste helper (native/win-paste/main.c)', () => {
       '-luser32',
       '-ladvapi32',
     ]);
+  });
+
+  it('--front-app prints only the program file name, never the window title', () => {
+    expect(paste).toContain('fputs("APP ", stdout)');
+    expect(paste).toContain('QueryFullProcessImageNameW');
+    expect(paste).not.toMatch(/GetWindowText/);
   });
 });

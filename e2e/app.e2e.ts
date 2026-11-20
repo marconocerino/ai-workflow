@@ -47,6 +47,7 @@ test('renderer has no Node access', async () => {
       'hotkey',
       'audio',
       'audioEngine',
+      'overlay',
       'startup',
       'log',
       'diagnostics',
@@ -54,7 +55,7 @@ test('renderer has no Node access', async () => {
   });
 });
 
-test('every window (main and hidden audio) runs with the secure webPreferences', async () => {
+test('every window (main, audio, overlay) runs with the secure webPreferences', async () => {
   const prefs = await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows().map((w) => {
       const p = w.webContents.getLastWebPreferences()!;
@@ -66,7 +67,7 @@ test('every window (main and hidden audio) runs with the secure webPreferences',
       };
     }),
   );
-  expect(prefs).toHaveLength(2);
+  expect(prefs).toHaveLength(3);
   for (const p of prefs) {
     expect(p).toEqual({
       contextIsolation: true,
@@ -87,13 +88,13 @@ test('typed IPC round trip: app:get-info shows the real app version', async () =
 test('blocks new windows and navigation away from the app', async () => {
   const opened = await page.evaluate(() => window.open('https://example.com') === null);
   expect(opened).toBe(true);
-  // Only our two windows: the main window and the hidden audio window.
+  // Only our windows: main, the hidden audio window and the dictation overlay (VAI-305).
   expect(
     app
       .windows()
       .map((w) => w.url().replace(/^app:\/\/renderer/, ''))
       .sort(),
-  ).toEqual(['/', '/audio-engine']);
+  ).toEqual(['/', '/audio-engine', '/overlay']);
 
   await page.evaluate(() => {
     window.location.href = 'https://example.com/';

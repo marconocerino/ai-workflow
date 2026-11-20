@@ -5,10 +5,18 @@
 //   no-permission → FAILED no-permission (macOS Accessibility, VAI-312)
 import { appendFileSync } from 'node:fs';
 
+// `--front-app` (VAI-305): which app is in front. AIW_FAKE_FRONT_APP, default Notepad.
+if (process.argv[2] === '--front-app') {
+  process.stdout.write(`APP ${process.env.AIW_FAKE_FRONT_APP ?? 'notepad.exe'}\n`, () =>
+    process.exit(0),
+  );
+}
+
 let text = '';
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (chunk) => (text += chunk));
 process.stdin.on('end', () => {
+  if (process.argv[2] === '--front-app') return;
   const log = process.env.AIW_FAKE_PASTE_LOG;
   if (log) appendFileSync(log, `${JSON.stringify({ text, args: process.argv.length - 2 })}\n`);
   const mode = process.env.AIW_FAKE_PASTE_MODE ?? 'pasted';

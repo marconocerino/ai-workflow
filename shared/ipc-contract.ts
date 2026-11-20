@@ -6,6 +6,7 @@
  * or payload is a compile error on both sides.
  */
 import type { AiService, ConnectionResult } from './ai';
+import type { OverlayState } from './overlay';
 import type { AudioCommand, AudioEvent, MicStatus } from './audio';
 import type { FeatureState } from './features';
 import type { SecretName, Settings, SettingsPatch } from './settings';
@@ -74,6 +75,8 @@ export interface HotkeyStatus {
 
 /** The only main → renderer message: commands for the hidden audio window. */
 export const AUDIO_COMMAND_CHANNEL = 'audio:command';
+/** Main → overlay window only: the dictation bar's state (VAI-305). */
+export const OVERLAY_STATE_CHANNEL = 'overlay:state';
 
 /** channel → request payload and response type. */
 export interface IpcContract {
@@ -98,6 +101,8 @@ export interface IpcContract {
   'hotkey:recheck': { request: void; response: HotkeyStatus };
   /** macOS: open a Privacy & Security page in System Settings (VAI-312). */
   'hotkey:open-permission-settings': { request: PermissionPane; response: void };
+  /** The overlay window asks for the current bar state when its page loads (VAI-305). */
+  'overlay:get-state': { request: void; response: OverlayState };
   /** Mic state for Settings (VAI-302). */
   'audio:status': { request: void; response: MicStatus };
   /** Audio window only: mic opened/closed/failed. */
@@ -151,6 +156,11 @@ export interface AiWorkflowApi {
     suspend(on: boolean): Promise<void>;
     recheck(): Promise<HotkeyStatus>;
     openPermissionSettings(pane: PermissionPane): Promise<void>;
+  };
+  /** Used only by the overlay window (VAI-305). */
+  overlay: {
+    getState(): Promise<OverlayState>;
+    onState(listener: (state: OverlayState) => void): void;
   };
   audio: {
     status(): Promise<MicStatus>;

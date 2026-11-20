@@ -55,6 +55,7 @@ async function render(
     startup,
     hotkey,
     audio: { status: vi.fn().mockResolvedValue(micStatus) },
+    overlay: { getState: vi.fn(), onState: vi.fn() },
   };
   TestBed.configureTestingModule({
     imports: [DictationSettings],

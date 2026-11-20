@@ -163,7 +163,20 @@ Before each app: copy something of your own (e.g. a word in Notepad) so you can 
 7. `main.log`: [ ] `Pasted clipboard=restored ms=…` lines; no dictated text anywhere.
 8. Windows Security → Protection history: [ ] nothing about `aiw-paste.exe`.
 
-## 13. Custom folder
+## 13. Dictation overlay
+
+1. Click into Outlook (new mail). Hold Ctrl. [ ] A bar appears at once at the bottom-centre of the
+   screen, above the taskbar: red mic, moving level meter while you speak, "Listening…", chip
+   "Outlook". [ ] The caret is still blinking in Outlook (focus not taken).
+2. Release. [ ] The bar says "Transcribing…" without disappearing in between, then goes away when
+   the text is pasted.
+3. Toggle shortcut: [ ] the bar shows "Esc to cancel"; Esc hides it at once, nothing is pasted.
+4. Second monitor: move the mouse there, dictate. [ ] The bar appears on that monitor.
+5. A full-screen browser video (F11) or a maximised Teams call: [ ] the bar shows on top.
+6. Click "through" the bar while it's up. [ ] The click reaches the app underneath.
+7. Teams, Edge, VS Code, Notepad: [ ] the chip names the app (no window or document titles).
+
+## 14. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

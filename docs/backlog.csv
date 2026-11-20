@@ -87,7 +87,7 @@ VAI-304,E3 Dictation,Paste at cursor,"As a user, I want the text to appear where
 • If pasting fails, the text stays on the clipboard with a notice",3,Must,S1,dictation,Done
 VAI-305,E3 Dictation,Recording overlay,"As a user, I want a small floating bar while I dictate, so I know it's listening.","• Appears within 100 ms of starting
 • Shows a level meter and the target app
-• Never steals focus from the app I'm typing in",3,Must,S1,"dictation, ui",To do
+• Never steals focus from the app I'm typing in",3,Must,S1,"dictation, ui",Done
 VAI-306,E3 Dictation,Live transcription preview,"As a user, I want to see words appear and firm up while I speak, so I trust what will be pasted.","• Partial text appears within about 1 s
 • Final text replaces partials smoothly
 • Falls back to post-recording transcription if streaming fails",5,Should,S2,"dictation, ai",To do

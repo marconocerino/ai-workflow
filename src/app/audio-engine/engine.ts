@@ -1,9 +1,11 @@
 import {
   type AudioCommand,
   type AudioEvent,
+  LEVEL_INTERVAL_MS,
   MAX_RECORDING_MS,
   type MicProblem,
   SAMPLE_RATE,
+  levelOf,
 } from '../../../shared/audio';
 import { concat, Downsampler, peakOf, RingBuffer } from './pcm';
 
@@ -24,6 +26,7 @@ export interface EngineOutput {
 }
 
 const MAX_SAMPLES = (MAX_RECORDING_MS / 1000) * SAMPLE_RATE;
+const LEVEL_SAMPLES = (LEVEL_INTERVAL_MS / 1000) * SAMPLE_RATE;
 
 /**
  * The microphone inside the hidden audio window (VAI-302). While open but not recording it
@@ -38,6 +41,9 @@ export class AudioEngine {
   private preRoll = new RingBuffer(0);
   private recording: Int16Array[] | null = null;
   private recorded = 0;
+  /** Level meter (VAI-305): sum of squares over the current interval. */
+  private levelSum = 0;
+  private levelCount = 0;
 
   constructor(
     private readonly openSource: OpenSource,
@@ -59,6 +65,8 @@ export class AudioEngine {
         this.recording = [this.preRoll.read()];
         this.recorded = this.recording[0]!.length;
         this.preRoll.clear();
+        this.levelSum = 0;
+        this.levelCount = 0;
         break;
       case 'stop':
         this.finish(true);
@@ -108,8 +116,24 @@ export class AudioEngine {
       const chunk = pcm.length > room ? pcm.subarray(0, room) : pcm;
       this.recording.push(chunk);
       this.recorded += chunk.length;
+      this.meter(pcm);
     } else {
       this.preRoll.write(pcm);
+    }
+  }
+
+  /** Only a loudness number leaves this window, never samples. */
+  private meter(pcm: Int16Array): void {
+    for (const s of pcm) {
+      this.levelSum += s * s;
+      if (++this.levelCount >= LEVEL_SAMPLES) {
+        this.out.event({
+          type: 'level',
+          level: levelOf(Math.sqrt(this.levelSum / this.levelCount)),
+        });
+        this.levelSum = 0;
+        this.levelCount = 0;
+      }
     }
   }
 

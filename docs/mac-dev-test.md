@@ -46,3 +46,10 @@ Before each app copy a word of your own, so you can check it comes back.
    history.
 4. `~/Library/Application Support/AI Workflow/logs/main.log`: [ ] `Pasted clipboard=restored ms=…`
    lines; [ ] no dictated text anywhere.
+
+## 4. Dictation overlay
+
+1. Click into TextEdit, hold Ctrl. [ ] A bar appears at once at the bottom-centre above the Dock:
+   mic, moving level meter, "Listening…", chip "TextEdit". [ ] TextEdit keeps focus (caret blinks).
+2. Release. [ ] "Transcribing…", then the bar goes when the text is pasted.
+3. In a full-screen app (green button) and on another desktop (Space): [ ] the bar shows there too.

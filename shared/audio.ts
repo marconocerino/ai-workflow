@@ -13,7 +13,9 @@ export type AudioEvent =
   | { type: 'ready' }
   | { type: 'opened'; fellBack: boolean; openMs: number }
   | { type: 'closed' }
-  | { type: 'error'; reason: MicProblem };
+  | { type: 'error'; reason: MicProblem }
+  /** While recording, every LEVEL_INTERVAL_MS: loudness 0..1 for the overlay meter (VAI-305). */
+  | { type: 'level'; level: number };
 
 /** blocked: Windows privacy settings or a policy deny the mic · no-device: no microphone at all */
 export type MicProblem = 'blocked' | 'no-device' | 'failed';
@@ -31,6 +33,15 @@ export const SAMPLE_RATE = 16_000;
 export const MAX_RECORDING_MS = 10 * 60_000;
 /** Rolling buffer kept while the mic is ready, so the first word isn't clipped. */
 export const PRE_ROLL_MS = 500;
+/** How often the level meter updates while recording (20 per second). */
+export const LEVEL_INTERVAL_MS = 50;
+
+/** RMS of 16-bit samples → 0..1 on a −60…0 dBFS scale (how loud it looks on a meter). */
+export function levelOf(rms: number): number {
+  if (rms <= 0) return 0;
+  const db = 20 * Math.log10(rms / 32768);
+  return Math.min(1, Math.max(0, (db + 60) / 60));
+}
 
 /** For Settings and the tray. */
 export interface MicStatus {
