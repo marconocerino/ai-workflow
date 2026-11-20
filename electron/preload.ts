@@ -28,6 +28,10 @@ const api: AiWorkflowApi = {
   ai: {
     testConnection: (service) => invoke('ai:test-connection', service),
   },
+  startup: {
+    get: () => invoke('startup:get'),
+    set: (openAtLogin) => invoke('startup:set', openAtLogin),
+  },
   log: {
     rendererError: (report) => invoke('log:renderer-error', report),
   },

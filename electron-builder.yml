@@ -12,6 +12,7 @@ files:
   - '!dist/app/**/*.spec.js'
   - '!dist/app/electron/db/test-helpers.js'
   - dist/renderer/**/*
+  - assets/tray/**/*
   - package.json
   # Encrypted SQLite (libsql): each platform below ships only its own prebuilt binary package.
 asar: true

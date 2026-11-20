@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatRadioModule } from '@angular/material/radio';
+import { type MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import type { StartupState } from '../../../../shared/ipc-contract';
 import type { DictationMode } from '../../../../shared/settings';
 import { ipcErrorMessage } from '../../core/ipc-errors';
 import { SettingsApi } from '../../core/settings-api';
+import { StartupApi } from '../../core/startup-api';
 import { Icon } from '../../ui/icon/icon';
 import { Keys } from '../../ui/keys/keys';
 import { SaveStatus } from '../shared/save-status';
@@ -11,11 +14,11 @@ import { SettingsHeader } from '../shared/settings-header';
 
 /**
  * Settings → Dictation (VAI-204, design: Settings@1x.png). How-it-works card and the shortcut
- * mode. The Microphone (VAI-302) and Startup (VAI-205) sections are added by their stories.
+ * mode; Startup (VAI-205). The Microphone section (VAI-302) is added by its story.
  */
 @Component({
   selector: 'app-dictation-settings',
-  imports: [ReactiveFormsModule, MatRadioModule, SettingsHeader, Keys, Icon],
+  imports: [ReactiveFormsModule, MatRadioModule, MatSlideToggleModule, SettingsHeader, Keys, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dictation.html',
   styleUrl: './dictation.scss',
@@ -30,10 +33,30 @@ export class DictationSettings {
   protected readonly toggleShortcut = signal<string[]>([]);
   protected readonly loaded = signal(false);
   protected readonly error = signal<string | null>(null);
+  private readonly startupApi = inject(StartupApi);
+  protected readonly startup = signal<StartupState | null>(null);
+  protected readonly startupError = signal<string | null>(null);
 
   constructor() {
     this.status.reset();
     void this.load();
+    void this.startupApi.get().then(
+      (s) => this.startup.set(s),
+      () => this.startup.set({ available: false, openAtLogin: false }),
+    );
+  }
+
+  protected async setOpenAtLogin(change: MatSlideToggleChange): Promise<void> {
+    this.startupError.set(null);
+    try {
+      this.startup.set(await this.status.track(this.startupApi.set(change.checked)));
+    } catch (e) {
+      this.startupError.set(ipcErrorMessage(e));
+      // Show the real OS state again (set the switch directly: the bound value didn't change).
+      const real = await this.startupApi.get().catch(() => this.startup());
+      if (real) this.startup.set(real);
+      change.source.checked = real?.openAtLogin ?? !change.checked;
+    }
   }
 
   private async load(): Promise<void> {

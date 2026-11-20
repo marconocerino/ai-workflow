@@ -91,6 +91,7 @@ test('API key is encrypted on disk and can never be read back by the renderer', 
     settings: ['get', 'update'],
     secrets: ['clear', 'has', 'set'],
     ai: ['testConnection'],
+    startup: ['get', 'set'],
     log: ['rendererError'],
     diagnostics: ['export', 'openLogs'],
   });

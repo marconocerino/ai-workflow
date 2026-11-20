@@ -80,3 +80,13 @@
   margin: var(--aiw-space-3) 0 0;
   color: var(--aiw-color-danger);
 }
+
+.startup {
+  padding: var(--aiw-space-4);
+}
+
+.row.first {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+}

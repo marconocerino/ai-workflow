@@ -85,7 +85,21 @@ Needs an admin account for this step (the policy keys are admin-only). Copy `doc
    - [ ] "Access is denied" (users can't enable features themselves).
 4. As admin, double-click `features-remove-machine.reg`, restart: the Meetings button is gone.
 
-## 8. Custom folder
+## 8. Tray and start at sign-in
+
+1. Start AI Workflow. [ ] An AI Workflow icon (waveform bars) appears in the notification area
+   (it may be under the ^ arrow). Hover: "AI Workflow — Idle".
+2. Close the window with X. [ ] The window disappears; the tray icon stays.
+3. Click the tray icon. [ ] The window comes back.
+4. Right-click the tray icon. [ ] Menu: "Dictation: not active yet", Open AI Workflow, Settings,
+   Quit AI Workflow. Choose **Settings** → Settings opens.
+5. Settings → Dictation → Startup: turn on **Open AI Workflow when I sign in**. [ ] "Saved".
+   [ ] Task Manager → Startup apps lists AI Workflow (enabled).
+6. Sign out and back in. [ ] AI Workflow starts with **no window**, only the tray icon.
+7. Disable it in Task Manager → Startup apps, reopen Settings → Dictation. [ ] The switch is off.
+8. Tray → **Quit AI Workflow**. [ ] Icon disappears; no AI Workflow process in Task Manager.
+
+## 9. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

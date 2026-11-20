@@ -144,6 +144,19 @@ scripts/dev.mjs    `npm start` runner
 - No compiling: `npm ci` installs the prebuilt binary for your platform. `npm run dist:win` on a Mac
   fetches the Windows binary first (`scripts/fetch-native.mjs`).
 
+## Tray and start at sign-in
+
+- The app lives in the system tray. **Closing the window hides it**; quit from the tray menu
+  ("Quit AI Workflow"), Cmd+Q on macOS, or by signing out. The icon shows Idle, Listening or
+  Recording (red dot); the tooltip and menu say the same in words. Until the hotkey exists
+  (VAI-301) it always shows Idle.
+- Settings → Dictation → Startup → "Open AI Workflow when I sign in" uses the OS login entry
+  (Windows: starts with `--hidden`, straight to the tray). Only in the installed app.
+- Tray icons are drawn by `node scripts/tray-icons.mjs` into `assets/tray/` (a test checks they
+  match). Replace them when design delivers real icons.
+- e2e tests can read and drive the tray through `globalThis.__aiwTest` in the main process, which
+  only exists in dev builds started with `AIW_E2E=1`.
+
 ## Feature flags
 
 Meetings, agents and voiceprints are **off** unless IT turns them on (VAI-109, D-016). Flags are
