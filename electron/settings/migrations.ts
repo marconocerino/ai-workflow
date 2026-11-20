@@ -22,7 +22,34 @@ export const migrations: Record<number, (data: unknown) => unknown> = {
   // v4 → v5 (VAI-308): adds dictation.styles (default rules from validation); everything else
   // unchanged.
   4: (data) => data,
+  // v5 → v6 (VAI-308b): Outlook's default style becomes Email. Only if the rules are still exactly
+  // the v5 defaults; any list the user edited is left as it is.
+  5: (data) => {
+    const styles = (data as { dictation?: { styles?: unknown } } | null)?.dictation?.styles;
+    if (JSON.stringify(styles) !== JSON.stringify(V5_DEFAULT_STYLES)) return data;
+    const d = data as { dictation: { styles: { app: string; style: string }[] } };
+    return {
+      ...d,
+      dictation: {
+        ...d.dictation,
+        styles: d.dictation.styles.map((r) =>
+          r.app === 'Outlook' ? { ...r, style: 'email' } : { ...r },
+        ),
+      },
+    };
+  },
 };
+
+/** The default style rules as shipped in settings v5 (VAI-308). Frozen here; never change. */
+const V5_DEFAULT_STYLES = [
+  { app: 'Outlook', style: 'professional' },
+  { app: 'Word', style: 'professional' },
+  { app: 'Teams', style: 'casual' },
+  { app: 'Slack', style: 'casual' },
+  { app: 'VS Code', style: 'code' },
+  { app: 'Terminal', style: 'code' },
+  { app: 'Command Prompt', style: 'code' },
+];
 
 export class SettingsMigrationError extends Error {
   constructor(from: number) {

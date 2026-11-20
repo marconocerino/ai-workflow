@@ -97,6 +97,9 @@ VAI-307,E3 Dictation,AI cleanup (Light and Polished),"As a user, I want filler w
 VAI-308,E3 Dictation,Style per app,"As a user, I want cleanup to match the app I'm in (professional in Outlook, casual in Teams, code-aware in VS Code), so tone is right automatically.","• Foreground app name detected (never window titles)
 • Rules editable with defaults
 • Apps without a rule use Neutral",3,Should,S2,"dictation, ai",Done
+VAI-308b,E3 Dictation,Email style,"As a user, I want dictation into Outlook laid out like an email, so greeting, message and sign-off land on their own lines without editing.","• Spoken greeting on its own line, message in paragraphs, spoken closing and name on their own lines
+• Never adds a greeting, closing, name or signature that wasn't said
+• Outlook uses Email by default; settings with untouched default rules are upgraded, edited rules are kept",2,Should,S2,"dictation, ai",Done
 VAI-309,E3 Dictation,Custom vocabulary,"As a user, I want to add names, products and acronyms, so they're spelled correctly.","• Add words by Enter, comma or pasting a list
 • Vocabulary sent as hints to ASR and cleanup
 • Words can be removed",2,Should,S2,dictation,To do

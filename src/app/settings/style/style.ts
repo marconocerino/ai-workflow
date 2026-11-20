@@ -22,7 +22,8 @@ import { SaveStatus } from '../shared/save-status';
 import { SettingsHeader } from '../shared/settings-header';
 
 export const STYLE_HELP: Record<StyleName, string> = {
-  professional: 'Complete sentences, careful punctuation, slang written out.',
+  professional: 'Careful punctuation and capitals, slang written out.',
+  email: 'Your greeting, paragraphs and sign-off on their own lines. Adds none you didn’t say.',
   casual: 'Keeps contractions and a relaxed tone; light punctuation.',
   code: 'File names, commands and identifiers written as code.',
   neutral: 'Just the cleanup level, nothing extra.',

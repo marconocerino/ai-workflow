@@ -115,12 +115,12 @@ async function dictateAndReadChip(): Promise<string> {
   return text;
 }
 
-test('Outlook: Professional style, and the bar says "Outlook · Professional"', async () => {
+test('Outlook: Email style (VAI-308b), and the bar says "Outlook · Email"', async () => {
   await start('OUTLOOK.EXE');
   server.chat.content = CLEANED;
-  expect(await dictateAndReadChip()).toBe('Outlook · Professional');
-  expect(sentStyle()).toBe('professional');
-  expect(log()).toMatch(/Cleaned up level=light style=professional ms=\d+$/m);
+  expect(await dictateAndReadChip()).toBe('Outlook · Email');
+  expect(sentStyle()).toBe('email');
+  expect(log()).toMatch(/Cleaned up level=light style=email ms=\d+$/m);
   expect(log()).not.toMatch(/Outlook|OUTLOOK/); // the app name isn't logged either
 });
 

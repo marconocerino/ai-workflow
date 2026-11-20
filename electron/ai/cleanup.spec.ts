@@ -175,7 +175,7 @@ describe('style per app (VAI-308)', () => {
     const systems = fetchFn.mock.calls.map(
       (c) => JSON.parse(c[1].body as string).messages[0].content,
     );
-    expect(systems[0]).toBe(cleanupPrompt('light', 'professional'));
+    expect(systems[0]).toBe(cleanupPrompt('light', 'email')); // Outlook (VAI-308b)
     expect(systems[1]).toBe(cleanupPrompt('light', 'casual'));
     expect(systems[2]).toBe(cleanupPrompt('light', 'code'));
     expect(systems[3]).toBe(cleanupPrompt('light')); // no rule → Neutral
@@ -200,6 +200,36 @@ describe('style per app (VAI-308)', () => {
     );
     expect(await cleaner.clean('can we move the call to friday', 'Outlook')).toMatchObject({
       cleaned: false,
+    });
+  });
+});
+
+describe('Email style (VAI-308b)', () => {
+  it('lays out what was said as an email, and never adds a greeting, closing or name', () => {
+    const p = cleanupPrompt('light', 'email');
+    expect(p.startsWith(cleanupPrompt('light'))).toBe(true);
+    expect(p).toMatch(/greeting .* on its own line/);
+    expect(p).toMatch(/closing .* ending with a comma, and a spoken name on the next line/);
+    expect(p).toMatch(/never add a greeting, closing, name or signature that was not spoken/);
+  });
+
+  it('Outlook gets Email by default', async () => {
+    const { cleaner, fetchFn } = setup(() =>
+      answer('Hi John,\n\nThe deck is ready.\n\nKind regards,\nMarco'),
+    );
+    const result = await cleaner.clean('hi john the deck is ready kind regards marco', 'Outlook');
+    expect(result).toMatchObject({ cleaned: true });
+    const system = JSON.parse(fetchFn.mock.calls[0]![1].body as string).messages[0].content;
+    expect(system).toBe(cleanupPrompt('light', 'email'));
+  });
+
+  it('a greeting or sign-off that was not said is rejected (raw text pasted)', async () => {
+    const { cleaner } = setup(() =>
+      answer('Hi John,\n\nThe deck is ready for review.\n\nKind regards,\nMarco'),
+    );
+    expect(await cleaner.clean('the deck is ready for review', 'Outlook')).toMatchObject({
+      cleaned: false,
+      text: 'the deck is ready for review',
     });
   });
 });

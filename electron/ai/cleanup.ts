@@ -55,6 +55,12 @@ const STYLE_RULES: Record<Exclude<StyleName, 'neutral'>, string> = {
 - Write out slang and casual contractions ("gonna" becomes "going to", "wanna" becomes "want to").
 - Do not add subjects or other words just to make full sentences.
 - Do not add greetings, sign-offs or polite phrases that were not said.`,
+  email: `Style: email (the body of an email).
+- Lay the text out as an email: a spoken greeting ("hi John", "hello team") on its own line ending with a comma, then an empty line.
+- Then the message in short paragraphs, separated by empty lines.
+- A spoken closing ("kind regards", "thanks", "best") on its own line after an empty line, ending with a comma, and a spoken name on the next line.
+- Use careful punctuation and capitalisation; write out slang ("gonna" becomes "going to").
+- Only lay out what was said: never add a greeting, closing, name or signature that was not spoken. If none was said, write just the message.`,
   casual: `Style: casual (chat).
 - Keep contractions and the speaker's relaxed tone.
 - Use light punctuation; leave out the full stop after a single short sentence.`,

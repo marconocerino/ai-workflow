@@ -68,3 +68,10 @@ Before each app copy a word of your own, so you can check it comes back.
 3. VS Code: "open package dot json". [ ] Bar "VS Code · Code"; `package.json`.
 4. Terminal: "ls dash la", "make dir test", "cd tilde slash projects". [ ] `ls -la`, `mkdir test`,
    `cd ~/projects` — no full stop, nothing runs until you press Enter.
+
+## 7. Email style
+
+1. Settings → Style per app: add "Mail" → Email (or use Outlook for Mac, Email by default).
+2. In a new mail: "hi john how are you just a quick update the deck is ready kind regards marco".
+   [ ] "Hi John," / empty line / message / empty line / "Kind regards," / "Marco".
+3. "the deck is ready for review". [ ] One sentence, no greeting or sign-off added.
