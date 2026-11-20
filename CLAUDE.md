@@ -33,6 +33,7 @@ Vitest (unit), Playwright (e2e on the real app), ESLint + Prettier, electron-bui
 - `npm run e2e` — production build, then Playwright drives the real app
 - `npm run build` — renderer + electron build into dist/
 - `npm run dist:win` / `npm run dist:mac` — packaged app in release/ (Windows: per-user installer + zip)
+- `node scripts/build-win-helper.mjs` — build the Hold-Ctrl helper (needs `brew install mingw-w64`)
 - `npm run release:win` — signed Windows build (needs CSC_LINK + CSC_KEY_PASSWORD; fails unsigned)
 - `npm run smoke:packaged` — start the packaged build with a throwaway profile; checks the DB opens
 - `npm run plan` — regenerate PLAN.md from docs/backlog.csv

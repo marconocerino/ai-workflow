@@ -132,8 +132,26 @@ function readEndpoint(
 }
 
 const DICTATION_MODES: readonly DictationMode[] = ['hold', 'toggle'];
-/** Modifier names or a single key name such as Space, F9, K. */
-const KEY_NAME = /^(Ctrl|Alt|Shift|Meta|Space|Enter|Tab|F([1-9]|1[0-9]|2[0-4])|[A-Z0-9])$/;
+const MODIFIERS = ['Ctrl', 'Alt', 'Shift', 'Meta'];
+/** A non-modifier key: Space, Enter, Tab, F1–F24, A–Z, 0–9. */
+const MAIN_KEY = /^(Space|Enter|Tab|F([1-9]|1[0-9]|2[0-4])|[A-Z0-9])$/;
+
+/**
+ * A global shortcut: modifiers first, then exactly one main key, and at least one of Ctrl, Alt
+ * or Meta (Shift+letter alone would take a normal key away from typing).
+ */
+function isShortcut(keys: unknown): keys is string[] {
+  if (!Array.isArray(keys) || keys.some((k) => typeof k !== 'string')) return false;
+  const mods = keys.slice(0, -1) as string[];
+  const main = keys.at(-1) as string | undefined;
+  return (
+    main !== undefined &&
+    MAIN_KEY.test(main) &&
+    mods.every((m) => MODIFIERS.includes(m)) &&
+    new Set(mods).size === mods.length &&
+    mods.some((m) => m !== 'Shift')
+  );
+}
 
 function readDictation(
   raw: unknown,
@@ -154,16 +172,13 @@ function readDictation(
   const keys = raw['toggleShortcut'];
   if (keys !== undefined) {
     const { min, max } = LIMITS.shortcutKeys;
-    if (
-      Array.isArray(keys) &&
-      keys.length >= min &&
-      keys.length <= max &&
-      keys.every((k) => typeof k === 'string' && KEY_NAME.test(k)) &&
-      new Set(keys).size === keys.length
-    ) {
-      toggleShortcut = [...(keys as string[])];
+    if (isShortcut(keys) && keys.length >= min && keys.length <= max) {
+      toggleShortcut = [...keys];
     } else {
-      issues.push({ path: 'dictation.toggleShortcut', message: `must be ${min}–${max} key names` });
+      issues.push({
+        path: 'dictation.toggleShortcut',
+        message: 'must be Ctrl, Alt or Win (plus Shift if you like) and one other key',
+      });
     }
   }
   return { mode, toggleShortcut };

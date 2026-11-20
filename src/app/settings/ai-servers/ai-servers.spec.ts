@@ -35,6 +35,7 @@ function fakeBridge() {
         sources: ['defaults'],
       }),
     },
+    hotkey: { status: vi.fn(), setToggleShortcut: vi.fn(), suspend: vi.fn() },
     startup: { get: vi.fn(), set: vi.fn() },
     log: { rendererError: vi.fn().mockResolvedValue(undefined) },
     diagnostics: { export: vi.fn(), openLogs: vi.fn() },

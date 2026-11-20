@@ -2,16 +2,28 @@
   <aside class="sidebar">
     <app-brand subtitle="Settings" />
 
-    <!-- The hotkey arrives with VAI-301; until then dictation isn't listening. -->
-    <div class="status-card" data-testid="dictation-status">
-      <div class="status"><span class="dot" aria-hidden="true"></span> Not active yet</div>
-      <div class="how aiw-muted">
-        @if (mode() === 'toggle') {
-          Press <aiw-keys [keys]="toggleShortcut()" /> to dictate
-        } @else {
-          Hold <aiw-keys keys="Ctrl" /> to dictate
-        }
-      </div>
+    <div class="status-card" data-testid="dictation-status" role="status">
+      @if (hotkey(); as h) {
+        @let c = card(h);
+        <div class="status">
+          <span class="dot" [class.ready]="c.ready" aria-hidden="true"></span> {{ c.title }}
+        </div>
+        <div class="how aiw-muted">
+          @switch (c.how) {
+            @case ('hold') {
+              Hold <aiw-keys keys="Ctrl" /> to dictate
+            }
+            @case ('toggle') {
+              Press <aiw-keys [keys]="h.toggleShortcut" /> to dictate
+            }
+            @default {
+              {{ h.toggleError ?? 'No shortcut is working.' }}
+            }
+          }
+        </div>
+      } @else {
+        <div class="status"><span class="dot" aria-hidden="true"></span> Not active</div>
+      }
     </div>
 
     <nav aria-label="Settings sections" data-testid="settings-nav">

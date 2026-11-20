@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import type { DictationMode } from '../../../../shared/settings';
+import type { HotkeyStatus } from '../../../../shared/ipc-contract';
 import { ElectronApi } from '../../core/electron-api';
-import { SettingsApi } from '../../core/settings-api';
+import { HotkeyApi } from '../../core/hotkey-api';
 import { Brand } from '../../shell/brand/brand';
 import { Icon, type IconName, Keys } from '../../ui';
 import { SaveStatus } from '../shared/save-status';
@@ -37,10 +37,9 @@ export const SETTINGS_SECTIONS: readonly Section[] = [
 export class SettingsLayout {
   protected readonly sections = SETTINGS_SECTIONS;
   protected readonly version = signal<string | null>(null);
-  protected readonly mode = signal<DictationMode>('hold');
-  protected readonly toggleShortcut = signal<string[]>(['Ctrl', 'Shift', 'Space']);
+  protected readonly hotkey = signal<HotkeyStatus | null>(null);
 
-  private readonly settings = inject(SettingsApi);
+  private readonly hotkeyApi = inject(HotkeyApi);
   private readonly status = inject(SaveStatus);
 
   constructor() {
@@ -48,20 +47,37 @@ export class SettingsLayout {
       .getAppInfo()
       .then((info) => this.version.set(info.version))
       .catch(() => this.version.set(null));
-    // Load the shortcut for the status card, and again after every save (it may have changed).
+    // Hotkey status for the card, again after every save (mode or shortcut may have changed).
     effect(() => {
-      if (this.status.state() === 'idle' || this.status.state() === 'saved')
-        void this.loadShortcut();
+      const state = this.status.state();
+      if (state === 'idle' || state === 'saved' || state === 'error') void this.loadHotkey();
     });
   }
 
-  private async loadShortcut(): Promise<void> {
+  /** What the card says: is dictation ready, and how do you start it? */
+  protected card(h: HotkeyStatus): {
+    ready: boolean;
+    title: string;
+    how: 'hold' | 'toggle' | null;
+  } {
+    if (h.mode === 'hold' && h.holdCtrl === 'ready') {
+      return { ready: true, title: 'Ready', how: 'hold' };
+    }
+    if (h.toggleActive) {
+      return {
+        ready: true,
+        title: h.mode === 'hold' ? 'Ready (Hold Ctrl unavailable)' : 'Ready',
+        how: 'toggle',
+      };
+    }
+    return { ready: false, title: 'Not active', how: null };
+  }
+
+  private async loadHotkey(): Promise<void> {
     try {
-      const s = await this.settings.get();
-      this.mode.set(s.dictation.mode);
-      this.toggleShortcut.set(s.dictation.toggleShortcut);
+      this.hotkey.set(await this.hotkeyApi.status());
     } catch {
-      // Keep the defaults; the page itself shows load errors.
+      this.hotkey.set(null);
     }
   }
 }

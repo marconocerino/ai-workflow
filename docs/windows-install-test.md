@@ -99,7 +99,25 @@ Needs an admin account for this step (the policy keys are admin-only). Copy `doc
 7. Disable it in Task Manager → Startup apps, reopen Settings → Dictation. [ ] The switch is off.
 8. Tray → **Quit AI Workflow**. [ ] Icon disappears; no AI Workflow process in Task Manager.
 
-## 9. Custom folder
+## 9. Hold Ctrl hotkey
+
+Open Notepad and Word (or any editor). Watch the tray icon tooltip / Settings status card.
+
+1. Settings → Dictation shows **Ready — Hold Ctrl to dictate**.
+2. Hold Ctrl alone ~1 s. [ ] Tray turns red-dot (Recording). Release. [ ] Back to Idle.
+3. Tap Ctrl quickly. [ ] Nothing happens.
+4. In Notepad: Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+A, Ctrl+S. [ ] All work normally, no recording.
+5. Hold Ctrl ~1 s, then press C while still holding. [ ] Recording stops (cancelled); copy works.
+6. In a browser: hold Ctrl and scroll the mouse wheel (zoom). [ ] No recording.
+7. Shift+Ctrl (Shift first). [ ] No recording.
+8. AltGr layout (e.g. French/German keyboard): type @ or € with AltGr. [ ] No recording.
+9. Task Manager → end `aiw-key-listener.exe`. [ ] It comes back within a second (Ready again).
+   End it 4 times quickly. [ ] Settings says "Ready (Hold Ctrl unavailable)"; Ctrl+Shift+Space
+   starts and stops recording; Esc cancels.
+10. Windows Security → Protection history. [ ] Nothing about AI Workflow or aiw-key-listener.
+11. Settings → Dictation → Change → press Ctrl+Alt+K. [ ] Saved; Toggle mode + Ctrl+Alt+K works.
+
+## 10. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

@@ -90,3 +90,25 @@
   padding: 0;
   border-top: 0;
 }
+
+.shortcut-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--aiw-space-3);
+}
+
+.capture {
+  min-width: 220px;
+  padding: 8px 12px;
+  border: 2px solid var(--aiw-color-primary);
+  border-radius: var(--aiw-radius-md);
+  background: var(--aiw-color-surface-tint);
+  font-size: 13px;
+  color: var(--aiw-color-ink);
+}
+
+.note {
+  margin: var(--aiw-space-3) 0 0;
+  font-size: 14px;
+  color: var(--aiw-color-ink-muted);
+}

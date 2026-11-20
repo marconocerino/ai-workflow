@@ -4,6 +4,7 @@ import {
   Tray,
   app,
   dialog,
+  globalShortcut,
   ipcMain,
   nativeImage,
   net,
@@ -15,11 +16,15 @@ import {
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { spawn } from 'node:child_process';
 import { AiHttpClient } from './ai/ai-http';
 import { AppDatabase } from './db/app-database';
 import { buildDiagnosticsZip, diagnosticsFileName } from './diagnostics/export';
 import { registerAiIpc } from './ipc/ai';
+import { DictationHotkey } from './hotkey/dictation-hotkey';
+import { KeyListener } from './hotkey/key-listener';
 import { getAppInfo } from './ipc/app-info';
+import { registerHotkeyIpc } from './ipc/hotkey';
 import { registerDiagnosticsIpc } from './ipc/diagnostics';
 import { createIpcRegistrar } from './ipc/handle';
 import { registerSettingsIpc } from './ipc/settings';
@@ -104,6 +109,7 @@ const lifecycle = new WindowLifecycle(logger.scope('window'));
 const dictationStatus = new DictationStatus();
 const startup = new Startup(app, process.platform, logger.scope('startup'));
 let tray: TrayController | null = null;
+let hotkey: DictationHotkey | null = null;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -153,12 +159,15 @@ if (!app.requestSingleInstanceLock()) {
       ...Object.fromEntries(Object.entries(features.flags).map(([k, v]) => [k, v ? 'on' : 'off'])),
       source: features.sources.join(','),
     });
+    hotkey = createHotkey(settings);
     app.on('will-quit', () => {
+      hotkey?.dispose();
       tray?.destroy();
       database.close();
       appLog.info('Quit');
     });
     registerIpc(settings, secrets, database, features);
+    hotkey.apply();
     createTray();
     createMainWindow(startup.openedAtLogin(process.argv));
     exposeTestHooks();
@@ -240,7 +249,11 @@ function registerIpc(
   // Feature IPC is registered through the gate, so a hidden feature has nothing to call:
   //   const registerIf = featureGate(features.flags, logger.scope('policy'));
   //   registerIf('meetings', () => registerMeetingsIpc(handle, …));
-  registerSettingsIpc(handle, settings, secrets);
+  registerSettingsIpc(handle, settings, secrets, () => {
+    hotkey?.apply();
+    tray?.refresh();
+  });
+  if (hotkey) registerHotkeyIpc(handle, hotkey, settings);
   registerDiagnosticsIpc(handle, diagnosticsDeps(settings, secrets, appInfo, features));
 
   // Electron's net.fetch uses Chromium's network stack: system proxy and company certificates work.
@@ -329,7 +342,10 @@ function createTray(): void {
     iconPath: (state) => path.join(iconDir, `${state}.png`),
     status: dictationStatus,
     platform: process.platform,
-    dictationAvailable: () => false, // VAI-301 adds the hotkey
+    dictationAvailable: () => {
+      const s = hotkey?.status();
+      return s?.holdCtrl === 'ready' || s?.toggleActive === true;
+    },
     showWindow: () => lifecycle.show(),
     openSettings: () => {
       const win = BrowserWindow.getAllWindows()[0];
@@ -342,6 +358,54 @@ function createTray(): void {
   tray.create();
 }
 
+/**
+ * Keyboard control of dictation (VAI-301, D-019). Windows: Hold-Ctrl through our watcher
+ * process (resources/aiw-key-listener.exe). Elsewhere, and whenever the watcher can't run, the
+ * toggle shortcut. Dev/test: AIW_KEY_LISTENER_SCRIPT runs a fake watcher script instead.
+ */
+function createHotkey(settings: SettingsStore): DictationHotkey {
+  const fakeScript = !app.isPackaged ? process.env['AIW_KEY_LISTENER_SCRIPT'] : undefined;
+  const exe = app.isPackaged
+    ? path.join(
+        process.resourcesPath,
+        'app.asar.unpacked',
+        'resources',
+        'win',
+        'aiw-key-listener.exe',
+      )
+    : path.join(app.getAppPath(), 'resources', 'win', 'aiw-key-listener.exe');
+  const spawnWatcher = fakeScript
+    ? () =>
+        spawn(process.execPath, [fakeScript], {
+          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+          stdio: ['pipe', 'pipe', 'ignore'],
+        })
+    : process.platform === 'win32'
+      ? () => spawn(exe, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] })
+      : null;
+
+  let controller: DictationHotkey | null = null;
+  const listener = spawnWatcher
+    ? new KeyListener({
+        spawn: spawnWatcher,
+        onEvent: (e) => controller?.keyEvent(e),
+        onAvailability: (ok) => {
+          controller?.holdAvailability(ok);
+          tray?.refresh();
+        },
+        logger: logger.scope('hotkey'),
+      })
+    : null;
+  controller = new DictationHotkey({
+    shortcuts: globalShortcut,
+    listener,
+    status: dictationStatus,
+    config: () => settings.get().dictation,
+    logger: logger.scope('hotkey'),
+  });
+  return controller;
+}
+
 /** e2e only (dev build + AIW_E2E=1): lets Playwright read and drive the tray from the main process. */
 function exposeTestHooks(): void {
   if (app.isPackaged || process.env['AIW_E2E'] !== '1') return;
@@ -349,5 +413,6 @@ function exposeTestHooks(): void {
     tray: () => tray?.describe(),
     clickTray: (label: string) => tray?.click(label),
     setDictationState: (state: Parameters<DictationStatus['set']>[0]) => dictationStatus.set(state),
+    hotkey: () => hotkey?.status(),
   };
 }

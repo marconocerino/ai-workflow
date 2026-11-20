@@ -22,8 +22,8 @@
     "e2e": "npm run build && playwright test",
     "dist:mac": "npm run build && electron-builder --mac --dir",
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
-    "dist:win": "npm run build && node scripts/fetch-native.mjs win32-x64-msvc && electron-builder --win --x64",
-    "release:win": "npm run build && node scripts/fetch-native.mjs win32-x64-msvc && electron-builder --win --x64 -c.forceCodeSigning=true && node scripts/check-signature.mjs",
+    "dist:win": "npm run build && node scripts/fetch-native.mjs win32-x64-msvc && node scripts/build-win-helper.mjs && electron-builder --win --x64",
+    "release:win": "npm run build && node scripts/fetch-native.mjs win32-x64-msvc && node scripts/build-win-helper.mjs && electron-builder --win --x64 -c.forceCodeSigning=true && node scripts/check-signature.mjs",
     "ng": "ng",
     "plan": "node scripts/plan.mjs",
     "tokens": "node scripts/tokens.mjs"

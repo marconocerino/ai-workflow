@@ -10,6 +10,9 @@ decisions and `docs/backlog.csv` for the backlog.
 - npm 11 recommended (`npm install -g npm@11`). npm 10.9 fails when adding new packages
   (`Cannot read properties of null (reading 'edgesOut')`); `npm ci` from the lockfile works on both.
 - Windows 10/11 or macOS. Windows is the target platform; macOS is fine for development.
+- To build the Windows app (`dist:win`, `release:win`): a Windows C compiler for the Hold-Ctrl
+  helper — macOS `brew install mingw-w64`, Windows MinGW-w64 (`gcc` on PATH). Not needed for
+  `npm start` or the tests.
 
 ## Run
 
@@ -143,6 +146,21 @@ scripts/dev.mjs    `npm start` runner
 - `npm run test:electron` runs inside Electron's Node, the same runtime the app uses.
 - No compiling: `npm ci` installs the prebuilt binary for your platform. `npm run dist:win` on a Mac
   fetches the Windows binary first (`scripts/fetch-native.mjs`).
+
+## Dictation hotkey
+
+- **Hold Ctrl** (Windows): hold Ctrl on its own for 120 ms to start, release to stop. Ctrl+C, Ctrl+V,
+  Ctrl+scroll, Ctrl+click etc. never start it (and if another key comes after 120 ms, the
+  recording is cancelled). Keys are only observed, never blocked.
+- It runs as a small helper, `resources/win/aiw-key-listener.exe`, built from
+  `native/win-key-listener/main.c` by `node scripts/build-win-helper.mjs` (done by `dist:win`).
+  The helper only reports "Ctrl down/up" and "some other key" — never which key — and exits when
+  the app does. It's signed together with the app.
+- **Toggle shortcut** (default Ctrl+Shift+Space; Settings → Dictation → Change): used in Toggle
+  mode, and automatically when Hold Ctrl can't run (helper missing, blocked or crashing). Esc
+  cancels a toggle recording.
+- macOS dev builds: no Hold Ctrl; the toggle shortcut works.
+- Tests use a fake helper: `AIW_KEY_LISTENER_SCRIPT=e2e/fake-key-listener.mjs` (dev only).
 
 ## Tray and start at sign-in
 

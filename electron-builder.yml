@@ -18,6 +18,7 @@ files:
 asar: true
 asarUnpack:
   - '**/*.node'
+  - '**/aiw-key-listener.exe'
 # libsql ships prebuilt Node-API binaries per platform, so no native rebuild is needed (D-013).
 npmRebuild: false
 # Hardening: the signed app can't be turned into a Node runner or have its code swapped.
@@ -35,9 +36,13 @@ electronFuses:
 linux:
   files:
     - '!node_modules/@libsql/{darwin,win32}-*/**'
+    - '!resources/win/**'
 win:
   files:
     - '!node_modules/@libsql/{darwin,linux}-*/**'
+    # Hold-Ctrl watcher (VAI-301), built by scripts/build-win-helper.mjs. Unpacked from the asar
+    # (asarUnpack below), which is also where electron-builder looks for files to sign.
+    - resources/win/aiw-key-listener.exe
   target:
     - target: nsis
       arch: [x64]
@@ -65,5 +70,6 @@ nsis:
 mac:
   files:
     - '!node_modules/@libsql/{win32,linux}-*/**'
+    - '!resources/win/**'
   target: dir
   category: public.app-category.productivity

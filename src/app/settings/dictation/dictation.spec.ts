@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import type { AiWorkflowApi } from '../../../../shared/ipc-contract';
+import type { AiWorkflowApi, HotkeyStatus } from '../../../../shared/ipc-contract';
 import type { Settings } from '../../../../shared/settings';
 import { AI_WORKFLOW_BRIDGE } from '../../core/electron-api';
 import { SaveStatus } from '../shared/save-status';
@@ -15,14 +15,36 @@ const stored: Settings = {
   },
 };
 
+function fakeHotkey(status: Partial<HotkeyStatus> = {}) {
+  const base: HotkeyStatus = {
+    mode: 'hold',
+    holdCtrl: 'ready',
+    toggleShortcut: ['Ctrl', 'Alt', 'F9'],
+    toggleActive: false,
+    ...status,
+  };
+  return {
+    status: vi.fn().mockResolvedValue(base),
+    setToggleShortcut: vi.fn((keys: string[]) =>
+      Promise.resolve({ ...base, toggleShortcut: keys }),
+    ),
+    suspend: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 async function render(
   update = vi.fn().mockResolvedValue(stored),
   startup = {
     get: vi.fn().mockResolvedValue({ available: false, openAtLogin: false }),
     set: vi.fn(),
   },
+  hotkey = fakeHotkey(),
 ) {
-  const bridge = { settings: { get: vi.fn().mockResolvedValue(stored), update }, startup };
+  const bridge = {
+    settings: { get: vi.fn().mockResolvedValue(stored), update },
+    startup,
+    hotkey,
+  };
   TestBed.configureTestingModule({
     imports: [DictationSettings],
     providers: [
@@ -38,7 +60,7 @@ async function render(
     await new Promise((r) => setTimeout(r));
     await fixture.whenStable();
   };
-  return { fixture, el, update, settle, startup, status: TestBed.inject(SaveStatus) };
+  return { fixture, el, update, settle, startup, hotkey, status: TestBed.inject(SaveStatus) };
 }
 
 describe('DictationSettings', () => {
@@ -125,5 +147,72 @@ describe('DictationSettings', () => {
         .querySelector('[data-testid="open-at-login"] button[role="switch"]')!
         .getAttribute('aria-checked'),
     ).toBe('false');
+  });
+
+  it('Change: records a new shortcut, pauses global shortcuts meanwhile, saves it', async () => {
+    const { el, settle, hotkey, status } = await render();
+    await settle();
+    el.querySelector<HTMLButtonElement>('[data-testid="change-shortcut"]')!.click();
+    await settle();
+    expect(hotkey.suspend).toHaveBeenCalledWith(true);
+    const box = el.querySelector<HTMLElement>('[data-testid="shortcut-capture"]')!;
+    expect(box.textContent).toContain('Press the new shortcut');
+    // Modifiers alone: keep waiting. Shift+K: not allowed. Ctrl+Alt+K: saved.
+    box.dispatchEvent(new KeyboardEvent('keydown', { code: 'ControlLeft', ctrlKey: true }));
+    box.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyK', shiftKey: true }));
+    await settle();
+    expect(el.querySelector('[data-testid="shortcut-capture"]')!.textContent).toContain(
+      'Include Ctrl, Alt or Win',
+    );
+    el.querySelector('[data-testid="shortcut-capture"]')!.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyK', ctrlKey: true, altKey: true }),
+    );
+    await settle();
+    expect(hotkey.setToggleShortcut).toHaveBeenCalledWith(['Ctrl', 'Alt', 'K']);
+    expect(status.state()).toBe('saved');
+    expect(hotkey.suspend).toHaveBeenLastCalledWith(false);
+    expect(el.querySelector('[data-testid="toggle-shortcut"]')!.textContent).toContain(
+      'Ctrl plus Alt plus K',
+    );
+  });
+
+  it('Change: a shortcut taken by another app shows the reason; Esc cancels', async () => {
+    const hotkey = fakeHotkey();
+    hotkey.setToggleShortcut.mockRejectedValue(
+      new Error(
+        "Error invoking remote method 'hotkey:set-toggle-shortcut': ShortcutTakenError: Ctrl+Alt+K is already used by another app. Choose another shortcut.",
+      ),
+    );
+    const { el, settle } = await render(undefined, undefined, hotkey);
+    await settle();
+    el.querySelector<HTMLButtonElement>('[data-testid="change-shortcut"]')!.click();
+    await settle();
+    el.querySelector('[data-testid="shortcut-capture"]')!.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyK', ctrlKey: true, altKey: true }),
+    );
+    await settle();
+    expect(el.querySelector('[data-testid="shortcut-error"]')!.textContent).toContain(
+      'Ctrl+Alt+K is already used by another app.',
+    );
+    el.querySelector<HTMLButtonElement>('[data-testid="change-shortcut"]')!.click();
+    await settle();
+    el.querySelector('[data-testid="shortcut-capture"]')!.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Escape' }),
+    );
+    await settle();
+    expect(el.querySelector('[data-testid="shortcut-capture"]')).toBeNull();
+    expect(hotkey.suspend).toHaveBeenLastCalledWith(false);
+  });
+
+  it('explains when Hold Ctrl is not available', async () => {
+    const { el, settle } = await render(
+      undefined,
+      undefined,
+      fakeHotkey({ holdCtrl: 'unsupported' }),
+    );
+    await settle();
+    expect(el.querySelector('[data-testid="hold-unavailable"]')!.textContent).toContain(
+      'Hold Ctrl works in the Windows app',
+    );
   });
 });

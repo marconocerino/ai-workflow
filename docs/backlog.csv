@@ -75,7 +75,7 @@ VAI-209,E2 Design system & shell,First-run onboarding,"As a new user, I want a s
 • Ends with a first successful dictation",5,Should,S2,ui,To do
 VAI-301,E3 Dictation,Hold-Ctrl global hotkey,"As a user, I want to hold Ctrl anywhere to dictate and release to stop, so voice input is instant.","• Holding Ctrl alone for 120 ms starts recording; release stops
 • Ctrl shortcuts (Ctrl+C etc.) are not hijacked
-• Fallback toggle shortcut works if the keyboard hook fails",3,Must,S1,dictation,To do
+• Fallback toggle shortcut works if the keyboard hook fails",3,Must,S1,dictation,Done
 VAI-302,E3 Dictation,Microphone capture and device choice,"As a user, I want to choose my microphone and optionally keep it warm, so my first word is never cut off.","• Device list with System default
 • Keep-mic-ready option (off, 5, 10, 30 s)
 • Warm audio stays in memory and is discarded if unused",3,Must,S1,"dictation, audio",To do

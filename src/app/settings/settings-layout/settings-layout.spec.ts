@@ -1,17 +1,24 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { AiWorkflowApi } from '../../../../shared/ipc-contract';
+import type { AiWorkflowApi, HotkeyStatus } from '../../../../shared/ipc-contract';
 import { AI_WORKFLOW_BRIDGE } from '../../core/electron-api';
 import { SETTINGS_SECTIONS, SettingsLayout } from './settings-layout';
 
-async function render(mode: 'hold' | 'toggle') {
+async function render(
+  mode: 'hold' | 'toggle',
+  holdCtrl: HotkeyStatus['holdCtrl'] = 'ready',
+  extra: Partial<HotkeyStatus> = {},
+) {
+  const status: HotkeyStatus = {
+    mode,
+    holdCtrl,
+    toggleShortcut: ['Ctrl', 'Shift', 'Space'],
+    toggleActive: mode === 'toggle' || holdCtrl !== 'ready',
+    ...extra,
+  };
   const bridge = {
     app: { getInfo: vi.fn().mockResolvedValue({ version: '0.1.0' }) },
-    settings: {
-      get: vi.fn().mockResolvedValue({
-        dictation: { mode, toggleShortcut: ['Ctrl', 'Shift', 'Space'] },
-      }),
-    },
+    hotkey: { status: vi.fn().mockResolvedValue(status) },
   };
   TestBed.configureTestingModule({
     imports: [SettingsLayout],
@@ -43,15 +50,32 @@ describe('SettingsLayout', () => {
     expect(links).toEqual(SETTINGS_SECTIONS.map((s) => s.label));
   });
 
-  it('status card shows the shortcut for the chosen mode', async () => {
-    const hold = await render('hold');
-    expect(hold.querySelector('[data-testid="dictation-status"]')!.textContent).toMatch(
-      /Not active yet\s+Hold.*to dictate/,
+  const card = (el: HTMLElement) =>
+    el.querySelector('[data-testid="dictation-status"]')!.textContent!.replace(/\s+/g, ' ').trim();
+
+  it('status card: Ready + Hold Ctrl when the watcher works', async () => {
+    expect(card(await render('hold'))).toMatch(/^Ready Hold .*Ctrl.* to dictate$/);
+  });
+
+  it('status card: toggle mode shows the shortcut', async () => {
+    const text = card(await render('toggle'));
+    expect(text).toContain('Press');
+    expect(text).toContain('Ctrl plus Shift plus Space');
+  });
+
+  it('status card: fallback when Hold Ctrl is unavailable', async () => {
+    const text = card(await render('hold', 'unavailable'));
+    expect(text).toContain('Ready (Hold Ctrl unavailable)');
+    expect(text).toContain('Ctrl plus Shift plus Space');
+  });
+
+  it('status card: nothing works → Not active with the reason', async () => {
+    const text = card(
+      await render('toggle', 'unsupported', {
+        toggleActive: false,
+        toggleError: 'Ctrl+Shift+Space is already used by another app.',
+      }),
     );
-    TestBed.resetTestingModule();
-    const toggle = await render('toggle');
-    expect(toggle.querySelector('[data-testid="dictation-status"]')!.textContent).toContain(
-      'Ctrl plus Shift plus Space',
-    );
+    expect(text).toBe('Not active Ctrl+Shift+Space is already used by another app.');
   });
 });
