@@ -27,6 +27,7 @@ function fakeHotkey(status: Partial<HotkeyStatus> = {}) {
     holdCtrl: 'ready',
     toggleShortcut: ['Ctrl', 'Alt', 'F9'],
     toggleActive: false,
+    paste: 'ready',
     ...status,
   };
   return {
@@ -35,6 +36,8 @@ function fakeHotkey(status: Partial<HotkeyStatus> = {}) {
       Promise.resolve({ ...base, toggleShortcut: keys }),
     ),
     suspend: vi.fn().mockResolvedValue(undefined),
+    recheck: vi.fn().mockResolvedValue({ ...base, holdCtrl: 'ready', paste: 'ready' }),
+    openPermissionSettings: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -222,6 +225,57 @@ describe('DictationSettings', () => {
     expect(el.querySelector('[data-testid="hold-unavailable"]')!.textContent).toContain(
       'Hold Ctrl works in the Windows app',
     );
+  });
+
+  describe('macOS permissions (VAI-312)', () => {
+    it('no permission at all: no notes when everything works', async () => {
+      const { el, settle } = await render();
+      await settle();
+      expect(el.querySelector('[data-testid="permission-input-monitoring"]')).toBeNull();
+      expect(el.querySelector('[data-testid="permission-accessibility"]')).toBeNull();
+    });
+
+    it('Input Monitoring missing: explains, opens System Settings, checks again', async () => {
+      const hotkey = fakeHotkey({ holdCtrl: 'no-permission', toggleActive: true });
+      const { el, settle } = await render(undefined, undefined, hotkey);
+      await settle();
+      const note = el.querySelector('[data-testid="permission-input-monitoring"]')!;
+      expect(note.textContent).toContain('Input Monitoring');
+      expect(note.textContent).toContain('toggle shortcut below works');
+      expect(el.querySelector('[data-testid="hold-unavailable"]')).toBeNull();
+      const [open, check] = Array.from(note.querySelectorAll('button'));
+      open!.click();
+      await settle();
+      expect(hotkey.openPermissionSettings).toHaveBeenCalledWith('input-monitoring');
+      check!.click();
+      await settle();
+      expect(hotkey.recheck).toHaveBeenCalled();
+      expect(el.querySelector('[data-testid="permission-input-monitoring"]')).toBeNull();
+    });
+
+    it('Accessibility missing: explains the ⌘V fallback and opens its settings', async () => {
+      const hotkey = fakeHotkey({ paste: 'no-permission' });
+      const { el, settle } = await render(undefined, undefined, hotkey);
+      await settle();
+      const note = el.querySelector('[data-testid="permission-accessibility"]')!;
+      expect(note.textContent).toContain('Accessibility');
+      expect(note.textContent).toContain('⌘V');
+      (note.querySelector('button') as HTMLButtonElement).click();
+      await settle();
+      expect(hotkey.openPermissionSettings).toHaveBeenCalledWith('accessibility');
+    });
+
+    it('shows an error if System Settings could not be opened', async () => {
+      const hotkey = fakeHotkey({ holdCtrl: 'no-permission' });
+      hotkey.openPermissionSettings.mockRejectedValue(new Error('Only on macOS.'));
+      const { el, settle } = await render(undefined, undefined, hotkey);
+      await settle();
+      (
+        el.querySelector('[data-testid="permission-input-monitoring"] button') as HTMLButtonElement
+      ).click();
+      await settle();
+      expect(el.querySelector('[role="alert"]')?.textContent).toBeTruthy();
+    });
   });
 
   describe('Microphone', () => {

@@ -14,6 +14,7 @@ async function render(
     holdCtrl,
     toggleShortcut: ['Ctrl', 'Shift', 'Space'],
     toggleActive: mode === 'toggle' || holdCtrl !== 'ready',
+    paste: 'ready',
     ...extra,
   };
   const bridge = {

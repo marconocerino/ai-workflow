@@ -16,7 +16,12 @@ function setup(opts: { mode?: DictationMode; taken?: string[]; listener?: boolea
     }),
     unregister: vi.fn((accel: string) => callbacks.delete(accel)),
   };
-  const listener = { start: vi.fn(), stop: vi.fn() } as unknown as KeyListener;
+  const listener = {
+    start: vi.fn(),
+    stop: vi.fn(),
+    recheck: vi.fn(),
+    needsPermission: false,
+  } as unknown as KeyListener & { needsPermission: boolean };
   const timers: { fn: () => void }[] = [];
   const fakeTimers: Timers = { set: (fn) => timers.push({ fn }), clear: () => undefined };
   const events = { start: vi.fn(), stop: vi.fn(), cancel: vi.fn() };
@@ -129,6 +134,27 @@ describe('DictationHotkey', () => {
     hotkey.apply();
     expect(hotkey.status().holdCtrl).toBe('unsupported');
     expect(callbacks.size).toBe(1);
+  });
+
+  it('macOS without Input Monitoring: no-permission, toggle shortcut on; recheck restarts', () => {
+    const { hotkey, listener, callbacks } = setup();
+    hotkey.apply();
+    listener.needsPermission = true;
+    hotkey.holdAvailability(false);
+    expect(hotkey.status()).toMatchObject({ holdCtrl: 'no-permission', toggleActive: true });
+    expect(callbacks.size).toBe(1);
+    hotkey.recheck();
+    expect(listener.recheck).toHaveBeenCalled();
+  });
+
+  it('recheck in toggle mode does not start the watcher', () => {
+    const { hotkey, listener } = setup({ mode: 'toggle' });
+    hotkey.recheck();
+    expect(listener.recheck).not.toHaveBeenCalled();
+  });
+
+  it('paste status comes from the output (clipboard-only by default)', () => {
+    expect(setup().hotkey.status().paste).toBe('clipboard-only');
   });
 
   it('accelerator names', () => {

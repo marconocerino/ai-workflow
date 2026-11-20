@@ -32,6 +32,8 @@ const api: AiWorkflowApi = {
     status: () => invoke('hotkey:status'),
     setToggleShortcut: (keys) => invoke('hotkey:set-toggle-shortcut', keys),
     suspend: (on) => invoke('hotkey:suspend', on),
+    recheck: () => invoke('hotkey:recheck'),
+    openPermissionSettings: (pane) => invoke('hotkey:open-permission-settings', pane),
   },
   audio: {
     status: () => invoke('audio:status'),

@@ -7,6 +7,7 @@ export type PasteFailure =
   | 'bad-input'
   | 'no-window'
   | 'elevated'
+  | 'no-permission'
   | 'keys-held'
   | 'clipboard'
   | 'send'
@@ -24,6 +25,7 @@ const HELPER_REASONS = new Set<PasteFailure>([
   'bad-input',
   'no-window',
   'elevated',
+  'no-permission',
   'keys-held',
   'clipboard',
   'send',
@@ -32,6 +34,7 @@ const HELPER_REASONS = new Set<PasteFailure>([
 const TEXT_LEFT_ON_CLIPBOARD = new Set<PasteFailure>([
   'no-window',
   'elevated',
+  'no-permission',
   'keys-held',
   'send',
 ]);
@@ -94,22 +97,35 @@ export interface PasteOutputDeps {
   /** Used when the helper couldn't leave the text on the clipboard itself. */
   writeClipboard(text: string): void | Promise<void>;
   notify(title: string, body: string): void;
+  /** For the paste key in messages: ⌘V on macOS, Ctrl+V elsewhere. */
+  platform?: NodeJS.Platform;
   logger?: ScopedLogger;
   now?(): number;
 }
 
-const FALLBACK: Partial<Record<PasteFailure, string>> = {
-  elevated: "Can't type into an app running as administrator. Text copied — press Ctrl+V.",
-  'keys-held': "Couldn't paste while Alt or the Windows key was held. Text copied — press Ctrl+V.",
-};
+/** What went wrong, in plain words (the text is on the clipboard in every case). */
+function fallbackMessage(reason: PasteFailure, pasteKey: string): string {
+  const copied = `Text copied — press ${pasteKey}.`;
+  switch (reason) {
+    case 'elevated':
+      return `Can't type into an app running as administrator. ${copied}`;
+    case 'keys-held':
+      return `Couldn't paste while Alt or the Windows key was held. ${copied}`;
+    case 'no-permission':
+      return `To paste automatically, allow Accessibility in System Settings (see Settings → Dictation). ${copied}`;
+    default:
+      return `Couldn't paste here. ${copied}`;
+  }
+}
 
 /**
- * Paste at the cursor (VAI-304, D-022). On success there's no notification — the text is just
+ * Paste at the cursor (VAI-304, D-022; macOS from source: VAI-312). On success there's no notification — the text is just
  * there and the clipboard is back as it was. If pasting fails, the text stays on the clipboard
  * and a notification says so. Logs the outcome only, never the text.
  */
 export function pasteOutput(d: PasteOutputDeps): DictationOutput {
   const now = d.now ?? (() => performance.now());
+  const pasteKey = d.platform === 'darwin' ? '⌘V' : 'Ctrl+V';
   return {
     async text(text) {
       const started = now();
@@ -129,10 +145,7 @@ export function pasteOutput(d: PasteOutputDeps): DictationOutput {
           return;
         }
       }
-      d.notify(
-        "Couldn't paste",
-        FALLBACK[outcome.reason] ?? "Couldn't paste here. Text copied — press Ctrl+V.",
-      );
+      d.notify("Couldn't paste", fallbackMessage(outcome.reason, pasteKey));
     },
     problem(message) {
       d.notify('Dictation failed', message);

@@ -1,5 +1,6 @@
 // Test double for aiw-key-listener.exe (VAI-301): prints READY, then replays lines that the test
-// appends to a control file. "EXIT <code>" makes it exit (to test crashes/restarts).
+// appends to a control file. "EXIT <code>" makes it exit (to test crashes/restarts);
+// "NO_PERMISSION" reports missing macOS Input Monitoring permission and exits (VAI-312).
 // Started by the app when AIW_KEY_LISTENER_SCRIPT points here (dev builds only).
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -21,6 +22,10 @@ setInterval(() => {
     const line = lines[sent];
     const exit = /^EXIT (\d+)$/.exec(line);
     if (exit) process.exit(Number(exit[1]));
+    if (line === 'NO_PERMISSION') {
+      process.stdout.write('NO_PERMISSION\n', () => process.exit(0));
+      return;
+    }
     if (line && line !== 'NO_READY') process.stdout.write(`${line}\n`);
   }
 }, 15);

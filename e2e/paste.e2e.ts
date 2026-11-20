@@ -10,6 +10,8 @@ import { ROOT, launchApp, tempProfile } from './launch';
 
 const KEY = 'gsk-e2e-transcription-key';
 const MODEL = 'whisper-large-v3-turbo';
+/** The app names the paste key of the OS it runs on. */
+const PASTE_KEY = process.platform === 'darwin' ? '⌘V' : 'Ctrl+V';
 const SPOKEN = 'The quarterly numbers look fine';
 
 interface Hooks {
@@ -23,7 +25,10 @@ let profile: string;
 let keys: string;
 let server: FakeAiServer;
 
-async function start(mode: 'pasted' | 'elevated' | 'crash') {
+async function start(
+  mode: 'pasted' | 'elevated' | 'crash' | 'no-permission',
+  env: Record<string, string> = {},
+) {
   const ai: { baseUrl?: string; timeoutMs?: number; retries?: number } = {};
   server = await startFakeAiServer(KEY, [MODEL]);
   server.transcribe.text = SPOKEN;
@@ -53,6 +58,7 @@ async function start(mode: 'pasted' | 'elevated' | 'crash') {
       AIW_PASTE_HELPER_SCRIPT: join(ROOT, 'e2e', 'fake-paste-helper.mjs'),
       AIW_FAKE_PASTE_LOG: pasteLog(),
       AIW_FAKE_PASTE_MODE: mode,
+      ...env,
     },
     FAKE_MIC_ARGS,
   ));
@@ -119,7 +125,7 @@ test('admin window: no paste, a notice says why (the helper leaves the text copi
   await dictate(1500);
   await expect.poll(notification).toEqual({
     title: "Couldn't paste",
-    body: "Can't type into an app running as administrator. Text copied — press Ctrl+V.",
+    body: `Can't type into an app running as administrator. Text copied — press ${PASTE_KEY}.`,
   });
   expect(log()).toMatch(/\[dictation\] Paste failed reason=elevated ms=\d+$/m);
 });
@@ -130,7 +136,24 @@ test('helper crashes: the text stays on the clipboard with a notice', async () =
   await expect.poll(clipboardText).toBe(SPOKEN);
   expect(await notification()).toEqual({
     title: "Couldn't paste",
-    body: "Couldn't paste here. Text copied — press Ctrl+V.",
+    body: `Couldn't paste here. Text copied — press ${PASTE_KEY}.`,
   });
   await expect.poll(tray).toBe('idle');
+});
+
+test('macOS without Accessibility: Settings explains it; text copied with a notice', async () => {
+  await start('no-permission', { AIW_FAKE_ACCESSIBILITY: '0' });
+  await page.goto('app://renderer/settings/dictation');
+  const note = page.getByTestId('permission-accessibility');
+  await expect(note).toContainText('Accessibility');
+  await expect(note.getByRole('button', { name: 'Open Accessibility settings' })).toBeVisible();
+
+  await dictate(1500);
+  await expect.poll(notification).toEqual({
+    title: "Couldn't paste",
+    body: expect.stringMatching(
+      /^To paste automatically, allow Accessibility in System Settings \(see Settings → Dictation\)\. Text copied — press (⌘V|Ctrl\+V)\.$/,
+    ),
+  });
+  expect(pasted()).toEqual([{ text: SPOKEN, args: 0 }]);
 });

@@ -22,3 +22,4 @@ playwright-report/
 .vscode/*
 !.vscode/extensions.json
 resources/win/
+resources/mac/

@@ -76,3 +76,56 @@ describe('hotkey IPC', () => {
     expect(onChange).toHaveBeenCalledOnce();
   });
 });
+
+describe('macOS permission IPC (VAI-312)', () => {
+  function setupPermissions(platform: NodeJS.Platform) {
+    const handlers = new Map<string, (e: IpcMainInvokeEvent, ...a: unknown[]) => unknown>();
+    const handle = createIpcRegistrar({ handle: (c, l) => handlers.set(c, l) }, () => true);
+    const recheck = vi.fn();
+    const deps = {
+      platform,
+      openExternal: vi.fn().mockResolvedValue(undefined),
+      requestAccessibility: vi.fn(),
+    };
+    registerHotkeyIpc(
+      handle,
+      { recheck, status: () => ({ holdCtrl: 'ready' }) } as unknown as DictationHotkey,
+      settings,
+      deps,
+    );
+    const invoke = (c: string, ...a: unknown[]) => handlers.get(c)!({} as IpcMainInvokeEvent, ...a);
+    return { invoke, deps, recheck };
+  }
+
+  it('opens only the two fixed Privacy & Security pages', async () => {
+    const { invoke, deps } = setupPermissions('darwin');
+    await invoke('hotkey:open-permission-settings', 'input-monitoring');
+    expect(deps.openExternal).toHaveBeenLastCalledWith(
+      'x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent',
+    );
+    expect(deps.requestAccessibility).not.toHaveBeenCalled();
+    await invoke('hotkey:open-permission-settings', 'accessibility');
+    expect(deps.openExternal).toHaveBeenLastCalledWith(
+      'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility',
+    );
+    expect(deps.requestAccessibility).toHaveBeenCalled(); // lists the app so there's a switch
+    for (const bad of ['https://evil.example', 'toString', '__proto__', 42]) {
+      await expect(invoke('hotkey:open-permission-settings', bad)).rejects.toThrow(/Unknown/);
+    }
+    expect(deps.openExternal).toHaveBeenCalledTimes(2);
+  });
+
+  it('refuses on other platforms', async () => {
+    const { invoke, deps } = setupPermissions('win32');
+    await expect(invoke('hotkey:open-permission-settings', 'accessibility')).rejects.toThrow(
+      /macOS/,
+    );
+    expect(deps.openExternal).not.toHaveBeenCalled();
+  });
+
+  it('recheck restarts the helpers and returns the new status', () => {
+    const { invoke, recheck } = setupPermissions('darwin');
+    expect(invoke('hotkey:recheck')).toEqual({ holdCtrl: 'ready' });
+    expect(recheck).toHaveBeenCalled();
+  });
+});

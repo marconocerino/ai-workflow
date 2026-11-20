@@ -47,11 +47,24 @@ export interface StartupState {
   openAtLogin: boolean;
 }
 
+export type PasteStatus = 'ready' | 'no-permission' | 'clipboard-only';
+
+/** macOS System Settings pages Settings may open (VAI-312). Fixed list, no URLs from the renderer. */
+export type PermissionPane = 'input-monitoring' | 'accessibility';
+
 /** Keyboard control of dictation (VAI-301). */
 export interface HotkeyStatus {
   mode: 'hold' | 'toggle';
-  /** ready: Hold-Ctrl works · unavailable: watcher can't run (toggle shortcut used) · unsupported: not on this OS */
-  holdCtrl: 'ready' | 'unavailable' | 'unsupported';
+  /**
+   * ready: Hold-Ctrl works · unavailable: watcher can't run (toggle shortcut used) ·
+   * no-permission: macOS Input Monitoring not granted (VAI-312) · unsupported: no watcher here
+   */
+  holdCtrl: 'ready' | 'unavailable' | 'no-permission' | 'unsupported';
+  /**
+   * How text gets out (VAI-304/312): ready = pasted at the cursor · no-permission = macOS
+   * Accessibility not granted · clipboard-only = no paste helper (text copied + notification).
+   */
+  paste: PasteStatus;
   toggleShortcut: string[];
   /** The toggle shortcut is registered right now (toggle mode, or fallback). */
   toggleActive: boolean;
@@ -81,6 +94,10 @@ export interface IpcContract {
   'hotkey:set-toggle-shortcut': { request: string[]; response: HotkeyStatus };
   /** Pause global shortcuts while the user records a new one in Settings. */
   'hotkey:suspend': { request: boolean; response: void };
+  /** macOS: after granting a permission, start the helpers again and report (VAI-312). */
+  'hotkey:recheck': { request: void; response: HotkeyStatus };
+  /** macOS: open a Privacy & Security page in System Settings (VAI-312). */
+  'hotkey:open-permission-settings': { request: PermissionPane; response: void };
   /** Mic state for Settings (VAI-302). */
   'audio:status': { request: void; response: MicStatus };
   /** Audio window only: mic opened/closed/failed. */
@@ -132,6 +149,8 @@ export interface AiWorkflowApi {
     status(): Promise<HotkeyStatus>;
     setToggleShortcut(keys: string[]): Promise<HotkeyStatus>;
     suspend(on: boolean): Promise<void>;
+    recheck(): Promise<HotkeyStatus>;
+    openPermissionSettings(pane: PermissionPane): Promise<void>;
   };
   audio: {
     status(): Promise<MicStatus>;

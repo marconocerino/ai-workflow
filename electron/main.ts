@@ -14,11 +14,12 @@ import {
   safeStorage,
   session,
   shell,
+  systemPreferences,
 } from 'electron';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { spawn } from 'node:child_process';
+import { type ChildProcess, spawn } from 'node:child_process';
 import { AiHttpClient } from './ai/ai-http';
 import { Transcriber } from './ai/transcribe';
 import { AudioController } from './audio/audio-controller';
@@ -57,7 +58,7 @@ import { APP_TITLE, createMainWindowOptions } from './window';
 import { WindowLifecycle } from './window-lifecycle';
 import type { AudioCommand } from '../shared/audio';
 import type { FeatureState } from '../shared/features';
-import { AUDIO_COMMAND_CHANNEL } from '../shared/ipc-contract';
+import { AUDIO_COMMAND_CHANNEL, type PasteStatus } from '../shared/ipc-contract';
 import { SECRET_NAMES, type SecretName } from '../shared/settings';
 
 // Dev/test only (ignored in packaged builds): separate profile folder and a fake macOS keychain,
@@ -132,6 +133,7 @@ let audioWindow: BrowserWindow | null = null;
 let lastRecordingForTests: { durationMs: number; peak: number } | null = null;
 let lastNotificationForTests: { title: string; body: string } | null = null;
 let pipeline: DictationPipeline | null = null;
+let pasteHelperAvailable = false;
 const quietNotifications = !app.isPackaged && process.env['AIW_E2E'] === '1';
 
 if (!app.requestSingleInstanceLock()) {
@@ -317,7 +319,15 @@ function registerIpc(
     hotkey?.apply();
     tray?.refresh();
   });
-  if (hotkey) registerHotkeyIpc(handle, hotkey, settings);
+  if (hotkey) {
+    registerHotkeyIpc(handle, hotkey, settings, {
+      platform: process.platform,
+      openExternal: (url) => shell.openExternal(url),
+      requestAccessibility: () => {
+        systemPreferences.isTrustedAccessibilityClient(true); // lists the app, prompts once
+      },
+    });
+  }
   registerDiagnosticsIpc(handle, diagnosticsDeps(settings, secrets, appInfo, features));
   registerAiIpc(handle, aiClient, settings, secrets, logger.scope('ai'));
 }
@@ -365,34 +375,60 @@ function createOutput(log: ScopedLogger): DictationOutput {
   };
   const writeClipboard = (text: string) => clipboard.writeText(text);
 
-  const fakeScript = !app.isPackaged ? process.env['AIW_PASTE_HELPER_SCRIPT'] : undefined;
-  const exe = winHelperPath('aiw-paste.exe');
-  const spawnHelper = fakeScript
-    ? () =>
-        spawn(process.execPath, [fakeScript], {
-          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-          stdio: ['pipe', 'pipe', 'ignore'],
-        })
-    : process.platform === 'win32' && fs.existsSync(exe)
-      ? () => spawn(exe, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] })
-      : null;
+  const spawnHelper = helperSpawner('aiw-paste', 'AIW_PASTE_HELPER_SCRIPT');
+  pasteHelperAvailable = spawnHelper !== null;
   if (!spawnHelper) {
-    if (process.platform === 'win32') log.warn('Paste helper missing; using the clipboard only');
+    if (process.platform === 'win32' || process.platform === 'darwin') {
+      log.warn('Paste helper missing; using the clipboard only');
+    }
     return clipboardOutput({ writeClipboard, notify, platform: process.platform });
   }
   return pasteOutput({
     paste: (text) => runPasteHelper(spawnHelper, text),
     writeClipboard,
     notify,
+    platform: process.platform,
     logger: log,
   });
 }
 
-/** A Windows helper exe: unpacked from the asar when packaged (so it can run and be signed). */
-function winHelperPath(name: string): string {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'win', name)
-    : path.join(app.getAppPath(), 'resources', 'win', name);
+/**
+ * How to start a native helper (`aiw-key-listener`, `aiw-paste`), or null if there is none:
+ * - Windows: resources/win/<name>.exe, unpacked from the asar when packaged (D-019, D-022).
+ * - macOS: resources/mac/<name>, from source only (built by `npm start`; VAI-312).
+ * - Dev/test: the fake script in `fakeEnv` instead. e2e never runs the real helpers.
+ */
+function helperSpawner(name: string, fakeEnv: string): (() => ChildProcess) | null {
+  const fakeScript = !app.isPackaged ? process.env[fakeEnv] : undefined;
+  if (fakeScript) {
+    return () =>
+      spawn(process.execPath, [fakeScript], {
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+        stdio: ['pipe', 'pipe', 'ignore'],
+      });
+  }
+  if (!app.isPackaged && process.env['AIW_E2E'] === '1') return null;
+  const file =
+    process.platform === 'win32'
+      ? app.isPackaged
+        ? path.join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'win', `${name}.exe`)
+        : path.join(app.getAppPath(), 'resources', 'win', `${name}.exe`)
+      : process.platform === 'darwin' && !app.isPackaged
+        ? path.join(app.getAppPath(), 'resources', 'mac', name)
+        : null;
+  if (!file || !fs.existsSync(file)) return null;
+  return () => spawn(file, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
+}
+
+/** Can text be pasted at the cursor? (Settings, VAI-304/312) */
+function pasteStatus(): PasteStatus {
+  if (!pasteHelperAvailable) return 'clipboard-only';
+  if (process.platform !== 'darwin') return 'ready';
+  // Dev/test: AIW_FAKE_ACCESSIBILITY=0 pretends the permission is missing (with the fake helper).
+  const fake = !app.isPackaged ? process.env['AIW_FAKE_ACCESSIBILITY'] : undefined;
+  if (fake !== undefined || process.env['AIW_PASTE_HELPER_SCRIPT'])
+    return fake === '0' ? 'no-permission' : 'ready';
+  return systemPreferences.isTrustedAccessibilityClient(false) ? 'ready' : 'no-permission';
 }
 
 /** Dev/test only: save diagnostics into this folder without a dialog (for e2e). */
@@ -572,17 +608,7 @@ function createAudio(settings: SettingsStore): AudioController {
  * toggle shortcut. Dev/test: AIW_KEY_LISTENER_SCRIPT runs a fake watcher script instead.
  */
 function createHotkey(settings: SettingsStore): DictationHotkey {
-  const fakeScript = !app.isPackaged ? process.env['AIW_KEY_LISTENER_SCRIPT'] : undefined;
-  const exe = winHelperPath('aiw-key-listener.exe');
-  const spawnWatcher = fakeScript
-    ? () =>
-        spawn(process.execPath, [fakeScript], {
-          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-          stdio: ['pipe', 'pipe', 'ignore'],
-        })
-    : process.platform === 'win32'
-      ? () => spawn(exe, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] })
-      : null;
+  const spawnWatcher = helperSpawner('aiw-key-listener', 'AIW_KEY_LISTENER_SCRIPT');
 
   let controller: DictationHotkey | null = null;
   const listener = spawnWatcher
@@ -602,6 +628,7 @@ function createHotkey(settings: SettingsStore): DictationHotkey {
     status: dictationStatus,
     events: audio ?? undefined,
     config: () => settings.get().dictation,
+    paste: pasteStatus,
     logger: logger.scope('hotkey'),
   });
   return controller;

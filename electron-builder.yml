@@ -44,6 +44,7 @@ linux:
     - package.json # include anchor (see note above)
     - '!node_modules/@libsql/{darwin,win32}-*/**'
     - '!resources/win/**'
+    - '!resources/mac/**' # macOS helpers run from source only (VAI-312, D-019)
 win:
   files:
     - '!node_modules/@libsql/{darwin,linux}-*/**'
@@ -81,5 +82,6 @@ mac:
     - package.json # include anchor (see note above)
     - '!node_modules/@libsql/{win32,linux}-*/**'
     - '!resources/win/**'
+    - '!resources/mac/**' # macOS helpers run from source only (VAI-312, D-019)
   target: dir
   category: public.app-category.productivity

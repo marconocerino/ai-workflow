@@ -111,4 +111,28 @@ describe('KeyListener', () => {
     await write(children[0]!, 'READY\nCTRL_DOWN clean\nOTHER\nCTRL_UP\n');
     expect(lines.join('\n')).not.toMatch(/CTRL|OTHER/);
   });
+
+  it('NO_PERMISSION (macOS): not retried, start() does nothing until recheck()', async () => {
+    vi.useFakeTimers();
+    const { listener, children, availability, lines } = setup();
+    listener.start();
+    children[0]!.stdout.write('NO_PERMISSION\n');
+    await vi.advanceTimersByTimeAsync(0);
+    children[0]!.emit('exit', 0);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(children).toHaveLength(1); // no restart loop (each start would re-prompt)
+    expect(listener.needsPermission).toBe(true);
+    expect(availability).toEqual([false]); // status refresh
+    expect(lines.join('\n')).toContain('needs Input Monitoring permission');
+
+    listener.start(); // e.g. settings saved → apply()
+    expect(children).toHaveLength(1);
+
+    listener.recheck(); // user granted it and clicked "Check again"
+    expect(children).toHaveLength(2);
+    expect(listener.needsPermission).toBe(false);
+    children[1]!.stdout.write('READY\n');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(listener.isAvailable).toBe(true);
+  });
 });

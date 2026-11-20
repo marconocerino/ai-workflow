@@ -94,3 +94,22 @@ test('change the toggle shortcut in Settings', async () => {
   await expect.poll(hotkeyStatus).toMatchObject({ mode: 'toggle', toggleActive: true });
   await expect(page.getByTestId('dictation-status')).toContainText(/Press.*Alt.*K/);
 });
+
+test('macOS without Input Monitoring: Settings explains it, toggle works, Check again recovers', async () => {
+  await expect.poll(hotkeyStatus).toMatchObject({ holdCtrl: 'ready' });
+  send('NO_PERMISSION'); // the watcher reports it and exits
+  await expect.poll(hotkeyStatus).toMatchObject({ holdCtrl: 'no-permission', toggleActive: true });
+  await page.waitForTimeout(1500);
+  expect(await hotkeyStatus()).toMatchObject({ holdCtrl: 'no-permission' }); // no restart loop
+
+  await page.goto('app://renderer/settings/dictation');
+  const note = page.getByTestId('permission-input-monitoring');
+  await expect(note).toContainText('Input Monitoring');
+  await expect(note.getByRole('button', { name: 'Open Input Monitoring settings' })).toBeVisible();
+  await expect(page.getByTestId('hold-unavailable')).toHaveCount(0);
+
+  writeFileSync(keys, ''); // the user granted it
+  await note.getByRole('button', { name: 'Check again' }).click();
+  await expect(note).toHaveCount(0);
+  await expect.poll(hotkeyStatus).toMatchObject({ holdCtrl: 'ready', toggleActive: false });
+});
