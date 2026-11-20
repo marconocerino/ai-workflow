@@ -106,6 +106,11 @@ VAI-310,E3 Dictation,Dictation history,"As a user, I want a searchable history o
 VAI-311,E3 Dictation,Offline and error handling,"As a user, I want clear feedback when the AI servers can't be reached, so I don't lose what I said.","• Recording is kept and retried when the connection returns
 • Message explains what happened in plain words
 • No crash or silent failure",2,Must,S2,"dictation, quality",To do
+VAI-312,E3 Dictation,Paste at cursor and hold-to-talk on macOS (from source),"As a developer on a Mac, I want dictation to paste at the cursor and start by holding a key, like on Windows, so I can use and test the app daily on my Mac.","• Runs from source (npm start) only; no packaged Mac app or Apple signing (needs a company Developer ID first, see D-019)
+• Hold a key (Ctrl alone, or Fn/Globe) to dictate, release to stop; same shortcut rules as Windows (Ctrl+C etc. never start dictation)
+• Text is pasted at the cursor with ⌘V; my clipboard (all types) is restored afterwards; dictated text marked transient for clipboard managers
+• Without Accessibility or Input Monitoring permission: Settings explains how to grant it, and the toggle shortcut and clipboard fallback keep working
+• Swift helpers built with Xcode command-line tools; reuses the Windows logic (CtrlHold, paste output, fallbacks)",5,Could,Backlog,"dictation, macos",To do
 VAI-401,E4 Meeting capture,Spike: Windows system audio capture,"As the team, we want to prove we can capture what the PC plays (other participants) without a meeting bot, so we de-risk meetings early.","• Prototype captures a Teams and a Zoom call via WASAPI process loopback (excluding our own app)
 • Mic and system audio saved as separate tracks
 • Short write-up of limits and next steps",3,Must,S0,"spike, audio",To do
