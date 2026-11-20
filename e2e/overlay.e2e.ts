@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { AiWorkflowApi } from '../shared/ipc-contract';
 import { type FakeAiServer, startFakeAiServer } from './fake-ai-server';
 import { FAKE_MIC_ARGS } from './fake-mic';
-import { ROOT, launchApp, tempProfile } from './launch';
+import { ROOT, closeApp, launchApp, tempProfile } from './launch';
 
 // VAI-305: the floating dictation bar while recording and transcribing (fake mic, keys, server, helper).
 
@@ -85,7 +85,7 @@ async function start(
 }
 
 test.afterEach(async () => {
-  await app?.close().catch(() => undefined);
+  await closeApp(app);
   await server?.close();
   rmSync(profile, { recursive: true, force: true });
 });

@@ -185,3 +185,69 @@ describe('delivery failures', () => {
     expect(status.get()).toBe('idle');
   });
 });
+
+describe('AI cleanup step (VAI-307)', () => {
+  function withRefine(refine: (t: string) => Promise<string>) {
+    const out: string[] = [];
+    const pipeline = new DictationPipeline({
+      transcribe: async () => ({ kind: 'text', text: 'um hello', latencyMs: 1, attempts: 1 }),
+      refine,
+      output: {
+        text: (t) => {
+          out.push(t);
+        },
+        problem: (m) => {
+          out.push(`problem:${m}`);
+        },
+      },
+      status: new DictationStatus(),
+      micReady: () => false,
+    });
+    return { pipeline, out };
+  }
+
+  it('the cleaned text is what gets pasted', async () => {
+    const { pipeline, out } = withRefine(async () => 'Hello.');
+    await pipeline.onRecording(rec());
+    expect(out).toEqual(['Hello.']);
+  });
+
+  it('if cleanup crashes, the raw text is pasted', async () => {
+    const { pipeline, out } = withRefine(() => Promise.reject(new Error('boom')));
+    await pipeline.onRecording(rec());
+    expect(out).toEqual(['um hello']);
+  });
+
+  it('problems skip cleanup', async () => {
+    let called = false;
+    const out: string[] = [];
+    const pipeline = new DictationPipeline({
+      transcribe: async () => ({ kind: 'problem', code: 'timeout', message: 'Slow.', attempts: 1 }),
+      refine: async (t) => {
+        called = true;
+        return t;
+      },
+      output: { text: () => undefined, problem: (m) => void out.push(m) },
+      status: new DictationStatus(),
+      micReady: () => false,
+    });
+    await pipeline.onRecording(rec());
+    expect(called).toBe(false);
+    expect(out).toEqual(['Slow.']);
+  });
+});
+
+describe('line breaks', () => {
+  it('Windows gets CRLF (Polished paragraphs), elsewhere unchanged', async () => {
+    const clip: string[] = [];
+    const make = (platform: NodeJS.Platform) =>
+      clipboardOutput({
+        writeClipboard: (t) => void clip.push(t),
+        notify: () => undefined,
+        platform,
+      });
+    await make('win32').text('One.\n\nTwo.\r\nThree.');
+    await make('darwin').text('One.\n\nTwo.');
+    expect(clip).toEqual(['One.\r\n\r\nTwo.\r\nThree.', 'One.\n\nTwo.']);
+  });
+});

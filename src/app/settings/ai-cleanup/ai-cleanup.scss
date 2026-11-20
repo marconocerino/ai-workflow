@@ -1,0 +1,40 @@
+.page {
+  max-width: 760px;
+  padding: var(--aiw-space-7) var(--aiw-space-7) 64px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiw-space-4);
+}
+
+.levels {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiw-space-1);
+  margin-top: var(--aiw-space-3);
+  font-size: 13px;
+}
+
+.said {
+  color: var(--aiw-color-ink-muted);
+  font-style: italic;
+}
+
+.pasted {
+  color: var(--aiw-color-ink);
+  font-weight: 600;
+}
+
+.rules {
+  margin: var(--aiw-space-4) 0 0;
+  font-size: 14px;
+}
+
+.note,
+.error {
+  margin: 0;
+  padding: var(--aiw-space-4);
+}

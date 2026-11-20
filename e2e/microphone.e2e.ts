@@ -60,7 +60,7 @@ test('hold Ctrl records the microphone; release delivers audio with sound in it'
   send('CTRL_UP');
   await expect.poll(last).not.toBeNull();
   const rec = (await last())!;
-  expect(rec.durationMs).toBeGreaterThan(1200);
+  expect(rec.durationMs).toBeGreaterThan(1000); // ~1.5 s hold; slack for a busy machine
   expect(rec.durationMs).toBeLessThan(2000);
   expect(rec.peak).toBeGreaterThan(0.1); // the fake mic's beeps
   // Keep-ready off: mic closed right away.

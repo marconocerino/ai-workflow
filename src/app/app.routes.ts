@@ -63,12 +63,8 @@ export const routes: Routes = [
       {
         path: 'ai-cleanup',
         title: 'AI cleanup · Settings · AI Workflow',
-        loadComponent: comingSoon,
-        data: {
-          heading: 'AI cleanup',
-          lead: 'How much the AI tidies up what you said.',
-          coming: 'Choose Light (punctuation, fillers) or Polished cleanup.',
-        },
+        loadComponent: () =>
+          import('./settings/ai-cleanup/ai-cleanup').then((m) => m.AiCleanupSettings),
       },
       {
         path: 'vocabulary',

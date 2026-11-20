@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { type ChildProcess, spawn } from 'node:child_process';
 import { AiHttpClient } from './ai/ai-http';
+import { Cleaner } from './ai/cleanup';
 import { Transcriber } from './ai/transcribe';
 import { AudioController } from './audio/audio-controller';
 import { allowPermissionCheck, allowPermissionRequest } from './audio/permissions';
@@ -355,7 +356,7 @@ function createAiClient(settings: SettingsStore, secrets: SecretStore): AiHttpCl
   );
 }
 
-/** Recording → speech-to-text (VAI-303) → paste at the cursor (VAI-304). */
+/** Recording → speech-to-text (VAI-303) → AI cleanup (VAI-307) → paste at the cursor (VAI-304). */
 function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): DictationPipeline {
   const log = logger.scope('dictation');
   const transcriber = new Transcriber({
@@ -363,8 +364,10 @@ function createPipeline(settings: SettingsStore, aiClient: AiHttpClient): Dictat
     settings: () => settings.get(),
     logger: log,
   });
+  const cleaner = new Cleaner({ client: aiClient, settings: () => settings.get(), logger: log });
   return new DictationPipeline({
     transcribe: (recording) => transcriber.transcribe(recording),
+    refine: async (text) => (await cleaner.clean(text)).text,
     output: createOutput(log),
     status: dictationStatus,
     micReady: () => audio?.status().state === 'ready',

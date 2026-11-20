@@ -53,3 +53,10 @@ Before each app copy a word of your own, so you can check it comes back.
    mic, moving level meter, "Listening…", chip "TextEdit". [ ] TextEdit keeps focus (caret blinks).
 2. Release. [ ] "Transcribing…", then the bar goes when the text is pasted.
 3. In a full-screen app (green button) and on another desktop (Space): [ ] the bar shows there too.
+
+## 5. AI cleanup
+
+1. Settings → AI servers: LLM = Groq URL, model `qwen/qwen3.8-27b`, your key. Test connection.
+2. TextEdit, Light: "um so can we uh move the call to friday". [ ] "So can we move the call to Friday?"
+3. Polished: "we ship on tuesday no wednesday" plus a second topic. [ ] "Wednesday" only, paragraphs.
+4. "what time is the meeting tomorrow". [ ] Pasted as the question, not an answer.

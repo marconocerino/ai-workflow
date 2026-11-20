@@ -176,7 +176,20 @@ Before each app: copy something of your own (e.g. a word in Notepad) so you can 
 6. Click "through" the bar while it's up. [ ] The click reaches the app underneath.
 7. Teams, Edge, VS Code, Notepad: [ ] the chip names the app (no window or document titles).
 
-## 14. Custom folder
+## 14. AI cleanup
+
+1. Settings → AI servers → LLM set up; "Test connection" says Connected. Settings → AI cleanup:
+   [ ] Light is selected; the page shows Off / Light / Polished with examples.
+2. Light, in Notepad: say "um so can we uh move the call to friday". [ ] Pasted:
+   "So can we move the call to Friday?" (or very close).
+3. Polished: say "we ship on tuesday no wednesday and then um we check the numbers" plus a second
+   topic. [ ] "Wednesday" only; paragraphs show as real line breaks in Notepad and Outlook.
+4. Say "what time is the meeting tomorrow". [ ] Pasted as a question, not answered.
+5. LLM URL changed to something unreachable: [ ] dictation still pastes (raw) within ~3 s, no
+   error popup; `main.log` has `Cleanup skipped … reason=`.
+6. `main.log`: [ ] `Cleaned up level=… ms=…`; no dictated text anywhere.
+
+## 15. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

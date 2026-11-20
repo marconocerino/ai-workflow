@@ -12,6 +12,8 @@ export interface DictationOutput {
 
 export interface DictationPipelineDeps {
   transcribe(recording: Recording): Promise<TranscriptionResult>;
+  /** AI cleanup (VAI-307). Must never throw; returns the raw text on any problem. */
+  refine?(text: string): Promise<string>;
   output: DictationOutput;
   status: DictationStatus;
   /** Is the mic still open ("Listening") after dictation? */
@@ -20,7 +22,7 @@ export interface DictationPipelineDeps {
 }
 
 /**
- * Finished recording → speech-to-text → output (VAI-303). Recordings are handled one at a time,
+ * Finished recording → speech-to-text → AI cleanup (VAI-307) → output (VAI-303/304). Recordings are handled one at a time,
  * in order, so two quick dictations come out in the order they were spoken. While text is on
  * its way the tray shows "Transcribing" (unless a new recording has started).
  */
@@ -52,9 +54,17 @@ export class DictationPipeline {
         attempts: 0,
       };
     }
+    let text = result.kind === 'text' ? result.text : '';
+    if (result.kind === 'text' && this.d.refine) {
+      try {
+        text = await this.d.refine(text);
+      } catch {
+        this.d.logger?.error('Cleanup crashed; pasting the raw text');
+      }
+    }
     this.pending--;
     try {
-      if (result.kind === 'text') await this.d.output.text(result.text);
+      if (result.kind === 'text') await this.d.output.text(text);
       else if (result.kind === 'problem') this.d.output.problem(result.message);
     } catch {
       this.d.logger?.error('Could not deliver dictation result');

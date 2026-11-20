@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { AiWorkflowApi } from '../shared/ipc-contract';
 import { type FakeAiServer, startFakeAiServer } from './fake-ai-server';
 import { FAKE_MIC_ARGS } from './fake-mic';
-import { ROOT, launchApp, tempProfile } from './launch';
+import { ROOT, closeApp, launchApp, tempProfile } from './launch';
 
 // VAI-303: hold Ctrl → fake mic → local OpenAI-compatible fake server → text on the clipboard.
 
@@ -65,7 +65,7 @@ async function start(ai: { baseUrl?: string; timeoutMs?: number; retries?: numbe
 }
 
 test.afterEach(async () => {
-  await app?.close().catch(() => undefined);
+  await closeApp(app);
   await server?.close();
   rmSync(profile, { recursive: true, force: true });
 });

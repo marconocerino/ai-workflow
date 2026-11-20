@@ -79,13 +79,25 @@ describe('sanitizeSettings', () => {
 });
 
 describe('dictation settings (v2)', () => {
-  it('defaults: hold Ctrl, Ctrl+Shift+Space, system default mic, mic ready for 10 s', () => {
+  it('defaults: hold Ctrl, Ctrl+Shift+Space, system default mic, mic ready for 10 s, Light cleanup', () => {
     expect(defaultSettings().dictation).toEqual({
       mode: 'hold',
       toggleShortcut: ['Ctrl', 'Shift', 'Space'],
       micDeviceId: '',
       keepMicReadySeconds: 10,
+      cleanup: 'light',
     });
+  });
+
+  it('cleanup level: off, light or polished; anything else is reported and ignored', () => {
+    for (const level of ['off', 'light', 'polished'] as const) {
+      expect(
+        applyPatch(defaultSettings(), { dictation: { cleanup: level } }).dictation.cleanup,
+      ).toBe(level);
+    }
+    expect(() =>
+      applyPatch(defaultSettings(), { dictation: { cleanup: 'heavy' as never } }),
+    ).toThrow(/dictation\.cleanup/);
   });
 
   it('accepts a device id and the keep-ready options', () => {

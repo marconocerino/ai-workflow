@@ -39,6 +39,11 @@ const TEXT_LEFT_ON_CLIPBOARD = new Set<PasteFailure>([
   'send',
 ]);
 
+/** Windows apps (Notepad, Outlook) expect CRLF line breaks, e.g. for Polished paragraphs. */
+export function forPlatform(text: string, platform: NodeJS.Platform | undefined): string {
+  return platform === 'win32' ? text.replace(/\r?\n/g, '\r\n') : text;
+}
+
 /** The helper's one result line (`PASTED restored`, `FAILED elevated`, …); anything else = crashed. */
 export function parsePasteLine(line: string | null | undefined): PasteOutcome {
   const [word, detail] = (line ?? '').trim().split(' ');
@@ -127,7 +132,8 @@ export function pasteOutput(d: PasteOutputDeps): DictationOutput {
   const now = d.now ?? (() => performance.now());
   const pasteKey = d.platform === 'darwin' ? '⌘V' : 'Ctrl+V';
   return {
-    async text(text) {
+    async text(dictated) {
+      const text = forPlatform(dictated, d.platform);
       const started = now();
       const outcome = await d.paste(text);
       const ms = Math.round(now() - started);

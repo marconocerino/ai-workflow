@@ -46,3 +46,24 @@ export async function mainWindow(app: ElectronApplication): Promise<Page> {
     await new Promise((r) => setTimeout(r, 50));
   }
 }
+
+/**
+ * Close the app at the end of a test. If it hasn't exited after `ms` (a rare hang seen once in
+ * the full e2e run during VAI-307), kill it and say so — a hang shows up as a warning instead of
+ * stalling the whole worker for a minute.
+ */
+export async function closeApp(app: ElectronApplication | undefined, ms = 15_000): Promise<void> {
+  if (!app) return;
+  const closed = app.close().then(
+    () => true,
+    () => true,
+  );
+  const inTime = await Promise.race([
+    closed,
+    new Promise<false>((r) => setTimeout(() => r(false), ms)),
+  ]);
+  if (!inTime) {
+    console.warn(`[e2e] app did not close within ${ms} ms; killing it`);
+    app.process().kill('SIGKILL');
+  }
+}

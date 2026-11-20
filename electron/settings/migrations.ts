@@ -16,6 +16,9 @@ export const migrations: Record<number, (data: unknown) => unknown> = {
   // v2 → v3 (VAI-302): adds dictation.micDeviceId and keepMicReadySeconds (defaults filled in
   // by validation); everything else unchanged.
   2: (data) => data,
+  // v3 → v4 (VAI-307): adds dictation.cleanup (default "light" from validation); everything else
+  // unchanged.
+  3: (data) => data,
 };
 
 export class SettingsMigrationError extends Error {

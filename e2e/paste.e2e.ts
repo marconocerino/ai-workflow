@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { AiWorkflowApi } from '../shared/ipc-contract';
 import { type FakeAiServer, startFakeAiServer } from './fake-ai-server';
 import { FAKE_MIC_ARGS } from './fake-mic';
-import { ROOT, launchApp, tempProfile } from './launch';
+import { ROOT, closeApp, launchApp, tempProfile } from './launch';
 
 // VAI-304: hold Ctrl → fake mic → fake speech server → fake aiw-paste helper (paste at cursor).
 
@@ -75,7 +75,7 @@ async function start(
 }
 
 test.afterEach(async () => {
-  await app?.close().catch(() => undefined);
+  await closeApp(app);
   await server?.close();
   rmSync(profile, { recursive: true, force: true });
 });
