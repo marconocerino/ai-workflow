@@ -27,12 +27,13 @@ export interface DictationSettings {
 }
 
 /** How cleanup writes for an app (VAI-308). Neutral: nothing beyond the cleanup level. */
-export const STYLES = ['neutral', 'professional', 'casual', 'code'] as const;
+export const STYLES = ['neutral', 'professional', 'email', 'casual', 'code'] as const;
 export type StyleName = (typeof STYLES)[number];
 
 export const STYLE_LABELS: Record<StyleName, string> = {
   neutral: 'Neutral',
   professional: 'Professional',
+  email: 'Email',
   casual: 'Casual',
   code: 'Code',
 };
@@ -47,7 +48,7 @@ export const MAX_STYLE_RULES = 50;
 export const MAX_APP_NAME = 40;
 
 export const DEFAULT_STYLE_RULES: readonly StyleRule[] = [
-  { app: 'Outlook', style: 'professional' },
+  { app: 'Outlook', style: 'email' },
   { app: 'Word', style: 'professional' },
   { app: 'Teams', style: 'casual' },
   { app: 'Slack', style: 'casual' },

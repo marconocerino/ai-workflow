@@ -99,6 +99,36 @@ describe('SettingsStore', () => {
     expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
   });
 
+  it('v5 file with the shipped default rules → v6: Outlook becomes Email, all else unchanged', () => {
+    const v5 = fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v5.json'), 'utf8');
+    write(v5);
+    const loaded = store().load();
+    const old = JSON.parse(v5).data;
+    expect(loaded).toEqual({
+      ...old,
+      dictation: {
+        ...old.dictation,
+        styles: old.dictation.styles.map((r: { app: string }) =>
+          r.app === 'Outlook' ? { app: 'Outlook', style: 'email' } : r,
+        ),
+      },
+    });
+    expect(loaded.dictation.styles).toEqual([...DEFAULT_STYLE_RULES]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('v5 file with rules the user edited → v6: rules left exactly as they were', () => {
+    const edited = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v5.json'), 'utf8'),
+    );
+    edited.data.dictation.styles = [
+      { app: 'Outlook', style: 'professional' },
+      { app: 'Notion', style: 'casual' },
+    ];
+    write(JSON.stringify(edited));
+    expect(store().load().dictation.styles).toEqual(edited.data.dictation.styles);
+  });
+
   it('v1 file from an earlier build (VAI-204): every value carries over unchanged', () => {
     const v1 = fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v1.json'), 'utf8');
     write(v1);

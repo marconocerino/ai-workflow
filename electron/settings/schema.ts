@@ -19,7 +19,7 @@ import {
 } from '../../shared/settings';
 
 /** Bump when the stored shape changes, and add a migration in migrations.ts. */
-export const SETTINGS_VERSION = 5;
+export const SETTINGS_VERSION = 6;
 
 export function defaultSettings(): Settings {
   return {

@@ -191,10 +191,14 @@ Before each app: copy something of your own (e.g. a word in Notepad) so you can 
 
 ## 15. Style per app
 
-1. Settings → Style per app: [ ] Outlook, Word = Professional; Teams, Slack = Casual; VS Code,
-   Terminal, Command Prompt = Code.
+1. Settings → Style per app: [ ] Outlook = Email; Word = Professional; Teams, Slack = Casual;
+   VS Code, Terminal, Command Prompt = Code.
+   Outlook (new mail): "hi john how are you just a quick update the deck is ready kind regards
+   marco". [ ] Bar "Outlook · Email"; pasted as "Hi John," / empty line / message / empty line /
+   "Kind regards," / "Marco", with real line breaks. "the deck is ready" alone: [ ] no greeting or
+   sign-off added.
 2. Say "hey gonna send the deck tomorrow" into Outlook, then Teams. [ ] The bar shows
-   "Outlook · Professional" / "Teams · Casual"; Outlook gets "going to" and a full stop, Teams keeps
+   "Outlook · Email" / "Teams · Casual"; Outlook gets "going to" and a full stop, Teams keeps
    "gonna" and no final full stop. Neither adds a greeting or sign-off.
 3. VS Code: "open package dot json and import use state". [ ] `package.json`, `useState`.
    Windows Terminal: "make dir projects", "cd projects", "git status". [ ] `mkdir projects`,

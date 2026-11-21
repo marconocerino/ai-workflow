@@ -1,0 +1,54 @@
+{
+  "version": 5,
+  "data": {
+    "dictation": {
+      "mode": "toggle",
+      "toggleShortcut": ["Ctrl", "Alt", "K"],
+      "micDeviceId": "abc123",
+      "keepMicReadySeconds": 30,
+      "cleanup": "polished",
+      "styles": [
+        {
+          "app": "Outlook",
+          "style": "professional"
+        },
+        {
+          "app": "Word",
+          "style": "professional"
+        },
+        {
+          "app": "Teams",
+          "style": "casual"
+        },
+        {
+          "app": "Slack",
+          "style": "casual"
+        },
+        {
+          "app": "VS Code",
+          "style": "code"
+        },
+        {
+          "app": "Terminal",
+          "style": "code"
+        },
+        {
+          "app": "Command Prompt",
+          "style": "code"
+        }
+      ]
+    },
+    "ai": {
+      "asr": {
+        "baseUrl": "https://asr.company.internal/v1",
+        "model": "qwen3-asr"
+      },
+      "llm": {
+        "baseUrl": "https://llm.company.internal/v1",
+        "model": "qwen3-32b"
+      },
+      "timeoutMs": 45000,
+      "retries": 3
+    }
+  }
+}

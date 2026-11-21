@@ -195,8 +195,12 @@ scripts/dev.mjs    `npm start` runner
 
 ## Style per app
 
-- Settings → Style per app: a style per app — **Professional** (Outlook, Word), **Casual** (Teams,
-  Slack), **Code** (VS Code, terminals) by default; any other app uses **Neutral** (D-025).
+- Settings → Style per app: a style per app — **Email** (Outlook), **Professional** (Word),
+  **Casual** (Teams, Slack), **Code** (VS Code, terminals) by default; any other app uses
+  **Neutral** (D-025).
+- **Email** lays out what you said as an email: "hi john … kind regards marco" becomes greeting,
+  paragraphs, "Kind regards," and "Marco" on their own lines. It never adds a greeting or sign-off
+  you didn't say (Outlook adds your signature).
 - **Code** writes what you say as typed: "make dir projects" → `mkdir projects`, "ls dash la" →
   `ls -la`, no full stop. It never turns a description into a command, and nothing is ever run:
   the app pastes, it doesn't press Enter.
