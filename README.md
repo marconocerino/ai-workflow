@@ -193,6 +193,16 @@ scripts/dev.mjs    `npm start` runner
 - Dev setup until the company LLM is available: URL `https://api.groq.com/openai/v1`, a fast
   non-reasoning model from Groq's list (e.g. `qwen/qwen3.8-27b`), your own key. Dev only (D-021).
 
+## Style per app
+
+- Settings → Style per app: a style per app — **Professional** (Outlook, Word), **Casual** (Teams,
+  Slack), **Code** (VS Code, terminals) by default; any other app uses **Neutral** (D-025).
+- **Code** writes what you say as typed: "make dir projects" → `mkdir projects`, "ls dash la" →
+  `ls -la`, no full stop. It never turns a description into a command, and nothing is ever run:
+  the app pastes, it doesn't press Enter.
+- The app is the short name in the dictation bar ("Outlook"), looked up once per recording, never a
+  window title. The bar shows "Outlook · Professional". Styles need AI cleanup on (Light/Polished).
+
 ## Dictation overlay
 
 - While recording and transcribing, a small bar floats at the bottom-centre of the screen under the

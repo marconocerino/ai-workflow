@@ -22,6 +22,45 @@ export interface DictationSettings {
   keepMicReadySeconds: KeepMicReadySeconds;
   /** AI cleanup of dictated text before pasting (VAI-307). */
   cleanup: CleanupLevel;
+  /** Writing style per app (VAI-308); apps without a rule use Neutral. */
+  styles: StyleRule[];
+}
+
+/** How cleanup writes for an app (VAI-308). Neutral: nothing beyond the cleanup level. */
+export const STYLES = ['neutral', 'professional', 'casual', 'code'] as const;
+export type StyleName = (typeof STYLES)[number];
+
+export const STYLE_LABELS: Record<StyleName, string> = {
+  neutral: 'Neutral',
+  professional: 'Professional',
+  casual: 'Casual',
+  code: 'Code',
+};
+
+/** `app` is the short app name shown in the overlay, e.g. "Outlook" (never a window title). */
+export interface StyleRule {
+  app: string;
+  style: StyleName;
+}
+
+export const MAX_STYLE_RULES = 50;
+export const MAX_APP_NAME = 40;
+
+export const DEFAULT_STYLE_RULES: readonly StyleRule[] = [
+  { app: 'Outlook', style: 'professional' },
+  { app: 'Word', style: 'professional' },
+  { app: 'Teams', style: 'casual' },
+  { app: 'Slack', style: 'casual' },
+  { app: 'VS Code', style: 'code' },
+  { app: 'Terminal', style: 'code' },
+  { app: 'Command Prompt', style: 'code' },
+];
+
+/** The style for an app: its rule (case-insensitive), else Neutral. */
+export function styleFor(rules: readonly StyleRule[], app: string | null): StyleName {
+  if (!app) return 'neutral';
+  const key = app.trim().toLowerCase();
+  return rules.find((r) => r.app.trim().toLowerCase() === key)?.style ?? 'neutral';
 }
 
 /** off: paste what was heard · light: punctuation, capitals, fillers · polished: also false starts, paragraphs */

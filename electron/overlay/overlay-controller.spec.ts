@@ -26,6 +26,7 @@ function setup(opts: { source?: 'hold' | 'toggle'; app?: Promise<string | null> 
     workArea: () => WORK_AREA,
     source: () => opts.source ?? 'hold',
     frontApp: () => opts.app ?? Promise.resolve('Outlook'),
+    styleLabel: (app) => (app === 'Outlook' ? 'Professional' : null),
     setTimer: (fn, ms) => timers.push({ fn, ms }),
     clearTimer: () => timers.splice(0),
   });
@@ -53,9 +54,10 @@ describe('OverlayController', () => {
     const { status, log, last, controller } = setup();
     status.set('recording');
     expect(log).toEqual([`show ${(1920 - 600) / 2},${1040 - 92 - 24}`]);
-    expect(last()).toEqual({ phase: 'recording', level: 0, app: null, hint: null });
+    expect(last()).toEqual({ phase: 'recording', level: 0, app: null, style: null, hint: null });
     await tick();
     expect(last().app).toBe('Outlook');
+    expect(last().style).toBe('Professional'); // "Outlook · Professional" (VAI-308)
     expect(controller.describe().showMs).toBeGreaterThanOrEqual(0);
   });
 

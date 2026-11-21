@@ -9,7 +9,7 @@ const BAR_WEIGHTS = [0.55, 0.8, 1, 0.8, 0.55];
  * The floating dictation bar (VAI-305, design: Dictation overlay@1x.png). Shown in the overlay
  * window while recording and transcribing; also on /gallery.
  *
- *   <aiw-dictation-bar phase="recording" [level]="0.6" app="Outlook" hint="Esc to cancel" />
+ *   <aiw-dictation-bar phase="recording" [level]="0.6" app="Outlook" appStyle="Professional" />
  */
 @Component({
   selector: 'aiw-dictation-bar',
@@ -33,7 +33,9 @@ const BAR_WEIGHTS = [0.55, 0.8, 1, 0.8, 0.55];
         <span class="hint">{{ hint() }}</span>
       }
       @if (app(); as name) {
-        <aiw-chip class="app" data-testid="target-app">{{ name }}</aiw-chip>
+        <aiw-chip class="app" data-testid="target-app"
+          >{{ name }}{{ appStyle() ? ' · ' + appStyle() : '' }}</aiw-chip
+        >
       }
     </div>
   `,
@@ -45,6 +47,8 @@ export class DictationBar {
   readonly level = input(0);
   /** The app the text will go to, e.g. "Outlook". */
   readonly app = input<string | null>(null);
+  /** Cleanup style for the app, e.g. "Professional" (VAI-308); shown after the app name. */
+  readonly appStyle = input<string | null>(null);
   /** Small hint, e.g. "Esc to cancel" in toggle mode. */
   readonly hint = input<string | null>(null);
 

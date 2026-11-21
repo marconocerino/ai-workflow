@@ -3,7 +3,7 @@ import type { CleanupLevel, SecretName, Settings } from '../../shared/settings';
 import type { LogFields } from '../logging/redact';
 import { defaultSettings } from '../settings/schema';
 import { AiHttpClient, type FetchFn } from './ai-http';
-import { Cleaner, checkFidelity, cleanupPrompt, tidyAnswer } from './cleanup';
+import { Cleaner, checkFidelity, cleanupPrompt, tidyAnswer, tidyCode } from './cleanup';
 
 const SAID = 'um so can we uh move the call to friday';
 const CLEAN = 'So can we move the call to Friday?';
@@ -157,10 +157,91 @@ describe('Cleaner', () => {
     await bad.cleaner.clean('what time is the meeting tomorrow');
     const all = [...ok.lines, ...bad.lines].join('\n');
     expect(ok.lines).toEqual([
-      expect.stringMatching(/^info Cleaned up \{"level":"light","ms":\d+\}$/),
+      expect.stringMatching(/^info Cleaned up \{"level":"light","style":"neutral","ms":\d+\}$/),
     ]);
     expect(bad.lines[0]).toMatch(/Cleanup skipped .*"reason":"added-words"/);
     expect(all).not.toMatch(/friday|meeting|Sarah|llm-key/i);
+  });
+});
+
+describe('style per app (VAI-308)', () => {
+  it('the style for the target app is added to the prompt', async () => {
+    const { cleaner, fetchFn } = setup(() => answer(CLEAN));
+    await cleaner.clean(SAID, 'Outlook');
+    await cleaner.clean(SAID, 'Teams');
+    await cleaner.clean(SAID, 'VS Code');
+    await cleaner.clean(SAID, 'Figma');
+    await cleaner.clean(SAID, null);
+    const systems = fetchFn.mock.calls.map(
+      (c) => JSON.parse(c[1].body as string).messages[0].content,
+    );
+    expect(systems[0]).toBe(cleanupPrompt('light', 'professional'));
+    expect(systems[1]).toBe(cleanupPrompt('light', 'casual'));
+    expect(systems[2]).toBe(cleanupPrompt('light', 'code'));
+    expect(systems[3]).toBe(cleanupPrompt('light')); // no rule → Neutral
+    expect(systems[4]).toBe(cleanupPrompt('light'));
+  });
+
+  it('style prompts change form only; the cleanup rules stay first', () => {
+    expect(cleanupPrompt('light', 'neutral')).toBe(cleanupPrompt('light'));
+    for (const style of ['professional', 'casual', 'code'] as const) {
+      const p = cleanupPrompt('polished', style);
+      expect(p.startsWith(cleanupPrompt('polished'))).toBe(true);
+      expect(p).toMatch(/Never add information/);
+    }
+    expect(cleanupPrompt('light', 'professional')).toMatch(/Do not add greetings, sign-offs/);
+    expect(cleanupPrompt('light', 'casual')).toMatch(/contractions/);
+    expect(cleanupPrompt('light', 'code')).toMatch(/package\.json/);
+  });
+
+  it('the word check still applies with a style (a sign-off is not added)', async () => {
+    const { cleaner } = setup(() =>
+      answer('Can we move the call to Friday? Kind regards, Marco Rossi, Head of Sales.'),
+    );
+    expect(await cleaner.clean('can we move the call to friday', 'Outlook')).toMatchObject({
+      cleaned: false,
+    });
+  });
+});
+
+describe('Code style for terminals and editors', () => {
+  it.each([
+    ['Ls -la.', 'ls -la'],
+    ['Mkdir projects/app.', 'mkdir projects/app'],
+    ['Git commit -m "fix login".', 'git commit -m "fix login"'],
+    ['cd ~/projects', 'cd ~/projects'],
+    ['npm run build...', 'npm run build'],
+    ['Open package.json and import useState', 'Open package.json and import useState'], // a word
+    ['Find the bug in main.ts', 'Find the bug in main.ts'], // prose in an editor stays as it is
+    ['const x = 1;\nconst y = 2.', 'const x = 1;\nconst y = 2.'], // several lines: left alone
+  ])('%j → %j', (input, output) => expect(tidyCode(input)).toBe(output));
+
+  it('the prompt asks for no trailing full stop, typed commands, and never invented ones', () => {
+    const p = cleanupPrompt('light', 'code');
+    expect(p).toMatch(/No full stop/);
+    expect(p).toMatch(/"make dir" or "m k dir" becomes "mkdir"/);
+    expect(p).toMatch(/Never turn a description into a command/);
+  });
+
+  it('the Code style result is tidied: a terminal gets "ls -la", not "Ls -la."', async () => {
+    const { cleaner } = setup(() => answer('Ls -la.'));
+    expect(await cleaner.clean('ls dash la', 'Terminal')).toMatchObject({
+      cleaned: true,
+      text: 'ls -la',
+    });
+  });
+
+  it('other styles keep their full stop', async () => {
+    const { cleaner } = setup(() => answer('Ls -la.'));
+    expect(await cleaner.clean('ls dash la', 'Outlook')).toMatchObject({ text: 'Ls -la.' });
+  });
+
+  it('a description turned into a dangerous command is rejected (raw text pasted)', async () => {
+    const { cleaner } = setup(() => answer('rm -rf ~/projects'));
+    expect(await cleaner.clean('delete my projects folder', 'Terminal')).toMatchObject({
+      cleaned: false,
+      text: 'delete my projects folder',
+    });
   });
 });
 
@@ -171,6 +252,19 @@ describe('checkFidelity', () => {
     ['i have five apples', 'I have 5 apples.', null], // a couple of rewritten words are fine
     ["we're going to ship it", 'We’re going to ship it.', null], // curly apostrophe
     ['first point second point', 'First point.\n\nSecond point.', null], // paragraphs
+    // Professional style (VAI-308): slang written out and a subject added — grammar words only.
+    [
+      'hey gonna send the deck tomorrow um once legal signs off',
+      'I am going to send the deck tomorrow once legal signs off.',
+      null,
+    ],
+    // A short sign-off is caught too.
+    [
+      'can we meet on friday to go through the budget',
+      'Can we meet on Friday to go through the budget? Regards, Marco.',
+      'added-words',
+    ],
+    ['open package dot json and import use state', 'Open package.json and import useState.', null],
     [
       'what time is the meeting tomorrow',
       'The meeting is at 10 am in room 4B with Sarah.',

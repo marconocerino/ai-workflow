@@ -26,6 +26,8 @@ export interface OverlayDeps {
   source(): 'hold' | 'toggle' | null;
   /** Name of the app in front, e.g. "Outlook"; null if unknown. */
   frontApp?(): Promise<string | null>;
+  /** Style label for that app ("Professional"), or null for Neutral / cleanup off (VAI-308). */
+  styleLabel?(app: string): string | null;
   logger?: ScopedLogger;
   now?(): number;
   setTimer?(fn: () => void, ms: number): unknown;
@@ -159,6 +161,7 @@ export class OverlayController {
       phase: 'recording',
       level: 0,
       app: null,
+      style: null,
       hint: this.d.source() === 'toggle' ? 'Esc to cancel' : null,
     };
     this.d.window.send(this.state);
@@ -168,7 +171,9 @@ export class OverlayController {
     void this.d
       .frontApp?.()
       .then((app) => {
-        if (session === this.session && this.state.phase !== 'hidden' && app) this.update({ app });
+        if (session === this.session && this.state.phase !== 'hidden' && app) {
+          this.update({ app, style: this.d.styleLabel?.(app) ?? null });
+        }
       })
       .catch(() => undefined);
   }

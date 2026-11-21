@@ -12,8 +12,10 @@ export interface DictationOutput {
 
 export interface DictationPipelineDeps {
   transcribe(recording: Recording): Promise<TranscriptionResult>;
-  /** AI cleanup (VAI-307). Must never throw; returns the raw text on any problem. */
-  refine?(text: string): Promise<string>;
+  /** AI cleanup (VAI-307) in the target app's style (VAI-308). Returns the raw text on problems. */
+  refine?(text: string, app: string | null): Promise<string>;
+  /** The app this recording goes to, captured when it started (VAI-308). */
+  targetApp?(): Promise<string | null>;
   output: DictationOutput;
   status: DictationStatus;
   /** Is the mic still open ("Listening") after dictation? */
@@ -36,12 +38,14 @@ export class DictationPipeline {
   onRecording(recording: Recording): Promise<void> {
     this.pending++;
     this.showBusy();
-    const run = this.queue.then(() => this.handle(recording));
+    // Capture now: by the time it's this recording's turn, a newer one may have started.
+    const app = this.d.targetApp?.() ?? Promise.resolve(null);
+    const run = this.queue.then(() => this.handle(recording, app));
     this.queue = run;
     return run;
   }
 
-  private async handle(recording: Recording): Promise<void> {
+  private async handle(recording: Recording, target: Promise<string | null>): Promise<void> {
     let result: TranscriptionResult;
     try {
       result = await this.d.transcribe(recording);
@@ -57,7 +61,7 @@ export class DictationPipeline {
     let text = result.kind === 'text' ? result.text : '';
     if (result.kind === 'text' && this.d.refine) {
       try {
-        text = await this.d.refine(text);
+        text = await this.d.refine(text, await target);
       } catch {
         this.d.logger?.error('Cleanup crashed; pasting the raw text');
       }

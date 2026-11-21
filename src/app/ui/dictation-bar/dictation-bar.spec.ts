@@ -8,6 +8,7 @@ import { DictationBar } from './dictation-bar';
     [phase]="phase()"
     [level]="level()"
     [app]="app()"
+    [appStyle]="appStyle()"
     [hint]="hint()"
   />`,
 })
@@ -15,6 +16,7 @@ class Host {
   readonly phase = signal<'recording' | 'transcribing'>('recording');
   readonly level = signal(0);
   readonly app = signal<string | null>(null);
+  readonly appStyle = signal<string | null>(null);
   readonly hint = signal<string | null>(null);
 }
 
@@ -49,6 +51,11 @@ describe('DictationBar (VAI-305)', () => {
     await settle();
     expect(el.querySelector('[data-testid="target-app"]')!.textContent!.trim()).toBe('Outlook');
     expect(el.textContent).toContain('Esc to cancel');
+    host.appStyle.set('Professional');
+    await settle();
+    expect(el.querySelector('[data-testid="target-app"]')!.textContent!.trim()).toBe(
+      'Outlook · Professional',
+    );
   });
 
   it('transcribing: no meter, no hint, says "Transcribing…"', async () => {

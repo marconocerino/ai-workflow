@@ -113,7 +113,7 @@ test('Light: the cleaned text is pasted; the LLM got the transcript and the Ligh
   expect(server.chats[0]!.model).toBe(LLM_MODEL);
   expect(system!.content).toContain('Light cleanup');
   expect(user!.content).toBe(`<transcript>\n${SPOKEN}\n</transcript>`);
-  expect(log()).toMatch(/\[dictation\] Cleaned up level=light ms=\d+$/m);
+  expect(log()).toMatch(/\[dictation\] Cleaned up level=light style=neutral ms=\d+$/m);
   expect(log()).not.toContain('quarterly');
 });
 
@@ -132,7 +132,7 @@ test('cleanup slower than 3 s: the raw text is pasted, without waiting longer', 
   const released = Date.now();
   await expect.poll(pasted, { timeout: 8000 }).toEqual([{ text: SPOKEN, args: 0 }]);
   expect(Date.now() - released).toBeLessThan(5500);
-  expect(log()).toMatch(/Cleanup skipped level=light reason=timeout ms=\d+$/m);
+  expect(log()).toMatch(/Cleanup skipped level=light style=neutral reason=timeout ms=\d+$/m);
 });
 
 test('an LLM that adds facts is not trusted: the raw text is pasted', async () => {
@@ -140,7 +140,7 @@ test('an LLM that adds facts is not trusted: the raw text is pasted', async () =
   server.chat.content = 'So the quarterly numbers look fine, up 12% per Sarah.'; // same length
   await dictate(1500);
   await expect.poll(pasted).toEqual([{ text: SPOKEN, args: 0 }]);
-  expect(log()).toMatch(/Cleanup skipped level=light reason=added-words/);
+  expect(log()).toMatch(/Cleanup skipped level=light style=neutral reason=added-words/);
 });
 
 test('Settings → AI cleanup: choosing Polished is saved and used', async () => {

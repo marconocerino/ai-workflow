@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { SettingsMigrationError, migrate, readEnvelope } from './migrations';
 import { SETTINGS_VERSION, SettingsValidationError, defaultSettings } from './schema';
 import { SettingsReadOnlyError, SettingsStore } from './settings-store';
+import { DEFAULT_STYLE_RULES } from '../../shared/settings';
 
 let dir: string;
 let warnings: string[];
@@ -66,6 +67,7 @@ describe('SettingsStore', () => {
       micDeviceId: '',
       keepMicReadySeconds: 10,
       cleanup: 'light',
+      styles: [...DEFAULT_STYLE_RULES],
     });
     expect(loaded.ai.retries).toBe(5);
     expect(warnings).toEqual([]);
@@ -76,7 +78,23 @@ describe('SettingsStore', () => {
     write(v3);
     const loaded = store().load();
     const old = JSON.parse(v3).data;
-    expect(loaded).toEqual({ ...old, dictation: { ...old.dictation, cleanup: 'light' } });
+    expect(loaded).toEqual({
+      ...old,
+      dictation: { ...old.dictation, cleanup: 'light', styles: [...DEFAULT_STYLE_RULES] },
+    });
+    expect(warnings).toEqual([]);
+    expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
+  });
+
+  it('v4 file (VAI-307) → v5: every value kept (incl. cleanup), default style rules added', () => {
+    const v4 = fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v4.json'), 'utf8');
+    write(v4);
+    const loaded = store().load();
+    const old = JSON.parse(v4).data;
+    expect(loaded).toEqual({
+      ...old,
+      dictation: { ...old.dictation, styles: [...DEFAULT_STYLE_RULES] },
+    });
     expect(warnings).toEqual([]);
     expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
   });

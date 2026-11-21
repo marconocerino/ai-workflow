@@ -20,6 +20,7 @@ const settings: Settings = {
     micDeviceId: '',
     keepMicReadySeconds: 10,
     cleanup: 'light',
+    styles: [],
   },
   ai: {
     asr: { baseUrl: 'https://asr.company.internal/v1', model: 'qwen3-asr' },

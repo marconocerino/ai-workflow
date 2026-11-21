@@ -60,3 +60,11 @@ Before each app copy a word of your own, so you can check it comes back.
 2. TextEdit, Light: "um so can we uh move the call to friday". [ ] "So can we move the call to Friday?"
 3. Polished: "we ship on tuesday no wednesday" plus a second topic. [ ] "Wednesday" only, paragraphs.
 4. "what time is the meeting tomorrow". [ ] Pasted as the question, not an answer.
+
+## 6. Style per app
+
+1. Settings → Style per app: add "TextEdit" → Professional and "Slack" (if installed) stays Casual.
+2. TextEdit: "hey gonna send the deck tomorrow". [ ] Bar "TextEdit · Professional"; "going to", full stop.
+3. VS Code: "open package dot json". [ ] Bar "VS Code · Code"; `package.json`.
+4. Terminal: "ls dash la", "make dir test", "cd tilde slash projects". [ ] `ls -la`, `mkdir test`,
+   `cd ~/projects` — no full stop, nothing runs until you press Enter.

@@ -251,3 +251,26 @@ describe('line breaks', () => {
     expect(clip).toEqual(['One.\r\n\r\nTwo.\r\nThree.', 'One.\n\nTwo.']);
   });
 });
+
+describe('style per app (VAI-308)', () => {
+  it('cleanup gets the app captured when the recording arrived, even if a newer one started', async () => {
+    let app = 'Outlook';
+    const seen: (string | null)[] = [];
+    const pipeline = new DictationPipeline({
+      transcribe: async () => ({ kind: 'text', text: 'hi', latencyMs: 1, attempts: 1 }),
+      refine: async (t, a) => {
+        seen.push(a);
+        return t;
+      },
+      targetApp: () => Promise.resolve(app),
+      output: { text: () => undefined, problem: () => undefined },
+      status: new DictationStatus(),
+      micReady: () => false,
+    });
+    const first = pipeline.onRecording(rec());
+    app = 'Teams'; // the next dictation started in Teams before the first was cleaned up
+    const second = pipeline.onRecording(rec());
+    await Promise.all([first, second]);
+    expect(seen).toEqual(['Outlook', 'Teams']);
+  });
+});

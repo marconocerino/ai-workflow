@@ -14,6 +14,7 @@ function stored(llmBaseUrl = 'https://llm.company.internal/v1'): Settings {
       micDeviceId: '',
       keepMicReadySeconds: 10,
       cleanup: 'light',
+      styles: [],
     },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },

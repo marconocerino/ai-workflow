@@ -1,3 +1,4 @@
+import { DEFAULT_STYLE_RULES } from '../../shared/settings';
 import { describe, expect, it } from 'vitest';
 import { SettingsValidationError, applyPatch, defaultSettings, sanitizeSettings } from './schema';
 
@@ -86,7 +87,34 @@ describe('dictation settings (v2)', () => {
       micDeviceId: '',
       keepMicReadySeconds: 10,
       cleanup: 'light',
+      styles: [...DEFAULT_STYLE_RULES],
     });
+  });
+
+  it('style rules (VAI-308): valid lists are trimmed and kept; bad ones are rejected', () => {
+    const next = applyPatch(defaultSettings(), {
+      dictation: { styles: [{ app: '  Notion ', style: 'casual' }] },
+    });
+    expect(next.dictation.styles).toEqual([{ app: 'Notion', style: 'casual' }]);
+    expect(applyPatch(defaultSettings(), { dictation: { styles: [] } }).dictation.styles).toEqual(
+      [],
+    );
+    for (const bad of [
+      [{ app: '', style: 'casual' }],
+      [{ app: 'x'.repeat(41), style: 'casual' }],
+      [{ app: 'Bell\u0007', style: 'casual' }],
+      [{ app: 'Notion', style: 'shouty' }],
+      [
+        { app: 'Notion', style: 'casual' },
+        { app: 'notion', style: 'code' },
+      ],
+      Array.from({ length: 51 }, (_, i) => ({ app: `App ${i}`, style: 'casual' })),
+      'Outlook',
+    ]) {
+      expect(() => applyPatch(defaultSettings(), { dictation: { styles: bad as never } })).toThrow(
+        /dictation\.styles/,
+      );
+    }
   });
 
   it('cleanup level: off, light or polished; anything else is reported and ignored', () => {

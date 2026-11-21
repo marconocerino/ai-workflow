@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { type ElectronApplication, type Page, expect, test } from '@playwright/test';
 import { chmodSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { DEFAULT_STYLE_RULES } from '../shared/settings';
 import { ROOT, launchApp, tempProfile } from './launch';
 
 const V1 = readFileSync(join(ROOT, 'electron/settings/fixtures/settings-v1.json'), 'utf8');
@@ -63,7 +64,7 @@ test('existing settings from an earlier build carry over unchanged', async () =>
 
   // The file was upgraded with every old value intact; new options got defaults.
   expect(settingsFile()).toEqual({
-    version: 4,
+    version: 5,
     data: {
       dictation: {
         mode: 'hold',
@@ -71,6 +72,7 @@ test('existing settings from an earlier build carry over unchanged', async () =>
         micDeviceId: '',
         keepMicReadySeconds: 10,
         cleanup: 'light',
+        styles: [...DEFAULT_STYLE_RULES],
       },
       ai: v1,
     },
