@@ -20,6 +20,7 @@ function stored(styles: StyleRule[] = [...DEFAULT_STYLE_RULES], cleanup: Cleanup
       keepMicReadySeconds: 10,
       cleanup,
       styles,
+      vocabulary: [],
     },
     ai: {
       asr: { baseUrl: '', model: '' },

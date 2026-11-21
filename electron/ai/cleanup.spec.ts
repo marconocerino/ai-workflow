@@ -10,10 +10,16 @@ const CLEAN = 'So can we move the call to Friday?';
 
 function setup(
   respond: FetchFn,
-  opts: { level?: CleanupLevel; llm?: Partial<Settings['ai']['llm']>; timeoutMs?: number } = {},
+  opts: {
+    level?: CleanupLevel;
+    llm?: Partial<Settings['ai']['llm']>;
+    timeoutMs?: number;
+    vocabulary?: string[];
+  } = {},
 ) {
   const settings = defaultSettings();
   settings.dictation.cleanup = opts.level ?? 'light';
+  settings.dictation.vocabulary = opts.vocabulary ?? [];
   settings.ai.llm = { baseUrl: 'https://llm.company.internal/v1', model: 'qwen3-32b', ...opts.llm };
   const fetchFn = vi.fn(respond);
   const lines: string[] = [];
@@ -272,6 +278,56 @@ describe('Code style for terminals and editors', () => {
       cleaned: false,
       text: 'delete my projects folder',
     });
+  });
+});
+
+describe('vocabulary (VAI-309)', () => {
+  it('the cleanup prompt lists the words, to spell them right and never add them', () => {
+    const p = cleanupPrompt('light', 'neutral', ['Siobhan', 'Kubernetes']);
+    expect(p).toContain('spell it exactly like this: Siobhan, Kubernetes.');
+    expect(p).toContain('Never add one that was not said.');
+    expect(cleanupPrompt('light', 'neutral', [])).toBe(cleanupPrompt('light'));
+  });
+
+  it('the cleaner sends the saved vocabulary, and accepts its spelling', async () => {
+    const { cleaner, fetchFn } = setup(() => answer('Update the Kubernetes deployment.'), {
+      vocabulary: ['Kubernetes'],
+    });
+    expect(await cleaner.clean('update the cooper netties deployment')).toMatchObject({
+      cleaned: true,
+      text: 'Update the Kubernetes deployment.',
+    });
+    const system = JSON.parse(fetchFn.mock.calls[0]![1].body as string).messages[0].content;
+    expect(system).toContain('spell it exactly like this: Kubernetes.');
+  });
+
+  it('a vocabulary word may replace a misheard one…', () => {
+    expect(
+      checkFidelity('update the cooper netties deployment', 'Update the Kubernetes deployment.', [
+        'Kubernetes',
+      ]),
+    ).toBeNull();
+  });
+
+  it('…but never be added on top', () => {
+    expect(checkFidelity('thanks', 'Thanks, Marco Rossi.', ['Marco', 'Rossi'])).toBe('added-words');
+    expect(
+      checkFidelity('update the cooper netties deployment', 'Update the Kubernetes deployment.'),
+    ).toBeNull(); // one new word is allowed anyway
+    expect(
+      checkFidelity(
+        'ask shivan to update the cooper netties deployment for a i w f',
+        'Ask Siobhan to update the Kubernetes deployment for AIWF.',
+        [],
+      ),
+    ).toBe('added-words');
+    expect(
+      checkFidelity(
+        'ask shivan to update the cooper netties deployment for a i w f',
+        'Ask Siobhan to update the Kubernetes deployment for AIWF.',
+        ['Siobhan', 'Kubernetes', 'AIWF'],
+      ),
+    ).toBeNull();
   });
 });
 

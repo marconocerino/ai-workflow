@@ -14,6 +14,7 @@ const stored: Settings = {
     keepMicReadySeconds: 10,
     cleanup: 'light',
     styles: [],
+    vocabulary: [],
   },
   ai: {
     asr: { baseUrl: 'https://asr.company/v1', model: 'qwen3-asr' },

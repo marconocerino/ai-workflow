@@ -88,7 +88,28 @@ describe('dictation settings (v2)', () => {
       keepMicReadySeconds: 10,
       cleanup: 'light',
       styles: [...DEFAULT_STYLE_RULES],
+      vocabulary: [],
     });
+  });
+
+  it('vocabulary (VAI-309): trimmed, inner spaces collapsed; bad lists rejected', () => {
+    const next = applyPatch(defaultSettings(), {
+      dictation: { vocabulary: ['  Kubernetes ', 'Visual   Studio', 'AIWF'] },
+    });
+    expect(next.dictation.vocabulary).toEqual(['Kubernetes', 'Visual Studio', 'AIWF']);
+    for (const bad of [
+      [''],
+      ['x'.repeat(41)],
+      ['Bell\u0007'],
+      ['Siobhan', 'siobhan'],
+      Array.from({ length: 201 }, (_, i) => `w${i}`),
+      [42],
+      'Kubernetes',
+    ]) {
+      expect(() =>
+        applyPatch(defaultSettings(), { dictation: { vocabulary: bad as never } }),
+      ).toThrow(/dictation\.vocabulary/);
+    }
   });
 
   it('style rules (VAI-308): valid lists are trimmed and kept; bad ones are rejected', () => {

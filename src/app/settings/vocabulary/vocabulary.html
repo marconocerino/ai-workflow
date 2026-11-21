@@ -1,0 +1,60 @@
+<div class="page">
+  <app-settings-header
+    heading="Vocabulary"
+    lead="Names, products and acronyms you want spelled right."
+  />
+
+  @if (error(); as message) {
+    <p class="aiw-card banner" role="alert">{{ message }}</p>
+  }
+
+  @if (loaded()) {
+    <h2 class="aiw-section-label" id="words-heading">Your words</h2>
+    <section class="aiw-card" aria-labelledby="words-heading">
+      <mat-form-field appearance="outline" class="words" subscriptSizing="dynamic">
+        <mat-label>Add a word</mat-label>
+        <mat-chip-grid #grid aria-label="Your vocabulary" data-testid="vocab-grid">
+          @for (word of words(); track word) {
+            <mat-chip-row (removed)="remove(word)" data-testid="vocab-word">
+              {{ word }}
+              <button matChipRemove type="button" [attr.aria-label]="'Remove ' + word">
+                <aiw-icon name="close" [size]="16" />
+              </button>
+            </mat-chip-row>
+          }
+          <input
+            [matChipInputFor]="grid"
+            [matChipInputSeparatorKeyCodes]="separators"
+            (matChipInputTokenEnd)="addFromInput($event)"
+            (paste)="onPaste($event)"
+            placeholder="e.g. Kubernetes, Siobhan, AIWF"
+            data-testid="vocab-input"
+          />
+        </mat-chip-grid>
+      </mat-form-field>
+
+      @if (notice(); as message) {
+        <p class="notice" role="status">{{ message }}</p>
+      }
+
+      <div class="foot">
+        <p class="aiw-muted">
+          Press Enter or type a comma to add. Paste a list to add many at once.
+        </p>
+        <p class="aiw-muted count" data-testid="vocab-count">{{ words().length }} of {{ max }}</p>
+      </div>
+    </section>
+
+    <h2 class="aiw-section-label" id="how-heading">How it's used</h2>
+    <section class="aiw-card how" aria-labelledby="how-heading">
+      <p>
+        Each dictation tells the speech-to-text server to expect these words, and AI cleanup to
+        spell them exactly like this when you say them. They're never added to text you didn't say.
+      </p>
+      <p class="aiw-muted">
+        Speech-to-text reads about the last 550 characters of the list, so your newest words count
+        most.
+      </p>
+    </section>
+  }
+</div>

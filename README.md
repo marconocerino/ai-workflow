@@ -207,6 +207,14 @@ scripts/dev.mjs    `npm start` runner
 - The app is the short name in the dictation bar ("Outlook"), looked up once per recording, never a
   window title. The bar shows "Outlook · Professional". Styles need AI cleanup on (Light/Polished).
 
+## Custom vocabulary
+
+- Settings → Vocabulary: names, products and acronyms (Enter, comma or paste a list; ✕ or
+  Backspace removes). Up to 200, each up to 40 characters (D-026).
+- Sent with every dictation as the transcription `prompt` (newest ~550 characters) and as a
+  spelling list in the cleanup prompt. They correct misheard words; they're never added to text
+  you didn't say, and never logged.
+
 ## Dictation overlay
 
 - While recording and transcribing, a small bar floats at the bottom-centre of the screen under the

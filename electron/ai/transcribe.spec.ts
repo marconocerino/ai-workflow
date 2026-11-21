@@ -67,6 +67,7 @@ describe('Transcriber', () => {
     const form = init.body as FormData;
     expect(form.get('model')).toBe('qwen3-asr');
     expect(form.get('response_format')).toBe('json');
+    expect(form.has('prompt')).toBe(false); // no vocabulary → no hint
     const file = form.get('file') as File;
     expect(file.name).toBe('dictation.wav');
     expect(file.type).toBe('audio/wav');
@@ -228,5 +229,16 @@ describe('Transcriber', () => {
     });
     expect(await transcriber.transcribe(recording())).toMatchObject({ code: 'blocked' });
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('vocabulary (VAI-309) goes to the server as the prompt hint; never logged', async () => {
+    const { transcriber, fetchFn, lines } = setup(
+      () => ok(),
+      (s) => (s.dictation.vocabulary = ['Siobhan', 'Kubernetes', 'AIWF']),
+    );
+    await transcriber.transcribe(recording());
+    const form = fetchFn.mock.calls[0]![1].body as FormData;
+    expect(form.get('prompt')).toBe('Siobhan, Kubernetes, AIWF');
+    expect(lines.join('\n')).not.toMatch(/Siobhan|Kubernetes/);
   });
 });

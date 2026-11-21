@@ -1,0 +1,43 @@
+.page {
+  max-width: 760px;
+  padding: var(--aiw-space-7) var(--aiw-space-7) 64px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiw-space-4);
+}
+
+.banner {
+  margin: 0;
+  padding: var(--aiw-space-4);
+}
+
+.words {
+  width: 100%;
+}
+
+.notice {
+  margin: var(--aiw-space-2) 0 0;
+  font-size: 14px;
+  color: var(--aiw-color-ink);
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--aiw-space-3);
+  margin-top: var(--aiw-space-3);
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.count {
+  white-space: nowrap;
+}
+
+.how p {
+  margin: 0 0 var(--aiw-space-2);
+  font-size: 14px;
+}

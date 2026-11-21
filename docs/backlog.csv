@@ -102,7 +102,7 @@ VAI-308b,E3 Dictation,Email style,"As a user, I want dictation into Outlook laid
 • Outlook uses Email by default; settings with untouched default rules are upgraded, edited rules are kept",2,Should,S2,"dictation, ai",Done
 VAI-309,E3 Dictation,Custom vocabulary,"As a user, I want to add names, products and acronyms, so they're spelled correctly.","• Add words by Enter, comma or pasting a list
 • Vocabulary sent as hints to ASR and cleanup
-• Words can be removed",2,Should,S2,dictation,To do
+• Words can be removed",2,Should,S2,dictation,Done
 VAI-310,E3 Dictation,Dictation history,"As a user, I want a searchable history of my dictations, so I can recover text I dictated earlier.","• Stored encrypted with app name, style and time
 • Search, copy and delete entries
 • Retention setting (e.g. 7, 30, 90 days)",3,Must,S2,"dictation, data",To do

@@ -24,6 +24,22 @@ export interface DictationSettings {
   cleanup: CleanupLevel;
   /** Writing style per app (VAI-308); apps without a rule use Neutral. */
   styles: StyleRule[];
+  /** Names, products and acronyms to spell right (VAI-309), oldest first. */
+  vocabulary: string[];
+}
+
+export const MAX_VOCABULARY = 200;
+export const MAX_VOCABULARY_WORD = 40;
+
+/**
+ * Split typed or pasted text into vocabulary entries (VAI-309): commas, semicolons and new lines
+ * separate; spaces inside an entry are kept ("Visual Studio"). Trimmed, empties dropped.
+ */
+export function splitVocabulary(text: string): string[] {
+  return text
+    .split(/[,;\r\n\t]+/)
+    .map((w) => w.trim().replace(/\s+/g, ' '))
+    .filter((w) => w.length > 0);
 }
 
 /** How cleanup writes for an app (VAI-308). Neutral: nothing beyond the cleanup level. */

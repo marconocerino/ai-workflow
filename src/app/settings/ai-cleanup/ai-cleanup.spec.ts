@@ -15,6 +15,7 @@ function stored(llmBaseUrl = 'https://llm.company.internal/v1'): Settings {
       keepMicReadySeconds: 10,
       cleanup: 'light',
       styles: [],
+      vocabulary: [],
     },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },

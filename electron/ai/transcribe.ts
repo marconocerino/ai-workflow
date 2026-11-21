@@ -7,6 +7,7 @@ import {
   AiTimeoutError,
   HostNotAllowedError,
 } from './ai-http';
+import { ASR_PROMPT_CHARS, vocabularyHint } from '../../shared/vocabulary';
 import { pcmToWav } from './wav';
 
 /** Shorter than this is an accidental press: not sent, no message. */
@@ -98,13 +99,14 @@ export class Transcriber {
     }
 
     const { model } = this.d.settings().ai.asr;
+    const hint = vocabularyHint(this.d.settings().dictation.vocabulary, ASR_PROMPT_CHARS);
     if (!model) return this.problem({ code: 'not-configured', retry: false }, 0);
     const wav = pcmToWav(recording.pcm);
     const maxAttempts = 1 + this.d.settings().ai.retries;
     const started = this.now();
 
     for (let attempt = 1; ; attempt++) {
-      const outcome = await this.attempt(wav, model);
+      const outcome = await this.attempt(wav, model, hint);
       if (outcome === '') return this.problem({ code: 'silent', retry: false }, attempt);
       if (typeof outcome === 'string') {
         const latencyMs = Math.round(this.now() - started);
@@ -132,11 +134,17 @@ export class Transcriber {
   }
 
   /** One request: the text, or why it failed. */
-  private async attempt(wav: Uint8Array<ArrayBuffer>, model: string): Promise<string | Failure> {
+  private async attempt(
+    wav: Uint8Array<ArrayBuffer>,
+    model: string,
+    hint: string,
+  ): Promise<string | Failure> {
     const form = new FormData();
     form.append('file', new Blob([wav], { type: 'audio/wav' }), 'dictation.wav');
     form.append('model', model);
     form.append('response_format', 'json');
+    // Custom vocabulary (VAI-309): the standard OpenAI/Whisper way to say "expect these words".
+    if (hint) form.append('prompt', hint);
 
     let res: Response;
     try {

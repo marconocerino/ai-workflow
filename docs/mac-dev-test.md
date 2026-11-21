@@ -75,3 +75,10 @@ Before each app copy a word of your own, so you can check it comes back.
 2. In a new mail: "hi john how are you just a quick update the deck is ready kind regards marco".
    [ ] "Hi John," / empty line / message / empty line / "Kind regards," / "Marco".
 3. "the deck is ready for review". [ ] One sentence, no greeting or sign-off added.
+
+## 8. Custom vocabulary
+
+1. Settings → Vocabulary: add an unusual name (e.g. a colleague's) with Enter, and paste a short
+   list. [ ] Chips appear.
+2. Dictate a sentence with them in TextEdit. [ ] Spelled as in the list.
+3. Remove one with ✕. [ ] Gone.

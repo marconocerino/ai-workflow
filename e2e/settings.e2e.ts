@@ -25,7 +25,7 @@ test('settings are saved as versioned JSON and survive a restart', async () => {
   await app.close();
 
   const onDisk = JSON.parse(readFileSync(join(profile, 'settings.json'), 'utf8'));
-  expect(onDisk.version).toBe(6);
+  expect(onDisk.version).toBe(7);
   expect(onDisk.data.ai.retries).toBe(4);
 
   ({ app, page } = await launchApp(profile));

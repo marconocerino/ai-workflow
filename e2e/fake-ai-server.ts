@@ -7,7 +7,13 @@ export interface FakeAiServer {
   /** Authorization headers received, in order. */
   authHeaders: (string | undefined)[];
   /** Transcription requests received (VAI-303): what was sent, never kept beyond the test. */
-  transcriptions: { model: string | null; wavBytes: number; contentType: string }[];
+  transcriptions: {
+    model: string | null;
+    /** The `prompt` hint (custom vocabulary, VAI-309), or null if none was sent. */
+    prompt: string | null;
+    wavBytes: number;
+    contentType: string;
+  }[];
   /** How POST /v1/audio/transcriptions answers; change it during a test. */
   transcribe: { status: number; text: string; delayMs: number };
   /** Chat completions received (VAI-307): the request body, parsed. */
@@ -58,10 +64,14 @@ export async function startFakeAiServer(apiKey: string, models: string[]): Promi
         const body = Buffer.concat(chunks);
         const text = body.toString('latin1');
         const model = /name="model"\r\n\r\n([^\r]*)\r\n/.exec(text)?.[1] ?? null;
+        const promptField = /name="prompt"\r\n\r\n([^\r]*)\r\n/.exec(text)?.[1];
+        const prompt =
+          promptField === undefined ? null : Buffer.from(promptField, 'latin1').toString('utf8');
         const riff = body.indexOf('RIFF');
         const dataLen = riff >= 0 ? body.readUInt32LE(riff + 40) : -1;
         transcriptions.push({
           model,
+          prompt,
           wavBytes: dataLen >= 0 ? dataLen + 44 : 0,
           contentType: req.headers['content-type'] ?? '',
         });

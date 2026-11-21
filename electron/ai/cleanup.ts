@@ -1,5 +1,6 @@
 import { type CleanupLevel, type Settings, type StyleName, styleFor } from '../../shared/settings';
 import type { ScopedLogger } from '../logging/logger';
+import { CLEANUP_HINT_CHARS, vocabularyHint } from '../../shared/vocabulary';
 import { type AiHttpClient, AiNotConfiguredError, HostNotAllowedError } from './ai-http';
 
 /** Cleanup must not hold up the paste for longer than this (VAI-307). */
@@ -103,9 +104,17 @@ export function tidyCode(text: string): string {
 export function cleanupPrompt(
   level: Exclude<CleanupLevel, 'off'>,
   style: StyleName = 'neutral',
+  vocabulary: readonly string[] = [],
 ): string {
   const parts = [RULES, LEVEL_RULES[level]];
   if (style !== 'neutral') parts.push(STYLE_RULES[style]);
+  const hint = vocabularyHint(vocabulary, CLEANUP_HINT_CHARS);
+  if (hint) {
+    // VAI-309: correct spelling only; never a reason to add a word that wasn't said.
+    parts.push(
+      `Vocabulary: when one of these is said (or misheard as something similar), spell it exactly like this: ${hint}. Never add one that was not said.`,
+    );
+  }
   return parts.join('\n\n');
 }
 
@@ -141,12 +150,19 @@ const GRAMMAR_WORDS = new Set(
  * don't count). An answer to a question, a followed instruction, a translation or an invented
  * detail fails this.
  */
-export function checkFidelity(spoken: string, cleaned: string): CleanupSkip | null {
+export function checkFidelity(
+  spoken: string,
+  cleaned: string,
+  vocabulary: readonly string[] = [],
+): CleanupSkip | null {
   if (!cleaned.trim()) return 'empty';
   if (cleaned.length > spoken.length * 1.1 + 20) return 'too-long';
   const said = new Set(words(spoken));
   const out = words(cleaned);
-  const added = out.filter((w) => !said.has(w) && !GRAMMAR_WORDS.has(w)).length;
+  // Vocabulary (VAI-309) may replace misheard words ("cooper netties" → "Kubernetes"), never be
+  // added on top: its words are free only when the result has no more words than were said.
+  const known = out.length <= words(spoken).length ? new Set(words(vocabulary.join(' '))) : null;
+  const added = out.filter((w) => !said.has(w) && !GRAMMAR_WORDS.has(w) && !known?.has(w)).length;
   // One rewritten word ("5" for "five", "useState"); a little more in long dictations.
   return added > Math.max(1, Math.floor(out.length * 0.05)) ? 'added-words' : null;
 }
@@ -185,6 +201,7 @@ export class Cleaner {
     const started = this.now();
     const level = this.d.settings().dictation.cleanup;
     const style = styleFor(this.d.settings().dictation.styles, app);
+    const vocabulary = this.d.settings().dictation.vocabulary;
     const { baseUrl, model } = this.d.settings().ai.llm;
     const raw = (reason: CleanupSkip): CleanupResult => {
       const ms = Math.round(this.now() - started);
@@ -201,14 +218,14 @@ export class Cleaner {
     });
     try {
       const answer = await Promise.race([
-        this.ask(level, style, model, spoken, timeoutMs),
+        this.ask(level, style, vocabulary, model, spoken, timeoutMs),
         deadline,
       ]);
       if (answer === 'timeout') return raw('timeout');
       if (typeof answer !== 'string') return raw(answer.skip);
       const tidied = tidyAnswer(answer, spoken);
       const cleaned = style === 'code' ? tidyCode(tidied) : tidied;
-      const problem = checkFidelity(spoken, cleaned);
+      const problem = checkFidelity(spoken, cleaned, vocabulary);
       if (problem) return raw(problem);
       const ms = Math.round(this.now() - started);
       this.d.logger?.info('Cleaned up', { level, style, ms });
@@ -222,6 +239,7 @@ export class Cleaner {
   private async ask(
     level: Exclude<CleanupLevel, 'off'>,
     style: StyleName,
+    vocabulary: readonly string[],
     model: string,
     spoken: string,
     timeoutMs: number,
@@ -234,7 +252,7 @@ export class Cleaner {
       max_tokens: Math.max(MIN_MAX_TOKENS, Math.ceil(spoken.length / 2) + 64),
       stream: false,
       messages: [
-        { role: 'system', content: cleanupPrompt(level, style) },
+        { role: 'system', content: cleanupPrompt(level, style, vocabulary) },
         { role: 'user', content: `<transcript>\n${spoken}\n</transcript>` },
       ],
     });

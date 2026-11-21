@@ -11,7 +11,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | --- | --- | --- |
 | S0 | 6 / 10 | 16 / 26 |
 | S1 | 13 / 14 | 46 / 48 |
-| S2 | 3 / 13 | 8 / 41 |
+| S2 | 4 / 13 | 10 / 41 |
 | S3 | 0 / 5 | 0 / 24 |
 | S4 | 0 / 4 | 0 / 23 |
 | S5 | 0 / 8 | 0 / 39 |
@@ -21,7 +21,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 | S9 | 0 / 9 | 0 / 35 |
 | S10 | 0 / 7 | 0 / 23 |
 | Backlog | 1 / 3 | 5 / 15 |
-| **Total** | **23 / 89** | **75 / 335** |
+| **Total** | **24 / 89** | **77 / 335** |
 
 ## E1 Foundation
 
@@ -63,7 +63,7 @@ Stories are picked in sprint order (S0, S1, …). Details and acceptance criteri
 - [x] VAI-307 AI cleanup (Light and Polished) — S2 · 3 pts · Must
 - [x] VAI-308 Style per app — S2 · 3 pts · Should
 - [x] VAI-308b Email style — S2 · 2 pts · Should
-- [ ] VAI-309 Custom vocabulary — S2 · 2 pts · Should
+- [x] VAI-309 Custom vocabulary — S2 · 2 pts · Should
 - [ ] VAI-310 Dictation history — S2 · 3 pts · Must
 - [ ] VAI-311 Offline and error handling — S2 · 2 pts · Must
 - [x] VAI-312 Paste at cursor and hold-to-talk on macOS (from source) — Backlog · 5 pts · Could

@@ -68,6 +68,7 @@ describe('SettingsStore', () => {
       keepMicReadySeconds: 10,
       cleanup: 'light',
       styles: [...DEFAULT_STYLE_RULES],
+      vocabulary: [],
     });
     expect(loaded.ai.retries).toBe(5);
     expect(warnings).toEqual([]);
@@ -80,7 +81,12 @@ describe('SettingsStore', () => {
     const old = JSON.parse(v3).data;
     expect(loaded).toEqual({
       ...old,
-      dictation: { ...old.dictation, cleanup: 'light', styles: [...DEFAULT_STYLE_RULES] },
+      dictation: {
+        ...old.dictation,
+        cleanup: 'light',
+        styles: [...DEFAULT_STYLE_RULES],
+        vocabulary: [],
+      },
     });
     expect(warnings).toEqual([]);
     expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
@@ -93,7 +99,7 @@ describe('SettingsStore', () => {
     const old = JSON.parse(v4).data;
     expect(loaded).toEqual({
       ...old,
-      dictation: { ...old.dictation, styles: [...DEFAULT_STYLE_RULES] },
+      dictation: { ...old.dictation, styles: [...DEFAULT_STYLE_RULES], vocabulary: [] },
     });
     expect(warnings).toEqual([]);
     expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
@@ -108,6 +114,7 @@ describe('SettingsStore', () => {
       ...old,
       dictation: {
         ...old.dictation,
+        vocabulary: [],
         styles: old.dictation.styles.map((r: { app: string }) =>
           r.app === 'Outlook' ? { app: 'Outlook', style: 'email' } : r,
         ),
@@ -127,6 +134,16 @@ describe('SettingsStore', () => {
     ];
     write(JSON.stringify(edited));
     expect(store().load().dictation.styles).toEqual(edited.data.dictation.styles);
+  });
+
+  it('v6 file (VAI-308b) → v7: every value kept, vocabulary starts empty', () => {
+    const v6 = fs.readFileSync(path.join(__dirname, 'fixtures', 'settings-v6.json'), 'utf8');
+    write(v6);
+    const loaded = store().load();
+    const old = JSON.parse(v6).data;
+    expect(loaded).toEqual({ ...old, dictation: { ...old.dictation, vocabulary: [] } });
+    expect(warnings).toEqual([]);
+    expect(readJson()).toEqual({ version: SETTINGS_VERSION, data: loaded });
   });
 
   it('v1 file from an earlier build (VAI-204): every value carries over unchanged', () => {

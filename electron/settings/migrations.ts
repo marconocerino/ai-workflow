@@ -38,6 +38,8 @@ export const migrations: Record<number, (data: unknown) => unknown> = {
       },
     };
   },
+  // v6 → v7 (VAI-309): adds dictation.vocabulary (empty from validation); everything else unchanged.
+  6: (data) => data,
 };
 
 /** The default style rules as shipped in settings v5 (VAI-308). Frozen here; never change. */

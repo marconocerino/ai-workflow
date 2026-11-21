@@ -207,7 +207,15 @@ Before each app: copy something of your own (e.g. a word in Notepad) so you can 
 4. An app without a rule (e.g. Paint's text tool): [ ] the bar shows only the app name.
 5. Add a rule for that app (Casual), dictate again. [ ] Bar shows "· Casual". Restore defaults works.
 
-## 16. Custom folder
+## 16. Custom vocabulary
+
+1. Settings → Vocabulary: type a colleague's unusual name, press Enter; type a product name and a
+   comma; paste a list (one per line) from Notepad. [ ] All appear as chips; "n of 200" updates.
+2. Dictate a sentence with those words. [ ] They're spelled as in the list.
+3. Remove one with ✕, another with Backspace (twice). [ ] Gone; "Saved".
+4. `main.log`: [ ] no vocabulary words in it.
+
+## 17. Custom folder
 
 ```
 start /wait AI-Workflow-Setup-<version>.exe /S /D=%USERPROFILE%\Apps\AI Workflow

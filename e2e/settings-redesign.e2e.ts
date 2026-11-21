@@ -64,7 +64,7 @@ test('existing settings from an earlier build carry over unchanged', async () =>
 
   // The file was upgraded with every old value intact; new options got defaults.
   expect(settingsFile()).toEqual({
-    version: 6,
+    version: 7,
     data: {
       dictation: {
         mode: 'hold',
@@ -73,6 +73,7 @@ test('existing settings from an earlier build carry over unchanged', async () =>
         keepMicReadySeconds: 10,
         cleanup: 'light',
         styles: [...DEFAULT_STYLE_RULES],
+        vocabulary: [],
       },
       ai: v1,
     },

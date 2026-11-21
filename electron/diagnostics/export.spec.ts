@@ -21,6 +21,7 @@ const settings: Settings = {
     keepMicReadySeconds: 10,
     cleanup: 'light',
     styles: [],
+    vocabulary: [],
   },
   ai: {
     asr: { baseUrl: 'https://asr.company.internal/v1', model: 'qwen3-asr' },

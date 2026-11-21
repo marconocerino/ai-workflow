@@ -15,11 +15,13 @@ import {
   KEEP_MIC_READY_OPTIONS,
   MAX_APP_NAME,
   MAX_STYLE_RULES,
+  MAX_VOCABULARY,
+  MAX_VOCABULARY_WORD,
   STYLES,
 } from '../../shared/settings';
 
 /** Bump when the stored shape changes, and add a migration in migrations.ts. */
-export const SETTINGS_VERSION = 6;
+export const SETTINGS_VERSION = 7;
 
 export function defaultSettings(): Settings {
   return {
@@ -30,6 +32,7 @@ export function defaultSettings(): Settings {
       keepMicReadySeconds: 10,
       cleanup: 'light',
       styles: DEFAULT_STYLE_RULES.map((r) => ({ ...r })),
+      vocabulary: [],
     },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },
@@ -237,7 +240,37 @@ function readDictation(
       });
     }
   }
-  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds, cleanup, styles };
+  let vocabulary = [...fallback.vocabulary];
+  if (raw['vocabulary'] !== undefined) {
+    const read = readVocabulary(raw['vocabulary']);
+    if (read) vocabulary = read;
+    else {
+      issues.push({
+        path: 'dictation.vocabulary',
+        message: `must be up to ${MAX_VOCABULARY} words, each 1–${MAX_VOCABULARY_WORD} characters, no duplicates`,
+      });
+    }
+  }
+  return { mode, toggleShortcut, micDeviceId, keepMicReadySeconds, cleanup, styles, vocabulary };
+}
+
+/** Valid vocabulary (trimmed, inner spaces collapsed), or null. Unique ignoring case. */
+function readVocabulary(raw: unknown): string[] | null {
+  if (!Array.isArray(raw) || raw.length > MAX_VOCABULARY) return null;
+  const seen = new Set<string>();
+  const words: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string') return null;
+    const word = item.trim().replace(/\s+/g, ' ');
+    // eslint-disable-next-line no-control-regex
+    if (!word || word.length > MAX_VOCABULARY_WORD || /[\u0000-\u001f\u007f]/.test(word)) {
+      return null;
+    }
+    if (seen.has(word.toLowerCase())) return null;
+    seen.add(word.toLowerCase());
+    words.push(word);
+  }
+  return words;
 }
 
 /** Valid style rules (trimmed), or null. App names: printable, unique (case-insensitive). */

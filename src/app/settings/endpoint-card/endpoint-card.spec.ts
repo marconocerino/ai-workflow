@@ -13,6 +13,7 @@ function settings(llm: Partial<Settings['ai']['llm']> = {}): Settings {
       keepMicReadySeconds: 10,
       cleanup: 'light',
       styles: [],
+      vocabulary: [],
     },
     ai: {
       asr: { baseUrl: '', model: 'qwen3-asr' },

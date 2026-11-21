@@ -69,12 +69,8 @@ export const routes: Routes = [
       {
         path: 'vocabulary',
         title: 'Vocabulary · Settings · AI Workflow',
-        loadComponent: comingSoon,
-        data: {
-          heading: 'Vocabulary',
-          lead: 'Names and terms the AI should always get right.',
-          coming: 'Add your own words, names and abbreviations.',
-        },
+        loadComponent: () =>
+          import('./settings/vocabulary/vocabulary').then((m) => m.VocabularySettings),
       },
       {
         path: 'style',
